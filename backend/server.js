@@ -36,7 +36,7 @@ httpServer.listen(port, () => {
 });
 
 process.on('unhandledRejection', (err) => {
-  logger.error('UNHANDLED REJECTION! 💥 Shutting down...');
+  logger.error('UNHANDLED REJECTION!  Shutting down...');
   logger.error(err.name, err.message);
   httpServer.close(() => {
     process.exit(1);
@@ -44,8 +44,8 @@ process.on('unhandledRejection', (err) => {
 });
 
 process.on('SIGTERM', () => {
-  logger.info('👋 SIGTERM RECEIVED. Shutting down gracefully');
+  logger.info(' SIGTERM RECEIVED. Shutting down gracefully');
   httpServer.close(() => {
-    logger.info('💥 Process terminated!');
+    logger.info(' Process terminated!');
   });
 });

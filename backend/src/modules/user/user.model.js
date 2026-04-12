@@ -49,6 +49,17 @@ const userSchema = new mongoose.Schema({
     type: Number,
     default: 0
   },
+  package: {
+    type: mongoose.Schema.ObjectId,
+    ref: 'Package'
+  },
+  packageStartDate: Date,
+  packageEndDate: Date,
+  subscriptionStatus: {
+    type: String,
+    enum: ['active', 'expired', 'inactive'],
+    default: 'inactive'
+  },
   createdAt: {
     type: Date,
     default: Date.now

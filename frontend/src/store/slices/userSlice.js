@@ -28,6 +28,15 @@ export const deleteUser = createAsyncThunk('users/delete', async (id, { rejectWi
   }
 });
 
+export const updateUser = createAsyncThunk('users/update', async ({ id, ...data }, { rejectWithValue }) => {
+  try {
+    const response = await api.put(`/users/${id}`, data);
+    return response.data;
+  } catch (error) {
+    return rejectWithValue(error.response.data);
+  }
+});
+
 const userSlice = createSlice({
   name: 'users',
   initialState: {
@@ -80,6 +89,16 @@ const userSlice = createSlice({
       .addCase(deleteUser.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload?.message || 'Failed to deactivate user';
+      })
+      
+      // Update User
+      .addCase(updateUser.fulfilled, (state, action) => {
+        state.loading = false;
+        const updatedUser = action.payload.data.user || action.payload.data;
+        const index = state.items.findIndex(u => (u._id || u.id) === (updatedUser._id || updatedUser.id));
+        if (index !== -1) {
+          state.items[index] = updatedUser;
+        }
       });
   },
 });

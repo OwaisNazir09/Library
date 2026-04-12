@@ -9,7 +9,8 @@ import TenantManagement from './pages/Admin/TenantManagement';
 import GlobalUsers from './pages/Admin/UserManagementGlobal';
 import AdminDashboard from './pages/Dashboard/AdminDashboard';
 import BookList from './pages/Books/BookList';
-import UserList from './pages/Users/UserList';
+import RegistrationList from './pages/Users/RegistrationList';
+import PackageList from './pages/Packages/PackageList';
 import BorrowingHistory from './pages/Borrowings/BorrowingHistory';
 import EventList from './pages/Events/EventList';
 import NotificationList from './pages/Notifications/NotificationList';
@@ -24,8 +25,8 @@ const App = () => {
       <Route path="/" element={<Navigate to="/login" replace />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
-      
-      {/* Super Admin Routes */}
+
+
       <Route element={<ProtectedRoute allowedRoles={['super_admin']} />}>
         <Route path="/admin" element={<AdminLayout />}>
           <Route index element={<Navigate to="/admin/dashboard" replace />} />
@@ -37,13 +38,13 @@ const App = () => {
         </Route>
       </Route>
 
-      {/* Tenant Routes (Librarian/Member) */}
       <Route element={<ProtectedRoute allowedRoles={['librarian', 'member', 'admin']} />}>
         <Route path="/app" element={<Layout />}>
           <Route index element={<Navigate to="/app/dashboard" replace />} />
           <Route path="dashboard" element={<AdminDashboard />} />
           <Route path="books" element={<BookList />} />
-          <Route path="users" element={<UserList />} />
+          <Route path="registrations" element={<RegistrationList />} />
+          <Route path="packages" element={<PackageList />} />
           <Route path="borrowings" element={<BorrowingHistory />} />
           <Route path="events" element={<EventList />} />
           <Route path="tables" element={<TableBooking />} />
