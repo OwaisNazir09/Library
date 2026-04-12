@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import { getModels } from '../../utils/helpers.js';
 import ApiFeatures from '../../utils/apiFeatures.js';
 
@@ -60,7 +61,24 @@ export const returnBook = async (req, res, next) => {
     if (borrowing.returnedDate > borrowing.dueDate) {
       const diffTime = Math.abs(borrowing.returnedDate - borrowing.dueDate);
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      borrowing.fine = diffDays * 10;
+
+      if (diffDays > 0) {
+        const amount = diffDays * 10; // $10 per day late
+        borrowing.fine = amount;
+
+        try {
+          const Fine = mongoose.model('Fine'); // We can use mongoose directly or import it
+          await Fine.create({
+            tenantId: req.tenantId,
+            student: borrowing.user,
+            issue: borrowing._id,
+            amount,
+            status: 'unpaid'
+          });
+        } catch (error) {
+          console.error("Failed generating fine object", error);
+        }
+      }
     }
     await borrowing.save();
 

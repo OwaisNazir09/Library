@@ -27,7 +27,6 @@ const Layout = () => {
 
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden antialiased">
-      {/* Sidebar */}
       <Sidebar
         isOpen={isSidebarOpen}
         onClose={() => setIsSidebarOpen(false)}

@@ -14,8 +14,10 @@ import PackageList from './pages/Packages/PackageList';
 import BorrowingHistory from './pages/Borrowings/BorrowingHistory';
 import EventList from './pages/Events/EventList';
 import NotificationList from './pages/Notifications/NotificationList';
-import TableBooking from './pages/Tables/TableBooking';
 import Settings from './pages/Settings/Settings';
+import Reports from './pages/Reports/Reports';
+import Reminders from './pages/Reminders/Reminders';
+import Fines from './pages/Fines/Fines';
 
 import ProtectedRoute from './components/common/ProtectedRoute';
 
@@ -47,7 +49,9 @@ const App = () => {
           <Route path="packages" element={<PackageList />} />
           <Route path="borrowings" element={<BorrowingHistory />} />
           <Route path="events" element={<EventList />} />
-          <Route path="tables" element={<TableBooking />} />
+          <Route path="reports" element={<Reports />} />
+          <Route path="reminders" element={<Reminders />} />
+          <Route path="fines" element={<Fines />} />
           <Route path="notifications" element={<NotificationList />} />
           <Route path="settings" element={<Settings />} />
         </Route>

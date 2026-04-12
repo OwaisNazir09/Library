@@ -31,12 +31,15 @@ const groups = [
     ]
   },
   {
-    label: 'MANAGEMENT',
+    label: 'REPORTS',
     items: [
-      { name: 'Report & Analytics', icon: BarChart2, path: '/app/reports' },
-      { name: 'Overdue Reminder', icon: Clock, path: '/app/borrowings' },
-      { name: 'Tables', icon: Coffee, path: '/app/tables' },
-      { name: 'Add Books', icon: PlusCircle, path: '/app/books/add' },
+      { name: 'Reports & Analytics', icon: BarChart2, path: '/app/reports' },
+      { name: 'Overdue Reminder', icon: Clock, path: '/app/reminders' },
+    ]
+  },
+  {
+    label: 'FINANCE',
+    items: [
       { name: 'Fines & Fees', icon: DollarSign, path: '/app/fines' },
     ]
   },

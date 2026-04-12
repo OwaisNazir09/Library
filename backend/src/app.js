@@ -19,6 +19,8 @@ import notificationRoutes from './modules/notification/notification.routes.js';
 import dashboardRoutes from './modules/dashboard/dashboard.routes.js';
 import adminRoutes from './modules/admin/admin.routes.js';
 import packageRoutes from './modules/package/package.routes.js';
+import fineRoutes from './modules/fines/fine.routes.js';
+import reportsRoutes from './modules/reports/reports.routes.js';
 
 const app = express();
 
@@ -64,6 +66,8 @@ app.use('/api/notifications', notificationRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/packages', packageRoutes);
+app.use('/api/fines', fineRoutes);
+app.use('/api/reports', reportsRoutes);
 
 app.all('*', (req, res, next) => {
   const err = new Error(`Can't find ${req.originalUrl} on this server!`);
