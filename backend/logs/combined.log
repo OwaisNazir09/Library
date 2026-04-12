@@ -114,3 +114,5 @@
 {"level":"info","message":"Master Database connected successfully","service":"library-service","timestamp":"2026-04-12 19:48:30"}
 {"level":"info","message":"Server running on port 5000","service":"library-service","timestamp":"2026-04-12 19:48:39"}
 {"level":"info","message":"Master Database connected successfully","service":"library-service","timestamp":"2026-04-12 19:48:40"}
+{"level":"info","message":"Server running on port 5000","service":"library-service","timestamp":"2026-04-12 19:49:49"}
+{"level":"info","message":"Master Database connected successfully","service":"library-service","timestamp":"2026-04-12 19:49:51"}
