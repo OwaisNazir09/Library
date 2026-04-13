@@ -369,3 +369,4 @@
 {"level":"info","message":"Master Database connected successfully","service":"library-service","timestamp":"2026-04-13 20:42:20"}
 {"level":"info","message":"Server running on port 3245","service":"library-service","timestamp":"2026-04-13 21:13:00"}
 {"level":"info","message":"Master Database connected successfully","service":"library-service","timestamp":"2026-04-13 21:13:01"}
+{"level":"info","message":"Server running on port 3245","service":"library-service","timestamp":"2026-04-13 21:26:14"}

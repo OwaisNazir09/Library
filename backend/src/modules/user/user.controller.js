@@ -151,7 +151,6 @@ export const createUser = async (req, res, next) => {
   try {
     const { User, Ledger, LedgerEntry } = getModels(req.db);
 
-    // If package is being assigned
     let pkg;
     if (req.body.package) {
       pkg = await Package.findById(req.body.package);
@@ -182,7 +181,7 @@ export const createUser = async (req, res, next) => {
 
     // --- Create Ledger for New User ---
     const ledgerId = `LED-${Math.floor(1000 + Math.random() * 9000)}`;
-    
+
     // Calculate initial fees based on pkg or explicit fee passing
     const monthlyFee = Number(req.body.monthlyFee) || (pkg ? Number(pkg.price) : 0);
     const admissionFee = Number(req.body.admissionFee) || 0;
