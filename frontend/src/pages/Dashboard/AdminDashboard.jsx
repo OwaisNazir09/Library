@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { 
   BookOpen, Users, Clock, AlertCircle, ShoppingCart, 
   ArrowUpRight, Award, CheckCircle2, MoreHorizontal,
-  ArrowRight
+  ArrowRight, Coffee, Globe
 } from 'lucide-react';
 import { 
   PieChart, Pie, Cell, ResponsiveContainer, 
@@ -40,6 +40,7 @@ import ErrorState from '../../components/common/ErrorState';
 
 const AdminDashboard = () => {
   const [stats, setStats] = React.useState(null);
+  const [ledgerStats, setLedgerStats] = React.useState(null);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState(null);
 
@@ -47,8 +48,12 @@ const AdminDashboard = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await api.get('/dashboard/stats');
-      setStats(response.data.data);
+      const [dashboardRes, ledgerRes] = await Promise.all([
+        api.get('/dashboard/stats'),
+        api.get('/ledger/stats')
+      ]);
+      setStats(dashboardRes.data.data);
+      setLedgerStats(ledgerRes.data.data);
     } catch (error) {
       console.error('Failed to fetch stats', error);
       setError('Failed to load dashboard metrics. Please check your connection.');
@@ -64,8 +69,10 @@ const AdminDashboard = () => {
   const statCardsData = [
     { label: 'Total Books', value: stats?.totalBooks || '0', change: '+120', sub: 'In collection', icon: BookOpen, color: 'text-teal-600', bg: 'bg-teal-50' },
     { label: 'Active Members', value: stats?.totalUsers || '0', change: '+3.7%', sub: 'Total members', icon: Users, color: 'text-sky-600', bg: 'bg-sky-50' },
-    { label: 'Borrowed Books', value: stats?.activeBorrowings || '0', change: '+25%', sub: 'Currently out', icon: Clock, color: 'text-indigo-600', bg: 'bg-indigo-50' },
-    { label: 'Overdue Returns', value: '237+', change: '-5.8%', sub: 'Pending action', icon: AlertCircle, color: 'text-rose-600', bg: 'bg-rose-50' },
+    { label: 'Study Desks', value: stats?.tables?.total || '0', change: `${stats?.tables?.available || 0} Avail`, sub: 'Private Desks', icon: Coffee, color: 'text-amber-600', bg: 'bg-amber-50' },
+    { label: 'Collected Fees', value: `₹${ledgerStats?.totalCollected || 0}`, change: `+₹${ledgerStats?.todayCollection || 0}`, sub: 'Today', icon: ShoppingCart, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+    { label: 'Pending Dues', value: `₹${ledgerStats?.totalPending || 0}`, change: `${ledgerStats?.overdueCount || 0} Students`, sub: 'Overdue', icon: AlertCircle, color: 'text-rose-600', bg: 'bg-rose-50' },
+    { label: 'Expired Desks', value: stats?.tables?.expired || '0', change: 'Action Req', sub: 'Pending unassign', icon: AlertCircle, color: 'text-rose-600', bg: 'bg-rose-50' },
   ];
 
   if (error) {

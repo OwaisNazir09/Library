@@ -9,7 +9,8 @@ import {
   ShieldCheck,
   ChevronRight,
   Menu,
-  X
+  X,
+  MessageSquare
 } from 'lucide-react';
 import { useDispatch } from 'react-redux';
 import { logout } from '../../store/slices/authSlice';
@@ -29,6 +30,7 @@ const AdminLayout = () => {
     { name: 'Dashboard', icon: BarChart2, path: '/admin/dashboard' },
     { name: 'Libraries', icon: Library, path: '/admin/tenants' },
     { name: 'Users (Global)', icon: Users, path: '/admin/users' },
+    { name: 'Interest Queries', icon: MessageSquare, path: '/admin/queries' },
     { name: 'Analytics', icon: ShieldCheck, path: '/admin/analytics' },
     { name: 'Settings', icon: Settings, path: '/admin/settings' },
   ];

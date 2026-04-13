@@ -21,6 +21,9 @@ import adminRoutes from './modules/admin/admin.routes.js';
 import packageRoutes from './modules/package/package.routes.js';
 import fineRoutes from './modules/fines/fine.routes.js';
 import reportsRoutes from './modules/reports/reports.routes.js';
+import queryRoutes from './modules/query/query.routes.js';
+import resourceRoutes from './modules/resource/resource.routes.js';
+import ledgerRoutes from './modules/ledger/ledger.routes.js';
 
 const app = express();
 
@@ -39,7 +42,7 @@ if (process.env.NODE_ENV === 'development') {
 }
 
 const limiter = rateLimit({
-  max: 100,
+  max: 10000,
   windowMs: 60 * 60 * 1000,
   message: 'Too many requests from this IP, please try again in an hour!'
 });
@@ -54,7 +57,6 @@ app.use(xss());
 
 app.use('/api', tenantHandler);
 
-// 3) ROUTES
 app.use('/api/tenants', tenantRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
@@ -68,6 +70,9 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/packages', packageRoutes);
 app.use('/api/fines', fineRoutes);
 app.use('/api/reports', reportsRoutes);
+app.use('/api/queries', queryRoutes);
+app.use('/api/resources', resourceRoutes);
+app.use('/api/ledger', ledgerRoutes);
 
 app.all('*', (req, res, next) => {
   const err = new Error(`Can't find ${req.originalUrl} on this server!`);

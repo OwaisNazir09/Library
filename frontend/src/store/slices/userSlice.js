@@ -12,7 +12,9 @@ export const fetchUsers = createAsyncThunk('users/fetchAll', async (params, { re
 
 export const addUser = createAsyncThunk('users/add', async (userData, { rejectWithValue }) => {
   try {
-    const response = await api.post('/users', userData);
+    const response = await api.post('/users', userData, {
+      headers: { 'Content-Type': userData instanceof FormData ? 'multipart/form-data' : 'application/json' }
+    });
     return response.data;
   } catch (error) {
     return rejectWithValue(error.response.data);
@@ -30,7 +32,11 @@ export const deleteUser = createAsyncThunk('users/delete', async (id, { rejectWi
 
 export const updateUser = createAsyncThunk('users/update', async ({ id, ...data }, { rejectWithValue }) => {
   try {
-    const response = await api.put(`/users/${id}`, data);
+    // If data is FormData, it's already formed correctly
+    const payload = data._formData || data;
+    const response = await api.patch(`/users/${id}`, payload, {
+      headers: { 'Content-Type': payload instanceof FormData ? 'multipart/form-data' : 'application/json' }
+    });
     return response.data;
   } catch (error) {
     return rejectWithValue(error.response.data);
@@ -44,6 +50,7 @@ const userSlice = createSlice({
     loading: false,
     error: null,
     total: 0,
+    page: 1,
   },
   reducers: {},
   extraReducers: (builder) => {

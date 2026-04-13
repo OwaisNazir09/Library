@@ -32,6 +32,4 @@ const fineSchema = new mongoose.Schema({
   }
 });
 
-const Fine = mongoose.model('Fine', fineSchema);
-
-export default Fine;
+export default fineSchema;

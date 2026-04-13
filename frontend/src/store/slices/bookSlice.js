@@ -12,7 +12,9 @@ export const fetchBooks = createAsyncThunk('books/fetchAll', async (params, { re
 
 export const addBook = createAsyncThunk('books/add', async (bookData, { rejectWithValue }) => {
   try {
-    const response = await api.post('/books', bookData);
+    const response = await api.post('/books', bookData, {
+      headers: { 'Content-Type': bookData instanceof FormData ? 'multipart/form-data' : 'application/json' }
+    });
     return response.data;
   } catch (error) {
     return rejectWithValue(error.response.data);
@@ -21,7 +23,9 @@ export const addBook = createAsyncThunk('books/add', async (bookData, { rejectWi
 
 export const updateBook = createAsyncThunk('books/update', async ({ id, data }, { rejectWithValue }) => {
   try {
-    const response = await api.put(`/books/${id}`, data);
+    const response = await api.patch(`/books/${id}`, data, {
+      headers: { 'Content-Type': data instanceof FormData ? 'multipart/form-data' : 'application/json' }
+    });
     return response.data;
   } catch (error) {
     return rejectWithValue(error.response.data);

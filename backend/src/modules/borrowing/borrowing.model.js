@@ -25,7 +25,15 @@ const borrowingSchema = new mongoose.Schema({
     required: true
   },
   returnedDate: Date,
-  fine: {
+  finePerDay: {
+    type: Number,
+    default: 0
+  },
+  fineAmount: {
+    type: Number,
+    default: 0
+  },
+  lateDays: {
     type: Number,
     default: 0
   },

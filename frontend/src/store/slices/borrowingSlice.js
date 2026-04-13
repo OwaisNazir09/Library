@@ -1,9 +1,9 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import api from '../../services/api';
 
-export const fetchBorrowings = createAsyncThunk('borrowings/fetchAll', async (_, { rejectWithValue }) => {
+export const fetchBorrowings = createAsyncThunk('borrowings/fetchAll', async (params, { rejectWithValue }) => {
   try {
-    const response = await api.get('/borrowings');
+    const response = await api.get('/borrowings', { params });
     return response.data;
   } catch (error) {
     return rejectWithValue(error.response.data);
@@ -21,7 +21,7 @@ export const issueBook = createAsyncThunk('borrowings/issue', async (borrowData,
 
 export const returnBook = createAsyncThunk('borrowings/return', async (id, { rejectWithValue }) => {
   try {
-    const response = await api.put(`/borrowings/return/${id}`);
+    const response = await api.patch(`/borrowings/return/${id}`);
     return response.data;
   } catch (error) {
     return rejectWithValue(error.response.data);
@@ -34,6 +34,8 @@ const borrowingSlice = createSlice({
     items: [],
     loading: false,
     error: null,
+    total: 0,
+    page: 1,
   },
   reducers: {},
   extraReducers: (builder) => {
@@ -46,6 +48,7 @@ const borrowingSlice = createSlice({
       .addCase(fetchBorrowings.fulfilled, (state, action) => {
         state.loading = false;
         state.items = action.payload.data?.borrowings || action.payload.data || [];
+        state.total = action.payload.total || action.payload.results || 0;
         state.error = null;
       })
       .addCase(fetchBorrowings.rejected, (state, action) => {

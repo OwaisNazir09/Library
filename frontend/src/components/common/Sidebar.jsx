@@ -25,9 +25,12 @@ const groups = [
     items: [
       { name: 'Overview', icon: LayoutGrid, path: '/app/dashboard' },
       { name: 'Books', icon: BookOpen, path: '/app/books' },
+      { name: 'Book Circulation', icon: PlusCircle, path: '/app/borrowings' },
       { name: 'Library Activities', icon: Library, path: '/app/events' },
       { name: 'Student Registrations', icon: Users, path: '/app/registrations' },
       { name: 'Membership Packages', icon: LayoutGrid, path: '/app/packages' },
+      { name: 'Study Desks', icon: Coffee, path: '/app/tables' },
+      { name: 'Digital Library', icon: BookOpen, path: '/app/digital-library' },
     ]
   },
   {
@@ -40,6 +43,7 @@ const groups = [
   {
     label: 'FINANCE',
     items: [
+      { name: 'Fee Ledger', icon: DollarSign, path: '/app/ledger' },
       { name: 'Fines & Fees', icon: DollarSign, path: '/app/fines' },
     ]
   },
@@ -93,8 +97,8 @@ const Sidebar = ({ isOpen, onClose }) => {
                   onClick={() => window.innerWidth < 1024 && onClose()}
                   className={({ isActive }) => `
                     flex items-center gap-3 px-5 py-3.5 rounded-2xl transition-all duration-200 group
-                    ${isActive 
-                      ? 'bg-[#044343] text-white shadow-xl shadow-teal-900/20' 
+                    ${isActive
+                      ? 'bg-[#044343] text-white shadow-xl shadow-teal-900/20'
                       : 'text-slate-900 hover:text-[#044343] hover:bg-slate-50'}
                   `}
                 >
@@ -110,7 +114,7 @@ const Sidebar = ({ isOpen, onClose }) => {
         ))}
       </nav>
 
-      {/* User Session Profile */}
+      {/* User Session Profile
       <div className="p-4 mt-auto">
         <div className="bg-slate-50 p-4 rounded-[2rem] flex items-center gap-3 border border-slate-100 transition-all hover:bg-slate-100/50">
           <div className="w-11 h-11 rounded-2xl bg-[#044343] flex items-center justify-center text-white font-black text-xl shadow-lg shadow-teal-900/10">
@@ -121,7 +125,7 @@ const Sidebar = ({ isOpen, onClose }) => {
             <p className="text-[10px] text-slate-600 truncate font-bold uppercase tracking-widest">{user?.email || 'william01@gmail.com'}</p>
           </div>
         </div>
-      </div>
+      </div> */}
 
       {/* Logout Action */}
       <div className="p-6 border-t border-slate-50">

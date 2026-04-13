@@ -28,7 +28,6 @@ export const protect = async (req, res, next) => {
       throw error;
     }
 
-    // GRANT ACCESS TO PROTECTED ROUTE
     req.user = currentUser;
     next();
   } catch (err) {
@@ -38,7 +37,6 @@ export const protect = async (req, res, next) => {
 
 export const restrictTo = (...roles) => {
   return (req, res, next) => {
-    // roles ['admin', 'librarian']. role='member'
     if (!roles.includes(req.user.role)) {
       const error = new Error('You do not have permission to perform this action');
       error.statusCode = 403;

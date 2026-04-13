@@ -91,7 +91,7 @@ const Login = () => {
           <div className="mt-12 pt-10 border-t border-slate-50">
             <p className="text-slate-400 font-medium text-sm">
               New to the platform?
-              <Link to="/register" className="text-[#044343] font-black ml-2 hover:underline">Register Core</Link>
+              <Link to="/query" className="text-[#044343] font-black ml-2 hover:underline">Request Callback</Link>
             </p>
           </div>
         </div>

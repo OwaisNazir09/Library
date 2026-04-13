@@ -4,31 +4,15 @@ import { Book, Users, Repeat, DollarSign, TrendingUp, BarChart2 } from 'lucide-r
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { getReportsSummary, getMonthlyAnalytics } from '../../services/reportService';
 
-const mockChartData = [
-  { name: 'Jan', books: 120 },
-  { name: 'Feb', books: 156 },
-  { name: 'Mar', books: 210 },
-  { name: 'Apr', books: 180 },
-  { name: 'May', books: 280 },
-  { name: 'Jun', books: 320 },
-];
-
-const mockPopularBooks = [
-  { id: 1, title: 'The Great Gatsby', author: 'F. Scott Fitzgerald', issues: 145 },
-  { id: 2, title: '1984', author: 'George Orwell', issues: 120 },
-  { id: 3, title: 'To Kill a Mockingbird', author: 'Harper Lee', issues: 95 },
-  { id: 4, title: 'Pride and Prejudice', author: 'Jane Austen', issues: 85 },
-];
-
 const Reports = () => {
   const [stats, setStats] = useState({
-    totalBooks: 4208,
-    issuedBooks: 840,
-    activeStudents: 1204,
-    revenue: 8450
+    totalBooks: 0,
+    issuedBooks: 0,
+    activeStudents: 0,
+    revenue: 0
   });
   
-  const [chartData, setChartData] = useState(mockChartData);
+  const [chartData, setChartData] = useState([]);
   const [isLive, setIsLive] = useState(false);
 
   useEffect(() => {
@@ -45,7 +29,7 @@ const Reports = () => {
           setChartData(analyticalRes.data);
         }
       } catch (err) {
-        console.warn("API not available or failed. Falling back to mock data.", err);
+        console.warn("Analytics API failed.", err);
         setIsLive(false);
       }
     };
@@ -122,22 +106,8 @@ const Reports = () => {
               <BarChart2 size={18} />
             </div>
           </div>
-          <div className="space-y-6">
-            {mockPopularBooks.map((book, i) => (
-              <div key={book.id} className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center font-black text-slate-400">
-                  #{i + 1}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-black text-slate-900 truncate">{book.title}</p>
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest truncate mt-0.5">{book.author}</p>
-                </div>
-                <div className="text-right">
-                  <p className="text-sm font-black text-[#044343]">{book.issues}</p>
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Issues</p>
-                </div>
-              </div>
-            ))}
+          <div className="space-y-6 flex items-center justify-center h-full text-slate-400 font-bold">
+            Data driven automatically via Library interactions.
           </div>
         </div>
       </div>

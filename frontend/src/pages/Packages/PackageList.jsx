@@ -11,7 +11,8 @@ import {
   DollarSign, 
   Clock, 
   BookOpen,
-  AlertCircle
+  AlertCircle,
+  Loader2
 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'react-hot-toast';
@@ -247,9 +248,10 @@ const PackageList = () => {
                   </button>
                   <button 
                     type="submit"
-                    className="flex-2 w-full bg-[#044343] text-white font-black py-4 rounded-2xl shadow-xl shadow-teal-900/20 active:scale-95 transition-all text-sm uppercase tracking-widest"
+                    disabled={loading}
+                    className="flex-2 w-full bg-[#044343] text-white font-black py-4 rounded-2xl shadow-xl shadow-teal-900/20 active:scale-95 transition-all text-sm uppercase tracking-widest flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
                   >
-                    {editingPackage ? 'Update Package' : 'Save Package'}
+                    {loading ? <Loader2 size={18} className="animate-spin" /> : (editingPackage ? 'Update Package' : 'Save Package')}
                   </button>
                 </div>
               </form>

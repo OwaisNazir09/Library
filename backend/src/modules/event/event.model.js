@@ -14,6 +14,8 @@ const eventSchema = new mongoose.Schema({
   currentAttendees: { type: Number, default: 0 },
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   isActive: { type: Boolean, default: true },
+  bannerImage: String,
+  bannerImagePublicId: String,
   createdAt: { type: Date, default: Date.now }
 });
 

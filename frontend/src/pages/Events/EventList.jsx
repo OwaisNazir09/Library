@@ -11,7 +11,9 @@ import {
   X,
   ChevronLeft,
   CalendarDays,
-  MoreVertical
+  MoreVertical,
+  ImagePlus,
+  Loader2
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { useForm } from 'react-hook-form';
@@ -40,7 +42,17 @@ const EventList = () => {
   const [currentMonth, setCurrentMonth] = React.useState(new Date());
   const [selectedDate, setSelectedDate] = React.useState(new Date());
   const [isModalOpen, setIsModalOpen] = React.useState(false);
+  const [bannerPreview, setBannerPreview] = React.useState(null);
+  const [bannerFile, setBannerFile] = React.useState(null);
   const { register, handleSubmit, reset } = useForm();
+
+  const handleBannerChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setBannerFile(file);
+      setBannerPreview(URL.createObjectURL(file));
+    }
+  };
 
   const loadEvents = React.useCallback(() => {
     dispatch(fetchEvents());
@@ -51,11 +63,17 @@ const EventList = () => {
   }, [loadEvents]);
 
   const onAddEvent = async (data) => {
-    const result = await dispatch(createEvent(data));
+    const formData = new FormData();
+    Object.entries(data).forEach(([key, val]) => { if (val) formData.append(key, val); });
+    if (bannerFile) formData.append('bannerImage', bannerFile);
+
+    const result = await dispatch(createEvent(formData));
     if (createEvent.fulfilled.match(result)) {
       toast.success('Event scheduled successfully!');
       setIsModalOpen(false);
       reset();
+      setBannerPreview(null);
+      setBannerFile(null);
     }
   };
 
@@ -237,9 +255,14 @@ const EventList = () => {
                     animate={{ x: 0, opacity: 1 }}
                     transition={{ delay: i * 0.1 }}
                     key={event._id}
-                    className="p-4 bg-slate-50 rounded-2xl border border-slate-100 hover:bg-white hover:shadow-xl hover:shadow-teal-900/5 transition-all group/item"
+                    className="bg-slate-50 rounded-2xl border border-slate-100 hover:bg-white hover:shadow-xl hover:shadow-teal-900/5 transition-all group/item overflow-hidden"
                   >
-                    <div className="flex items-start gap-4">
+                    {event.bannerImage && (
+                      <div className="h-24 w-full relative">
+                        <img src={event.bannerImage} className="w-full h-full object-cover" alt={event.title} />
+                      </div>
+                    )}
+                    <div className="p-4 flex items-start gap-4">
                       <div className="w-10 h-10 rounded-xl bg-white border border-slate-100 flex items-center justify-center text-[#044343] group-hover/item:bg-[#044343] group-hover/item:text-white transition-colors">
                         <Clock size={16} />
                       </div>
@@ -294,6 +317,33 @@ const EventList = () => {
             </button>
             <h2 className="text-2xl font-black text-slate-900 mb-8">Schedule Event</h2>
             <form onSubmit={handleSubmit(onAddEvent)} className="space-y-6">
+              <div className="space-y-1.5 mb-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Event Banner Image</label>
+                <div className="relative">
+                  <input
+                    type="file"
+                    accept="image/jpg,image/jpeg,image/png,image/webp"
+                    onChange={handleBannerChange}
+                    className="hidden"
+                    id="bannerImageInput"
+                  />
+                  <label htmlFor="bannerImageInput" className="cursor-pointer block">
+                    {bannerPreview ? (
+                      <div className="relative w-full h-32 rounded-2xl overflow-hidden border-2 border-[#044343]/20">
+                        <img src={bannerPreview} alt="Preview" className="w-full h-full object-cover" />
+                        <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
+                          <p className="text-white text-xs font-black">Click to Change</p>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="w-full h-32 rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50 flex flex-col items-center justify-center gap-2 hover:border-[#044343]/30 transition-colors">
+                        <ImagePlus size={28} className="text-slate-300" />
+                        <p className="text-[11px] font-black text-slate-400">Upload banner image</p>
+                      </div>
+                    )}
+                  </label>
+                </div>
+              </div>
               <div className="space-y-1.5">
                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Event Title</label>
                 <input {...register('title')} required className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-3.5 px-6 outline-none focus:ring-2 focus:ring-[#044343]/5" />
@@ -316,8 +366,12 @@ const EventList = () => {
                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Max Participants</label>
                 <input {...register('maxParticipants')} type="number" className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-3.5 px-6 outline-none focus:ring-2 focus:ring-[#044343]/5" />
               </div>
-              <button type="submit" className="w-full bg-[#044343] text-white font-black py-4 rounded-2xl mt-4 shadow-xl shadow-teal-900/10 active:scale-95 transition-all">
-                Publish Event
+              <button 
+                type="submit" 
+                disabled={loading}
+                className="w-full bg-[#044343] text-white font-black py-4 rounded-2xl mt-4 shadow-xl shadow-teal-900/10 active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+              >
+                {loading ? <Loader2 size={18} className="animate-spin" /> : 'Publish Event'}
               </button>
             </form>
           </motion.div>

@@ -31,8 +31,26 @@ const userSchema = new mongoose.Schema({
     default: 'member'
   },
   phone: String,
-  address: String,
+  dob: Date,
+  gender: {
+    type: String,
+    enum: ['Male', 'Female', 'Other']
+  },
+  addressLine1: String,
+  addressLine2: String,
+  city: String,
+  district: String,
+  state: String,
+  pincode: String,
+  idType: {
+    type: String,
+    enum: ['Aadhaar Card', 'Driving License', 'Student ID', 'Passport']
+  },
+  idNumber: String,
+  idPhoto: String,
+  idPhotoPublicId: String,
   profilePicture: String,
+  profilePicturePublicId: String,
   membershipDate: {
     type: Date,
     default: Date.now
@@ -60,10 +78,21 @@ const userSchema = new mongoose.Schema({
     enum: ['active', 'expired', 'inactive'],
     default: 'inactive'
   },
+  notes: String,
   createdAt: {
     type: Date,
     default: Date.now
   }
+}, {
+  toJSON: { virtuals: true },
+  toObject: { virtuals: true }
+});
+
+userSchema.virtual('assignedTable', {
+  ref: 'Table',
+  foreignField: 'assignedTo',
+  localField: '_id',
+  justOne: true
 });
 userSchema.pre('save', async function (next) {
   if (!this.isModified('password')) return next();

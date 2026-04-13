@@ -8,12 +8,10 @@ const Layout = () => {
   const [isSidebarOpen, setIsSidebarOpen] = React.useState(false);
   const location = useLocation();
 
-  // Close sidebar on route change (mobile)
   React.useEffect(() => {
     setIsSidebarOpen(false);
   }, [location.pathname]);
 
-  // Prevent body scroll when sidebar is open on mobile
   React.useEffect(() => {
     if (isSidebarOpen) {
       document.body.style.overflow = 'hidden';
@@ -51,8 +49,8 @@ const Layout = () => {
             border border-gray-200 
             rounded-xl 
             shadow-sm
-            p-4 md:p-6 lg:p-8
-            min-h-[calc(100vh-8rem)]
+            p-2 md:p-4 lg:p-6
+            min-h-[calc(100vh-2rem)]
             transition-all
             duration-200
           ">

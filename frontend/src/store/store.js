@@ -6,6 +6,8 @@ import borrowingReducer from './slices/borrowingSlice';
 import eventReducer from './slices/eventSlice';
 import tableReducer from './slices/tableSlice';
 import packageReducer from './slices/packageSlice';
+import resourceReducer from './slices/resourceSlice';
+import ledgerReducer from './slices/ledgerSlice';
 
 export const store = configureStore({
   reducer: {
@@ -16,5 +18,7 @@ export const store = configureStore({
     events: eventReducer,
     tables: tableReducer,
     packages: packageReducer,
+    resources: resourceReducer,
+    ledger: ledgerReducer,
   },
 });

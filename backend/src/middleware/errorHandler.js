@@ -10,14 +10,12 @@ const sendErrorDev = (err, res) => {
 };
 
 const sendErrorProd = (err, res) => {
-  // Operational, trusted error: send message to client
   if (err.isOperational) {
     res.status(err.statusCode).json({
       status: err.status,
       message: err.message
     });
   } else {
-    // Programming or other unknown error: don't leak error details
     logger.error('ERROR 💥', err);
     res.status(500).json({
       status: 'error',
@@ -33,7 +31,6 @@ export default (err, req, res, next) => {
   if (process.env.NODE_ENV === 'development') {
     sendErrorDev(err, res);
   } else {
-    // Custom error transformations for production
     let error = { ...err };
     error.message = err.message;
 

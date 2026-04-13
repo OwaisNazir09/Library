@@ -10,17 +10,26 @@ const bookSchema = new mongoose.Schema({
   author: { type: String, required: true, trim: true },
   isbn: { type: String, required: true, unique: true },
   publisher: String,
-  year: Number,
+  category: { type: String, trim: true },
+  language: String,
+  edition: String,
   totalCopies: { type: Number, default: 1 },
   availableCopies: { type: Number, default: 1 },
-  genre: String,
-  location: String,
-  shelf: String,
-  row: String,
+  bookCondition: { 
+    type: String, 
+    enum: ['New', 'Good', 'Old'],
+    default: 'New'
+  },
+  purchaseDate: Date,
   price: { type: Number, default: 0 },
+  shelfNumber: String,
+  rackNumber: String,
+  floor: String,
+  librarySection: String,
   isForSale: { type: Boolean, default: false },
   description: String,
   coverImage: String,
+  coverImagePublicId: String,
   createdAt: { type: Date, default: Date.now }
 });
 

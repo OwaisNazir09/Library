@@ -6,12 +6,6 @@ import { getOverdueIssues } from '../../services/issueService';
 import { toast } from 'react-hot-toast';
 import LoadingSkeleton from '../../components/common/LoadingSkeleton';
 
-const mockOverdueData = [
-  { _id: '1', user: { fullName: "Jane Doe" }, book: { title: "Introduction to Algorithms" }, dueDate: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString() },
-  { _id: '2', user: { fullName: "Ahmed Khan" }, book: { title: "Clean Code" }, dueDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString() },
-  { _id: '3', user: { fullName: "Sarah Smith" }, book: { title: "Design Patterns" }, dueDate: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString() },
-];
-
 const Reminders = () => {
   const [overdueList, setOverdueList] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -22,12 +16,9 @@ const Reminders = () => {
         const res = await getOverdueIssues();
         if (res?.data?.overdue) {
           setOverdueList(res.data.overdue);
-        } else {
-          setOverdueList(mockOverdueData);
         }
       } catch (err) {
-        console.warn("API not available or failed. Falling back to mock data.", err);
-        setOverdueList(mockOverdueData);
+        console.warn("API not available or failed.", err);
       } finally {
         setLoading(false);
       }

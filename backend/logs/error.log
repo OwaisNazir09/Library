@@ -10,3 +10,24 @@
 {"level":"error","message":"Tenant connection error: Tenant not found","service":"library-service","stack":"Error: Tenant not found\n    at getTenantConnection (file:///home/owaiseeee/library-multitenant/backend/src/middleware/tenant.js:20:11)\n    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)\n    at async tenantHandler (file:///home/owaiseeee/library-multitenant/backend/src/middleware/tenant.js:55:24)","timestamp":"2026-04-12 19:03:16"}
 {"level":"error","message":"Tenant connection error: Tenant not found","service":"library-service","stack":"Error: Tenant not found\n    at getTenantConnection (file:///home/owaiseeee/library-multitenant/backend/src/middleware/tenant.js:20:11)\n    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)\n    at async tenantHandler (file:///home/owaiseeee/library-multitenant/backend/src/middleware/tenant.js:55:24)","timestamp":"2026-04-12 19:03:38"}
 {"level":"error","message":"Tenant connection error: Tenant not found","service":"library-service","stack":"Error: Tenant not found\n    at getTenantConnection (file:///home/owaiseeee/library-multitenant/backend/src/middleware/tenant.js:20:11)\n    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)\n    at async tenantHandler (file:///home/owaiseeee/library-multitenant/backend/src/middleware/tenant.js:55:24)","timestamp":"2026-04-12 19:04:23"}
+{"level":"error","message":"UNHANDLED REJECTION! Shutting down...","service":"library-service","timestamp":"2026-04-12 21:36:38"}
+{"http_code":401,"level":"error","message":"Invalid cloud_name owaiseeee","name":"Error","service":"library-service","timestamp":"2026-04-12 21:36:38"}
+{"level":"error","message":"UNHANDLED REJECTION! Shutting down...","service":"library-service","timestamp":"2026-04-12 21:36:41"}
+{"http_code":401,"level":"error","message":"Invalid cloud_name owaiseeee","name":"Error","service":"library-service","timestamp":"2026-04-12 21:36:41"}
+{"level":"error","message":"UNHANDLED REJECTION! Shutting down...","service":"library-service","timestamp":"2026-04-13 19:53:18"}
+{"http_code":400,"level":"error","message":"Empty file","name":"Error","service":"library-service","timestamp":"2026-04-13 19:53:18"}
+{"level":"error","message":"UNHANDLED REJECTION! Shutting down...","service":"library-service","timestamp":"2026-04-13 19:54:19"}
+{"http_code":400,"level":"error","message":"Empty file","name":"Error","service":"library-service","timestamp":"2026-04-13 19:54:19"}
+{"level":"error","message":"UNHANDLED REJECTION! Shutting down...","service":"library-service","timestamp":"2026-04-13 19:57:22"}
+{"http_code":400,"level":"error","message":"Empty file","name":"Error","service":"library-service","timestamp":"2026-04-13 19:57:22"}
+{"level":"error","message":"UNHANDLED REJECTION! Shutting down...","service":"library-service","timestamp":"2026-04-13 19:58:04"}
+{"http_code":400,"level":"error","message":"Empty file","name":"Error","service":"library-service","timestamp":"2026-04-13 19:58:04"}
+{"level":"error","message":"UNHANDLED REJECTION! Shutting down...","service":"library-service","timestamp":"2026-04-13 19:58:21"}
+{"http_code":400,"level":"error","message":"Empty file","name":"Error","service":"library-service","timestamp":"2026-04-13 19:58:21"}
+{"level":"error","message":"UNHANDLED REJECTION! Shutting down...","service":"library-service","timestamp":"2026-04-13 19:58:50"}
+{"http_code":400,"level":"error","message":"Empty file","name":"Error","service":"library-service","timestamp":"2026-04-13 19:58:50"}
+{"level":"error","message":"UNHANDLED REJECTION! Shutting down...","service":"library-service","timestamp":"2026-04-13 19:59:59"}
+{"http_code":400,"level":"error","message":"Empty file","name":"Error","service":"library-service","timestamp":"2026-04-13 19:59:59"}
+{"level":"error","message":"UNHANDLED REJECTION! Shutting down...","service":"library-service","timestamp":"2026-04-13 20:03:42"}
+{"http_code":400,"level":"error","message":"Empty file","name":"Error","service":"library-service","timestamp":"2026-04-13 20:03:42"}
+{"level":"error","message":"UNCAUGHT EXCEPTION! Shutting down...","service":"library-service","timestamp":"2026-04-13 20:32:33"}

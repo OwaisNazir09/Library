@@ -1,15 +1,31 @@
 import Fine from './fine.model.js';
 import { getModels } from '../../utils/helpers.js';
+import ApiFeatures from '../../utils/apiFeatures.js';
 
 export const getFines = async (req, res, next) => {
   try {
-    const fines = await Fine.find({ tenantId: req.tenantId })
+    const { Fine } = getModels(req.db);
+    const filter = { tenantId: req.tenantId };
+    
+    const features = new ApiFeatures(Fine.find(filter), req.query)
+      .filter()
+      .sort()
+      .paginate();
+
+    features.query = features.query
       .populate('student', 'fullName email')
       .populate('issue', 'borrowedDate book');
 
+    const fines = await features.query;
+    const total = await Fine.countDocuments(filter);
+
     res.status(200).json({
       status: 'success',
-      data: fines
+      results: fines.length,
+      total,
+      data: {
+        fines
+      }
     });
   } catch (err) {
     next(err);

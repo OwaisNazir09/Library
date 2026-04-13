@@ -1,9 +1,8 @@
 import { getModels } from '../../utils/helpers.js';
-import Fine from '../fines/fine.model.js';
 
 export const getSummary = async (req, res, next) => {
   try {
-    const { Book, User, Borrowing } = getModels(req.db);
+    const { Book, User, Borrowing, Fine } = getModels(req.db);
     
     const filter = req.tenantId ? { tenantId: req.tenantId } : {};
 

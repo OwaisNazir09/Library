@@ -2,7 +2,7 @@ import axios from 'axios';
 import { toast } from 'react-hot-toast';
 
 const api = axios.create({
-  baseURL: 'http://localhost:5000/api',
+  baseURL: 'http://localhost:3245/api',
   headers: {
     'Content-Type': 'application/json',
   },
@@ -49,7 +49,7 @@ api.interceptors.response.use(
           window.location.href = '/login';
         }
         break;
-      
+
       case 403:
         toast.error('Access Denied: You do not have permission');
         break;

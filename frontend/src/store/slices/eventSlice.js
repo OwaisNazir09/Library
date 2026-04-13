@@ -12,7 +12,9 @@ export const fetchEvents = createAsyncThunk('events/fetchAll', async (_, { rejec
 
 export const createEvent = createAsyncThunk('events/create', async (eventData, { rejectWithValue }) => {
   try {
-    const response = await api.post('/events', eventData);
+    const response = await api.post('/events', eventData, {
+      headers: { 'Content-Type': eventData instanceof FormData ? 'multipart/form-data' : 'application/json' }
+    });
     return response.data;
   } catch (error) {
     return rejectWithValue(error.response.data);
