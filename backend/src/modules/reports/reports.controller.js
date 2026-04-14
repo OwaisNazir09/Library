@@ -57,8 +57,7 @@ export const getMonthlyAnalytics = async (req, res, next) => {
     ]);
 
     const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    
-    // Ensure last 6 months are fully populated, even if 0
+
     const data = [];
     for (let i = 5; i >= 0; i--) {
       const d = new Date();
