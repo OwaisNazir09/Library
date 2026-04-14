@@ -1,16 +1,16 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { 
-  BookOpen, Users, Clock, AlertCircle, ShoppingCart, 
+import {
+  BookOpen, Users, Clock, AlertCircle, ShoppingCart,
   ArrowUpRight, Award, CheckCircle2, MoreHorizontal,
   ArrowRight, Coffee, Globe
 } from 'lucide-react';
-import { 
-  PieChart, Pie, Cell, ResponsiveContainer, 
+import {
+  PieChart, Pie, Cell, ResponsiveContainer,
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   LineChart, Line, AreaChart, Area
 } from 'recharts';
-import api from '../../services/api';
+
 
 const categoryData = [
   { name: 'Fiction', value: 35, color: '#044343' },
@@ -36,35 +36,35 @@ const trendData = [
   { name: 'Fri', checkins: 4500, borrowed: 3000 },
 ];
 
+import { useGetDashboardStatsQuery } from '../../store/api/dashboardApi';
+import { useGetFinanceStatsQuery } from '../../store/api/financeApi';
 import ErrorState from '../../components/common/ErrorState';
+import LoadingSkeleton from '../../components/common/LoadingSkeleton';
 
 const AdminDashboard = () => {
-  const [stats, setStats] = React.useState(null);
-  const [ledgerStats, setLedgerStats] = React.useState(null);
-  const [loading, setLoading] = React.useState(true);
-  const [error, setError] = React.useState(null);
+  const { 
+    data: dashboardData, 
+    isLoading: dashboardLoading, 
+    error: dashboardError,
+    refetch: refetchDashboard
+  } = useGetDashboardStatsQuery();
 
-  const fetchStats = React.useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const [dashboardRes, ledgerRes] = await Promise.all([
-        api.get('/dashboard/stats'),
-        api.get('/ledger/stats')
-      ]);
-      setStats(dashboardRes.data.data);
-      setLedgerStats(ledgerRes.data.data);
-    } catch (error) {
-      console.error('Failed to fetch stats', error);
-      setError('Failed to load dashboard metrics. Please check your connection.');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const { 
+    data: financeData, 
+    isLoading: financeLoading, 
+    error: financeError,
+    refetch: refetchFinance
+  } = useGetFinanceStatsQuery();
 
-  React.useEffect(() => {
-    fetchStats();
-  }, [fetchStats]);
+  const stats = dashboardData?.data;
+  const ledgerStats = financeData?.data;
+  const loading = dashboardLoading || financeLoading;
+  const error = dashboardError || financeError;
+
+  const handleRetry = () => {
+    refetchDashboard();
+    refetchFinance();
+  };
 
   const statCardsData = [
     { label: 'Total Books', value: stats?.totalBooks || '0', change: '+120', sub: 'In collection', icon: BookOpen, color: 'text-teal-600', bg: 'bg-teal-50' },
@@ -78,7 +78,7 @@ const AdminDashboard = () => {
   if (error) {
     return (
       <div className="p-8">
-        <ErrorState message={error} onRetry={fetchStats} />
+        <ErrorState message={error?.data?.message || 'Failed to load dashboard metrics'} onRetry={handleRetry} />
       </div>
     );
   }
@@ -158,7 +158,7 @@ const AdminDashboard = () => {
 
         {/* Top Borrowed Books */}
         <div className="glass-card p-6 flex flex-col">
-           <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-bold text-slate-900">Top Borrowed Books</h3>
             <select className="text-[10px] font-bold text-slate-400 bg-transparent border-none outline-none">
               <option>This week</option>
@@ -166,7 +166,7 @@ const AdminDashboard = () => {
           </div>
           <div className="bg-slate-50 rounded-2xl p-4 flex flex-col items-center group cursor-pointer relative">
             <div className="w-full h-48 rounded-xl overflow-hidden mb-4 shadow-sm group-hover:shadow-md transition-shadow">
-               <img src="https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1587391325i/3.jpg" alt="Harry Potter" className="w-full h-full object-cover" />
+              <img src="https://images.unsplash.com/photo-1543004471-24b622242139?q=80&w=400" alt="Harry Potter" className="w-full h-full object-cover" />
             </div>
             <div className="text-center">
               <span className="text-[10px] font-bold text-slate-400 px-2 py-0.5 bg-white border border-slate-100 rounded-md">Fiction</span>
@@ -178,7 +178,7 @@ const AdminDashboard = () => {
                 <p className="text-[10px] text-slate-400 font-bold uppercase">Borrowers</p>
                 <p className="text-xs font-black text-[#044343]">247</p>
               </div>
-               <div className="text-center">
+              <div className="text-center">
                 <p className="text-[10px] text-slate-400 font-bold uppercase">Available</p>
                 <p className="text-xs font-black text-rose-500">21 Copies</p>
               </div>
@@ -201,20 +201,20 @@ const AdminDashboard = () => {
             </select>
           </div>
           <div className="h-[250px] w-full mt-4">
-             <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height="100%">
               <BarChart data={revenueData} barSize={60}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F1F5F9" />
-                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#94A3B8', fontSize: 10, fontWeight: 700}} dy={10} />
-                <YAxis axisLine={false} tickLine={false} tick={{fill: '#94A3B8', fontSize: 10, fontWeight: 700}} />
-                <Tooltip 
-                  cursor={{fill: 'transparent'}}
-                  contentStyle={{borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)'}}
+                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#94A3B8', fontSize: 10, fontWeight: 700 }} dy={10} />
+                <YAxis axisLine={false} tickLine={false} tick={{ fill: '#94A3B8', fontSize: 10, fontWeight: 700 }} />
+                <Tooltip
+                  cursor={{ fill: 'transparent' }}
+                  contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
                 />
                 <Bar dataKey="value" radius={[12, 12, 0, 0]}>
                   {revenueData.map((entry, index) => (
-                    <Cell 
-                      key={`cell-${index}`} 
-                      fill={index === 2 ? '#044343' : '#A7F3D0'} 
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={index === 2 ? '#044343' : '#A7F3D0'}
                       className="transition-all duration-300"
                     />
                   ))}
@@ -226,8 +226,8 @@ const AdminDashboard = () => {
 
         {/* Library Check-Ins vs Borrowing Trend */}
         <div className="lg:col-span-1 glass-card p-6 flex flex-col">
-           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-xs font-black text-slate-900 uppercase tracking-widest leading-tight">Library Check-Ins vs <br/> Borrowing Trend</h3>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-xs font-black text-slate-900 uppercase tracking-widest leading-tight">Library Check-Ins vs <br /> Borrowing Trend</h3>
             <select className="text-[10px] font-bold text-slate-400 bg-transparent border-none outline-none">
               <option>Monthly</option>
             </select>
@@ -248,9 +248,9 @@ const AdminDashboard = () => {
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F1F5F9" />
                 <XAxis dataKey="name" hide />
                 <YAxis hide />
-                <Tooltip contentStyle={{borderRadius: '12px'}} />
+                <Tooltip contentStyle={{ borderRadius: '12px' }} />
                 <Line type="monotone" dataKey="checkins" stroke="#044343" strokeWidth={3} dot={false} />
-                <Line type="monotone" dataKey="borrowed" stroke="#10B981" strokeWidth={3} dot={{r: 4, fill: '#10B981', strokeWidth: 2, stroke: '#fff'}} />
+                <Line type="monotone" dataKey="borrowed" stroke="#10B981" strokeWidth={3} dot={{ r: 4, fill: '#10B981', strokeWidth: 2, stroke: '#fff' }} />
               </LineChart>
             </ResponsiveContainer>
           </div>
@@ -272,7 +272,7 @@ const AdminDashboard = () => {
             ].map((author, i) => (
               <div key={i} className="flex items-center gap-4 group cursor-pointer">
                 <div className="w-12 h-12 rounded-2xl overflow-hidden bg-slate-100 border-2 border-white shadow-sm flex-shrink-0">
-                  <img src={`https://i.pravatar.cc/150?u=${i+10}`} alt={author.name} className="w-full h-full object-cover" />
+                  <img src={`https://i.pravatar.cc/150?u=${i + 10}`} alt={author.name} className="w-full h-full object-cover" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <h4 className="text-sm font-bold text-slate-900 tracking-tight truncate">{author.name}</h4>
@@ -361,30 +361,30 @@ const AdminDashboard = () => {
             </select>
           </div>
           <div className="relative h-40 w-40 flex items-center justify-center">
-             <div className="absolute inset-0 border-[12px] border-slate-100 rounded-full border-b-transparent rotate-[135deg]" />
-             <div className="absolute inset-0 border-[12px] border-[#044343] rounded-full border-l-transparent border-b-transparent border-t-transparent rotate-[45deg]" />
-             <div className="text-center">
-                <p className="text-xl font-black text-slate-900">{stats?.totalBooks || '0'}</p>
-                <p className="text-[10px] text-slate-400 font-bold">Total Books</p>
-             </div>
+            <div className="absolute inset-0 border-[12px] border-slate-100 rounded-full border-b-transparent rotate-[135deg]" />
+            <div className="absolute inset-0 border-[12px] border-[#044343] rounded-full border-l-transparent border-b-transparent border-t-transparent rotate-[45deg]" />
+            <div className="text-center">
+              <p className="text-xl font-black text-slate-900">{stats?.totalBooks || '0'}</p>
+              <p className="text-[10px] text-slate-400 font-bold">Total Books</p>
+            </div>
           </div>
           <div className="w-full grid grid-cols-2 gap-y-4 gap-x-6 mt-4">
-             <div>
-                <p className="text-[9px] font-bold text-slate-400 uppercase">Available Books</p>
-                <p className="text-xs font-bold text-slate-900">{(stats?.totalBooks - stats?.activeBorrowings) || '0'} copies</p>
-             </div>
-             <div>
-                <p className="text-[9px] font-bold text-slate-400 uppercase">Issued Books</p>
-                <p className="text-xs font-bold text-slate-900">{stats?.activeBorrowings || '0'} copies</p>
-             </div>
-             <div>
-                <p className="text-[9px] font-bold text-slate-400 uppercase">Reserved</p>
-                <p className="text-xs font-bold text-slate-900">1,071 copies</p>
-             </div>
-             <div>
-                <p className="text-[9px] font-bold text-slate-400 uppercase">Damaged</p>
-                <p className="text-xs font-bold text-rose-500">57 copies</p>
-             </div>
+            <div>
+              <p className="text-[9px] font-bold text-slate-400 uppercase">Available Books</p>
+              <p className="text-xs font-bold text-slate-900">{(stats?.totalBooks - stats?.activeBorrowings) || '0'} copies</p>
+            </div>
+            <div>
+              <p className="text-[9px] font-bold text-slate-400 uppercase">Issued Books</p>
+              <p className="text-xs font-bold text-slate-900">{stats?.activeBorrowings || '0'} copies</p>
+            </div>
+            <div>
+              <p className="text-[9px] font-bold text-slate-400 uppercase">Reserved</p>
+              <p className="text-xs font-bold text-slate-900">1,071 copies</p>
+            </div>
+            <div>
+              <p className="text-[9px] font-bold text-slate-400 uppercase">Damaged</p>
+              <p className="text-xs font-bold text-rose-500">57 copies</p>
+            </div>
           </div>
         </div>
 

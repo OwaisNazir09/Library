@@ -1,12 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { 
-  fetchResources, 
-  addResource, 
-  updateResource, 
-  deleteResource,
-  trackDownload 
-} from '../../store/slices/resourceSlice';
+import { useGetResourcesQuery, useAddResourceMutation, useUpdateResourceMutation, useDeleteResourceMutation, useTrackDownloadMutation } from '../../store/api/digitalLibraryApi';
 import {
   BookOpen,
   FileText,
@@ -24,7 +16,7 @@ import {
   Edit,
   X,
   Upload,
-  Image as ImageIcon,
+  ImageIcon,
   CheckCircle2,
   ArrowRight,
   TrendingUp,
@@ -52,15 +44,28 @@ const CATEGORIES = [
 ];
 
 const DigitalLibrary = () => {
-  const dispatch = useDispatch();
-  const { items, loading, total } = useSelector((state) => state.resources);
-  
   const [viewMode, setViewMode] = useState('grid');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [selectedVisibility, setSelectedVisibility] = useState('All');
   const [currentPage, setCurrentPage] = useState(1);
   const limit = 12;
+
+  const { data: resourcesData, isLoading: loading, error, refetch } = useGetResourcesQuery({
+    page: currentPage,
+    limit,
+    search: searchTerm,
+    category: selectedCategory === 'All' ? undefined : selectedCategory,
+    visibility: selectedVisibility === 'All' ? undefined : selectedVisibility.toLowerCase()
+  });
+
+  const [addResourceMutation, { isLoading: isAdding }] = useAddResourceMutation();
+  const [updateResourceMutation, { isLoading: isUpdating }] = useUpdateResourceMutation();
+  const [deleteResourceMutation] = useDeleteResourceMutation();
+  const [trackDownloadMutation] = useTrackDownloadMutation();
+
+  const items = resourcesData?.data?.resources || [];
+  const total = resourcesData?.total || 0;
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingResource, setEditingResource] = useState(null);
@@ -72,20 +77,6 @@ const DigitalLibrary = () => {
 
   const { register, handleSubmit, reset, setValue, watch } = useForm();
   const visibilityValue = watch('visibility', 'library');
-
-  const loadData = useCallback(() => {
-    dispatch(fetchResources({
-      page: currentPage,
-      limit,
-      search: searchTerm,
-      category: selectedCategory === 'All' ? undefined : selectedCategory,
-      visibility: selectedVisibility === 'All' ? undefined : selectedVisibility.toLowerCase()
-    }));
-  }, [dispatch, currentPage, searchTerm, selectedCategory, selectedVisibility]);
-
-  useEffect(() => {
-    loadData();
-  }, [loadData]);
 
   const onFileChange = (e) => {
     const file = e.target.files[0];
@@ -118,16 +109,15 @@ const DigitalLibrary = () => {
       if (coverFile) formData.append('coverImage', coverFile);
 
       if (editingResource) {
-        await dispatch(updateResource({ id: editingResource._id, data: formData })).unwrap();
+        await updateResourceMutation({ id: editingResource._id, data: formData }).unwrap();
         toast.success('Resource updated successfully');
       } else {
-        await dispatch(addResource(formData)).unwrap();
+        await addResourceMutation(formData).unwrap();
         toast.success('Resource uploaded successfully');
       }
       closeModal();
-      loadData();
     } catch (err) {
-      toast.error(err.message || 'Operation failed');
+      // Handled globally
     }
   };
 
@@ -166,17 +156,16 @@ const DigitalLibrary = () => {
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this resource?')) {
       try {
-        await dispatch(deleteResource(id)).unwrap();
+        await deleteResourceMutation(id).unwrap();
         toast.success('Resource removed');
-        loadData();
       } catch (err) {
-        toast.error(err.message || 'Delete failed');
+        // Handled globally
       }
     }
   };
 
   const handleDownload = (resource) => {
-    dispatch(trackDownload(resource._id));
+    trackDownloadMutation(resource._id);
     window.open(resource.fileUrl, '_blank');
   };
 
@@ -580,11 +569,11 @@ const DigitalLibrary = () => {
                   </button>
                   <button 
                     type="submit" 
-                    disabled={loading}
+                    disabled={isAdding || isUpdating}
                     className="flex-[2] bg-[#044343] text-white font-black py-5 rounded-3xl shadow-xl shadow-teal-900/10 active:scale-95 transition-all text-sm uppercase tracking-widest flex items-center justify-center gap-3 disabled:opacity-70 disabled:cursor-not-allowed"
                   >
-                    {loading ? <Loader2 size={20} className="animate-spin" /> : (editingResource ? 'Update Metadata' : 'Initiate Asset Sync')}
-                    {!loading && <ArrowRight size={20} />}
+                    {(isAdding || isUpdating) ? <Loader2 size={20} className="animate-spin" /> : (editingResource ? 'Update Metadata' : 'Initiate Asset Sync')}
+                    {!(isAdding || isUpdating) && <ArrowRight size={20} />}
                   </button>
                 </div>
               </form>

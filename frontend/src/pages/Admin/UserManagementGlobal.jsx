@@ -1,5 +1,5 @@
 import React from 'react';
-import api from '../../services/api';
+import { useGetUsersQuery } from '../../store/api/usersApi';
 import {
   Users,
   Search,
@@ -12,21 +12,8 @@ import {
 } from 'lucide-react';
 
 const UserManagementGlobal = () => {
-  const [loading, setLoading] = React.useState(true);
-  const [users, setUsers] = React.useState([]);
-
-  React.useEffect(() => {
-    const mockUsers = [
-      { id: '1', name: 'John Doe', email: 'john@example.com', role: 'super_admin', tenant: 'System' },
-      { id: '2', name: 'Alice Smith', email: 'alice@citylib.com', role: 'librarian', tenant: 'City Library' },
-      { id: '3', name: 'Bob Wilson', email: 'bob@unilib.com', role: 'member', tenant: 'University Lib' },
-      { id: '4', name: 'Sarah Connor', email: 'sarah@techlib.io', role: 'librarian', tenant: 'Tech Library' },
-    ];
-    setTimeout(() => {
-      setUsers(mockUsers);
-      setLoading(false);
-    }, 800);
-  }, []);
+  const { data: usersData, isLoading: loading, error, refetch } = useGetUsersQuery({ limit: 1000 });
+  const users = usersData?.data?.users || usersData?.data || [];
 
   return (
     <div className="space-y-8">
@@ -63,7 +50,14 @@ const UserManagementGlobal = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50">
-              {loading ? (
+              {error ? (
+                <tr>
+                  <td colSpan="5" className="py-20 text-center">
+                    <p className="text-slate-500 font-bold mb-4">{error.data?.message || 'Error loading platform users'}</p>
+                    <button onClick={() => refetch()} className="bg-[#044343] text-white px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest">Retry</button>
+                  </td>
+                </tr>
+              ) : loading ? (
                 <tr>
                   <td colSpan="5" className="py-20 text-center">
                     <Loader2 className="animate-spin inline-block text-[#044343]" size={32} />
@@ -71,14 +65,18 @@ const UserManagementGlobal = () => {
                 </tr>
               ) : (
                 users.map((user) => (
-                  <tr key={user.id} className="hover:bg-slate-50/50 transition-colors">
+                  <tr key={user._id} className="hover:bg-slate-50/50 transition-colors">
                     <td className="px-10 py-8">
                       <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center font-bold text-slate-400 overflow-hidden">
-                          <img src={`https://i.pravatar.cc/100?u=${user.id}`} alt="avatar" />
+                        <div className="w-12 h-12 rounded-full bg-[#044343] flex items-center justify-center font-bold text-white overflow-hidden shadow-lg shadow-teal-900/10">
+                          {user.profilePicture ? (
+                            <img src={user.profilePicture} alt="avatar" className="w-full h-full object-cover" />
+                          ) : (
+                            user.fullName?.charAt(0) || '?'
+                          )}
                         </div>
                         <div>
-                          <p className="text-sm font-black text-slate-900">{user.name}</p>
+                          <p className="text-sm font-black text-slate-900">{user.fullName}</p>
                           <p className="text-[10px] text-slate-400 font-bold mt-1 flex items-center gap-1">
                             <Mail size={10} /> {user.email}
                           </p>
@@ -94,15 +92,18 @@ const UserManagementGlobal = () => {
                       </span>
                     </td>
                     <td className="px-6 py-8">
-                      <div className="flex items-center gap-2 text-xs font-bold text-slate-500">
-                        <Globe size={14} className="text-slate-300" />
-                        {user.tenant}
-                      </div>
+                       <div className="flex flex-col">
+                        <div className="flex items-center gap-2 text-xs font-bold text-slate-900">
+                          <Globe size={14} className="text-teal-600" />
+                          {user.tenantName || 'Platform'}
+                        </div>
+                        <span className="text-[10px] text-slate-400 font-bold mt-1 uppercase tracking-tighter">ID: {user.tenantId?.substring(18) || 'GLOBAL'}</span>
+                       </div>
                     </td>
                     <td className="px-6 py-8">
                       <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-lg shadow-emerald-500/50 animate-pulse" />
-                        <span className="text-[10px] font-black uppercase text-slate-400">Online</span>
+                        <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-lg shadow-emerald-500/50" />
+                        <span className="text-[10px] font-black uppercase text-slate-400">Active</span>
                       </div>
                     </td>
                     <td className="px-10 py-8 text-right">

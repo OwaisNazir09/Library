@@ -1,5 +1,5 @@
 import React from 'react';
-import { AlertTriangle, RefreshCw } from 'lucide-react';
+import { AlertTriangle, RefreshCw, Home } from 'lucide-react';
 
 class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -15,25 +15,65 @@ class ErrorBoundary extends React.Component {
     console.error("Uncaught error:", error, errorInfo);
   }
 
+  handleReload = () => {
+    window.location.reload();
+  };
+
+  handleHome = () => {
+    window.location.href = "/";
+  };
+
   render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen flex items-center justify-center bg-[#F8FAFB] p-6 font-sans">
-          <div className="max-w-[500px] w-full bg-white p-16 rounded-[3.5rem] shadow-2xl shadow-rose-900/5 border border-rose-100 text-center">
-            <div className="w-20 h-20 bg-rose-100 rounded-3xl flex items-center justify-center mx-auto mb-10 text-rose-600">
-              <AlertTriangle size={40} />
+        <div className="min-h-screen bg-gradient-to-br from-slate-50 to-teal-50 flex items-center justify-center p-6">
+
+          <div className="w-full max-w-xl bg-white rounded-[2.5rem] p-14 shadow-2xl shadow-slate-900/5 border border-slate-100 text-center transition-all duration-300">
+
+            {/* Icon */}
+            <div className="w-24 h-24 mx-auto mb-8 bg-gradient-to-br from-rose-100 to-red-100 rounded-3xl flex items-center justify-center text-rose-600 shadow-lg">
+              <AlertTriangle size={42} />
             </div>
-            <h1 className="text-3xl font-black text-slate-900 mb-4 tracking-tight">Something Went Wrong</h1>
-            <p className="text-slate-400 font-medium mb-12">
-              The interface encountered a critical failure. This has been logged and we're looking into it.
+
+            {/* Title */}
+            <h1 className="text-3xl font-extrabold text-slate-900 mb-4 tracking-tight">
+              Something went wrong
+            </h1>
+
+            {/* Description */}
+            <p className="text-slate-500 leading-relaxed mb-10 font-medium">
+              We encountered an unexpected error while rendering this page.
+              Our system has logged the issue and our team is working to fix it.
             </p>
-            <button
-              onClick={() => window.location.reload()}
-              className="w-full bg-[#044343] text-white font-black py-5 rounded-3xl shadow-xl shadow-teal-900/10 flex items-center justify-center gap-3 hover:scale-105 transition-all"
-            >
-              <RefreshCw size={20} />
-              Reload Application
-            </button>
+
+            {/* Buttons */}
+            <div className="flex gap-4">
+
+              {/* Reload */}
+              <button
+                onClick={this.handleReload}
+                className="flex-1 bg-[#044343] hover:bg-[#033535] text-white font-semibold py-4 rounded-2xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-teal-900/10 hover:scale-[1.02]"
+              >
+                <RefreshCw size={18} />
+                Reload App
+              </button>
+
+              {/* Home */}
+              <button
+                onClick={this.handleHome}
+                className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold py-4 rounded-2xl flex items-center justify-center gap-2 transition-all"
+              >
+                <Home size={18} />
+                Go Home
+              </button>
+
+            </div>
+
+            {/* Footer */}
+            <div className="mt-10 text-xs text-slate-400 font-medium">
+              Bookary • Library Management System
+            </div>
+
           </div>
         </div>
       );

@@ -8,6 +8,7 @@ export const getMyNotifications = async (req, res, next) => {
   } catch (err) { next(err); }
 };
 
+
 export const markAsRead = async (req, res, next) => {
   try {
     const { Notification } = getModels(req.db);

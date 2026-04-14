@@ -2,29 +2,26 @@ import React from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { useDispatch, useSelector } from 'react-redux';
-import { login } from '../../store/slices/authSlice';
+import { useLoginMutation } from '../../store/api/authApi';
 import { Mail, Lock, ArrowRight, Library, Loader2 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 
 const Login = () => {
   const { register, handleSubmit } = useForm();
   const navigate = useNavigate();
-  const dispatch = useDispatch();
-  const { loading } = useSelector((state) => state.auth);
+  const [login, { isLoading: loading }] = useLoginMutation();
 
   const onSubmit = async (data) => {
-    const resultAction = await dispatch(login(data));
-    if (login.fulfilled.match(resultAction)) {
+    try {
+      const response = await login(data).unwrap();
       toast.success('Welcome back!');
-      const { role } = resultAction.payload;
+      const { role } = response;
       if (role === 'super_admin') {
         navigate('/admin/dashboard');
       } else {
         navigate('/app/dashboard');
       }
-    } else {
-      toast.error(resultAction.payload?.message || 'Login failed');
+    } catch (err) {
     }
   };
 
@@ -40,7 +37,7 @@ const Login = () => {
           <div className="w-20 h-20 bg-[#044343] rounded-3xl flex items-center justify-center mx-auto mb-10 shadow-xl shadow-teal-900/20">
             <Library className="text-white" size={36} />
           </div>
-          
+
           <h1 className="text-3xl font-black text-slate-900 mb-2 tracking-tight">Welcome Back</h1>
           <p className="text-slate-400 font-medium mb-12">Login to manage your library ecosystem</p>
 

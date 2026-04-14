@@ -1,24 +1,47 @@
-import React from 'react';
-import { Bell, Check, Info, AlertTriangle } from 'lucide-react';
+import { useGetNotificationsQuery, useMarkAsReadMutation } from '../../store/api/notificationApi';
+import { Bell, Check, Info, AlertTriangle, Loader2 } from 'lucide-react';
+import LoadingSkeleton from '../../components/common/LoadingSkeleton';
+import ErrorState from '../../components/common/ErrorState';
+import { toast } from 'react-hot-toast';
 
 const NotificationList = () => {
-  const notifications = [
-    { type: 'info', title: 'New Arrival', message: 'The book "Deep Work" is now available.', time: '5m ago', read: false },
-    { type: 'warning', title: 'Overdue Alert', message: 'You have 3 books overdue for return.', time: '2h ago', read: false },
-    { type: 'success', title: 'Return Confirmed', message: 'Successfully returned "Atomic Habits".', time: '1d ago', read: true },
-  ];
+  const { data: notificationsData, isLoading: loading, error, refetch } = useGetNotificationsQuery();
+  const [markAsReadMutation, { isLoading: isMarking }] = useMarkAsReadMutation();
+
+  const notifications = notificationsData?.data?.notifications || [];
+
+  const handleMarkAllRead = async () => {
+    try {
+      await markAsReadMutation().unwrap();
+      toast.success('All notifications marked as read');
+    } catch (err) {
+      // Handled globally
+    }
+  };
+
+  if (loading && notifications.length === 0) return <LoadingSkeleton type="card" rows={5} />;
+  if (error) return <ErrorState message={error.data?.message || 'Error loading notifications'} onRetry={refetch} />;
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold text-slate-900">Notifications</h1>
-        <button className="text-indigo-600 font-bold text-sm hover:underline">Mark all as read</button>
+        {notifications.length > 0 && (
+          <button 
+            onClick={handleMarkAllRead}
+            disabled={isMarking}
+            className="text-[#044343] font-bold text-sm hover:underline disabled:opacity-50 flex items-center gap-2"
+          >
+            {isMarking && <Loader2 size={14} className="animate-spin" />}
+            Mark all as read
+          </button>
+        )}
       </div>
 
       <div className="space-y-4">
         {notifications.map((n, i) => (
-          <div key={i} className={`p-6 rounded-[2rem] border transition-all flex items-start gap-4 ${
-            n.read ? 'bg-white border-slate-100 opacity-60' : 'bg-white border-indigo-100 shadow-lg shadow-indigo-500/5'
+          <div key={n._id || i} className={`p-6 rounded-[2rem] border transition-all flex items-start gap-4 ${
+            n.isRead ? 'bg-white border-slate-100 opacity-60' : 'bg-white border-indigo-100 shadow-lg shadow-indigo-500/5'
           }`}>
             <div className={`w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 ${
               n.type === 'info' ? 'bg-blue-50 text-blue-500' :

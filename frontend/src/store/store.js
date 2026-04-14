@@ -1,24 +1,12 @@
 import { configureStore } from '@reduxjs/toolkit';
+import { baseApi } from './api/baseApi';
 import authReducer from './slices/authSlice';
-import bookReducer from './slices/bookSlice';
-import userReducer from './slices/userSlice';
-import borrowingReducer from './slices/borrowingSlice';
-import eventReducer from './slices/eventSlice';
-import tableReducer from './slices/tableSlice';
-import packageReducer from './slices/packageSlice';
-import resourceReducer from './slices/resourceSlice';
-import ledgerReducer from './slices/ledgerSlice';
 
 export const store = configureStore({
   reducer: {
+    [baseApi.reducerPath]: baseApi.reducer,
     auth: authReducer,
-    books: bookReducer,
-    users: userReducer,
-    borrowings: borrowingReducer,
-    events: eventReducer,
-    tables: tableReducer,
-    packages: packageReducer,
-    resources: resourceReducer,
-    ledger: ledgerReducer,
   },
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware().concat(baseApi.middleware),
 });

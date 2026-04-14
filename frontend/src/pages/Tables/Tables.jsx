@@ -1,7 +1,5 @@
-import React from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { fetchTables, addTable, updateTable, deleteTable, assignTable, unassignTable } from '../../store/slices/tableSlice';
-import { fetchUsers } from '../../store/slices/userSlice';
+import { useGetTablesQuery, useAddTableMutation, useUpdateTableMutation, useDeleteTableMutation, useAssignTableMutation, useUnassignTableMutation } from '../../store/api/studyDeskApi';
+import { useGetUsersQuery } from '../../store/api/usersApi';
 import { 
   Search, 
   Filter, 
@@ -33,64 +31,63 @@ import EmptyState from '../../components/common/EmptyState';
 import Pagination from '../../components/common/Pagination';
 
 const Tables = () => {
-  const dispatch = useDispatch();
-  const { items, loading, error, total } = useSelector((state) => state.tables);
-  const { items: users } = useSelector((state) => state.users);
-
   const [currentPage, setCurrentPage] = React.useState(1);
   const [searchTerm, setSearchTerm] = React.useState('');
+  const limit = 10;
+
+  const { data: tablesData, isLoading: loading, error, refetch } = useGetTablesQuery({
+    page: currentPage,
+    limit,
+    search: searchTerm
+  });
+
+  const { data: usersData } = useGetUsersQuery({ limit: 1000, role: 'member' });
+  
+  const [addTableMutation, { isLoading: isAdding }] = useAddTableMutation();
+  const [assignTableMutation, { isLoading: isAssigning }] = useAssignTableMutation();
+  const [unassignTableMutation, { isLoading: isUnassigning }] = useUnassignTableMutation();
+
+  const items = tablesData?.data?.tables || tablesData?.data || [];
+  const total = tablesData?.total || tablesData?.results || items.length;
+  const users = usersData?.data || [];
+
   const [isAddModalOpen, setIsAddModalOpen] = React.useState(false);
   const [isAssignModalOpen, setIsAssignModalOpen] = React.useState(false);
   const [selectedTable, setSelectedTable] = React.useState(null);
   
-  const limit = 10;
-
   const { register, handleSubmit, reset } = useForm();
   const { register: regAssign, handleSubmit: handleAssignSubmit, reset: resetAssign } = useForm();
 
-  const loadData = React.useCallback(() => {
-    dispatch(fetchTables({
-      page: currentPage,
-      limit,
-      search: searchTerm
-    }));
-    dispatch(fetchUsers({ limit: 1000, role: 'member' }));
-  }, [dispatch, currentPage, searchTerm]);
-
-  React.useEffect(() => {
-    loadData();
-  }, [loadData]);
-
   const onAddTable = async (data) => {
     try {
-      await dispatch(addTable(data)).unwrap();
+      await addTableMutation(data).unwrap();
       toast.success('Table created successfully');
       setIsAddModalOpen(false);
       reset();
     } catch (err) {
-      toast.error(err.message || 'Failed to create table');
+      // Handled globally
     }
   };
 
   const onAssignSubmit = async (data) => {
     try {
-      await dispatch(assignTable({ id: selectedTable._id, ...data })).unwrap();
+      await assignTableMutation({ id: selectedTable._id, ...data }).unwrap();
       toast.success('Table assigned effectively');
       setIsAssignModalOpen(false);
       resetAssign();
       setSelectedTable(null);
     } catch (err) {
-      toast.error(err.message || 'Assignment failed');
+      // Handled globally
     }
   };
 
   const handleUnassign = async (id) => {
     if (window.confirm('Are you sure you want to unassign this student?')) {
       try {
-        await dispatch(unassignTable(id)).unwrap();
+        await unassignTableMutation(id).unwrap();
         toast.success('Table unassigned');
       } catch (err) {
-        toast.error(err.message || 'Failed to unassign');
+        // Handled globally
       }
     }
   };
@@ -108,7 +105,7 @@ const Tables = () => {
 
   const renderTableBody = () => {
     if (loading && items.length === 0) return <tr><td colSpan="7" className="p-8"><LoadingSkeleton type="table" rows={6} /></td></tr>;
-    if (error) return <tr><td colSpan="7" className="p-12"><ErrorState message={error} onRetry={loadData} /></td></tr>;
+    if (error) return <tr><td colSpan="7" className="p-12"><ErrorState message={error.data?.message || 'Error loading tables'} onRetry={refetch} /></td></tr>;
     if (items.length === 0) return <tr><td colSpan="7" className="p-12"><EmptyState title="No Tables" message="Start by creating study desks for your library." icon={Coffee} /></td></tr>;
 
     return items.map((table) => (
@@ -167,16 +164,18 @@ const Tables = () => {
               {table.status === 'Available' ? (
                 <button 
                   onClick={() => { setSelectedTable(table); setIsAssignModalOpen(true); }}
-                  className="px-4 py-2 bg-[#044343] text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-[#033636] transition-all shadow-md active:scale-95"
+                  disabled={isAssigning}
+                  className="px-4 py-2 bg-[#044343] text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-[#033636] transition-all shadow-md active:scale-95 disabled:opacity-70"
                 >
-                  Assign Desk
+                  {isAssigning ? <Loader2 size={12} className="animate-spin" /> : 'Assign Desk'}
                 </button>
               ) : (
                 <button 
                   onClick={() => handleUnassign(table._id)}
-                  className="px-4 py-2 bg-rose-50 text-rose-600 border border-rose-100 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-rose-100 transition-all active:scale-95"
+                  disabled={isUnassigning}
+                  className="px-4 py-2 bg-rose-50 text-rose-600 border border-rose-100 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-rose-100 transition-all active:scale-95 disabled:opacity-70"
                 >
-                  Unassign
+                  {isUnassigning ? <Loader2 size={12} className="animate-spin" /> : 'Unassign'}
                 </button>
               )}
            </div>
@@ -316,13 +315,13 @@ const Tables = () => {
                     </div>
                  </div>
 
-                 <button 
-                   type="submit" 
-                   disabled={loading}
-                   className="w-full bg-[#044343] text-white font-black py-5 rounded-3xl shadow-xl shadow-teal-900/20 active:scale-95 transition-all uppercase tracking-widest text-sm flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
-                 >
-                   {loading ? <Loader2 size={18} className="animate-spin" /> : 'Confirm Desk Addition'}
-                 </button>
+                  <button 
+                    type="submit" 
+                    disabled={isAdding}
+                    className="w-full bg-[#044343] text-white font-black py-5 rounded-3xl shadow-xl shadow-teal-900/20 active:scale-95 transition-all uppercase tracking-widest text-sm flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+                  >
+                    {isAdding ? <Loader2 size={18} className="animate-spin" /> : 'Confirm Desk Addition'}
+                  </button>
                </form>
             </motion.div>
           </div>
@@ -370,13 +369,13 @@ const Tables = () => {
                     </div>
                  </div>
 
-                 <button 
-                   type="submit" 
-                   disabled={loading}
-                   className="w-full bg-[#044343] text-white font-black py-5 rounded-2xl shadow-xl shadow-teal-900/10 active:scale-95 transition-all uppercase tracking-widest text-sm flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
-                 >
-                   {loading ? <Loader2 size={18} className="animate-spin" /> : 'Execute Desk Assignment'}
-                 </button>
+                  <button 
+                    type="submit" 
+                    disabled={isAssigning}
+                    className="w-full bg-[#044343] text-white font-black py-5 rounded-2xl shadow-xl shadow-teal-900/10 active:scale-95 transition-all uppercase tracking-widest text-sm flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+                  >
+                    {isAssigning ? <Loader2 size={18} className="animate-spin" /> : 'Execute Desk Assignment'}
+                  </button>
                </form>
             </motion.div>
           </div>

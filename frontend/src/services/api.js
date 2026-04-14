@@ -6,7 +6,7 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 10000, // 10s timeout
+  timeout: 10000,
 });
 
 api.interceptors.request.use(
@@ -55,7 +55,6 @@ api.interceptors.response.use(
         break;
 
       case 404:
-        // Handled per-component usually, but can toast for generic failures
         break;
 
       case 500:
@@ -64,8 +63,7 @@ api.interceptors.response.use(
 
       case 422:
       case 400:
-        // Validation errors usually handled by forms, 
-        // but we can toast generic bad request messages
+
         if (response.data?.message) {
           toast.error(response.data.message);
         }

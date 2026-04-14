@@ -14,7 +14,8 @@ import {
   HelpCircle,
   LogOut,
   Coffee,
-  X
+  X,
+  Receipt
 } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import { logout } from '../../store/slices/authSlice';
@@ -43,8 +44,11 @@ const groups = [
   {
     label: 'FINANCE',
     items: [
-      { name: 'Fee Ledger', icon: DollarSign, path: '/app/ledger' },
-      { name: 'Fines & Fees', icon: DollarSign, path: '/app/fines' },
+      { name: 'Finance Dashboard', icon: LayoutGrid, path: '/app/finance' },
+      { name: 'Student Accounts', icon: Users, path: '/app/finance/accounts' },
+      { name: 'Transactions', icon: DollarSign, path: '/app/finance/transactions' },
+      { name: 'Receipts', icon: Receipt, path: '/app/finance/receipts' },
+      { name: 'Finance Reports', icon: BarChart2, path: '/app/finance/reports' },
     ]
   },
   {

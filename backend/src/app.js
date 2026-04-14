@@ -23,7 +23,7 @@ import fineRoutes from './modules/fines/fine.routes.js';
 import reportsRoutes from './modules/reports/reports.routes.js';
 import queryRoutes from './modules/query/query.routes.js';
 import resourceRoutes from './modules/resource/resource.routes.js';
-import ledgerRoutes from './modules/ledger/ledger.routes.js';
+import financeRoutes from './modules/ledger/finance.routes.js';
 
 const app = express();
 
@@ -72,7 +72,7 @@ app.use('/api/fines', fineRoutes);
 app.use('/api/reports', reportsRoutes);
 app.use('/api/queries', queryRoutes);
 app.use('/api/resources', resourceRoutes);
-app.use('/api/ledger', ledgerRoutes);
+app.use('/api/finance', financeRoutes);
 
 app.all('*', (req, res, next) => {
   const err = new Error(`Can't find ${req.originalUrl} on this server!`);

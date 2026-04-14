@@ -1,6 +1,4 @@
-import React from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { fetchPackages, createPackage, deletePackage, updatePackage } from '../../store/slices/packageSlice';
+import { useGetPackagesQuery, useAddPackageMutation, useDeletePackageMutation, useUpdatePackageMutation } from '../../store/api/membershipApi';
 import { 
   Package, 
   Plus, 
@@ -21,28 +19,29 @@ import LoadingSkeleton from '../../components/common/LoadingSkeleton';
 import ErrorState from '../../components/common/ErrorState';
 
 const PackageList = () => {
-  const dispatch = useDispatch();
-  const { items, loading, error } = useSelector((state) => state.packages);
+  const { data: packagesData, isLoading: loading, error, refetch } = useGetPackagesQuery();
+  const [addPackage, { isLoading: isAdding }] = useAddPackageMutation();
+  const [updatePackageMutation, { isLoading: isUpdating }] = useUpdatePackageMutation();
+  const [deletePackageMutation] = useDeletePackageMutation();
+
+  const items = packagesData?.data?.packages || [];
+
   const [isModalOpen, setIsModalOpen] = React.useState(false);
   const [editingPackage, setEditingPackage] = React.useState(null);
   const { register, handleSubmit, reset, setValue } = useForm();
 
-  React.useEffect(() => {
-    dispatch(fetchPackages());
-  }, [dispatch]);
-
   const onSubmit = async (data) => {
     try {
       if (editingPackage) {
-        await dispatch(updatePackage({ id: editingPackage._id, ...data })).unwrap();
+        await updatePackageMutation({ id: editingPackage._id, data }).unwrap();
         toast.success('Package updated successfully');
       } else {
-        await dispatch(createPackage(data)).unwrap();
+        await addPackage(data).unwrap();
         toast.success('Package created successfully');
       }
       handleCloseModal();
     } catch (err) {
-      toast.error(err || 'Failed to save package');
+      // Handled globally
     }
   };
 
@@ -59,10 +58,10 @@ const PackageList = () => {
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this package?')) {
       try {
-        await dispatch(deletePackage(id)).unwrap();
+        await deletePackageMutation(id).unwrap();
         toast.success('Package deleted');
       } catch (err) {
-        toast.error(err || 'Failed to delete package');
+        // Handled globally
       }
     }
   };
@@ -74,7 +73,7 @@ const PackageList = () => {
   };
 
   if (loading && items.length === 0) return <LoadingSkeleton type="card" rows={3} />;
-  if (error) return <ErrorState message={error} onRetry={() => dispatch(fetchPackages())} />;
+  if (error) return <ErrorState message={error.data?.message || 'Error loading packages'} onRetry={refetch} />;
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
@@ -248,10 +247,10 @@ const PackageList = () => {
                   </button>
                   <button 
                     type="submit"
-                    disabled={loading}
+                    disabled={isAdding || isUpdating}
                     className="flex-2 w-full bg-[#044343] text-white font-black py-4 rounded-2xl shadow-xl shadow-teal-900/20 active:scale-95 transition-all text-sm uppercase tracking-widest flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
                   >
-                    {loading ? <Loader2 size={18} className="animate-spin" /> : (editingPackage ? 'Update Package' : 'Save Package')}
+                    {(isAdding || isUpdating) ? <Loader2 size={18} className="animate-spin" /> : (editingPackage ? 'Update Package' : 'Save Package')}
                   </button>
                 </div>
               </form>

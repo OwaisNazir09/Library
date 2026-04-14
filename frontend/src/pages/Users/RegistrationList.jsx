@@ -1,8 +1,7 @@
 import React from 'react';
-import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { fetchUsers, deleteUser, addUser, updateUser } from '../../store/slices/userSlice';
-import { fetchPackages } from '../../store/slices/packageSlice';
+import { useGetUsersQuery, useDeleteUserMutation, useAddUserMutation, useUpdateUserMutation } from '../../store/api/usersApi';
+import { useGetPackagesQuery, useAssignPackageMutation } from '../../store/api/membershipApi';
 import {
   Search,
   Plus,
@@ -38,14 +37,25 @@ import EmptyState from '../../components/common/EmptyState';
 import Pagination from '../../components/common/Pagination';
 
 const RegistrationList = () => {
-  const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { items, loading, error, total } = useSelector((state) => state.users);
-  const { items: packages } = useSelector((state) => state.packages);
-
   const [currentPage, setCurrentPage] = React.useState(1);
   const [searchTerm, setSearchTerm] = React.useState('');
   const limit = 10;
+
+  const { data: usersData, isLoading: loading, error, refetch } = useGetUsersQuery({
+    page: currentPage,
+    limit,
+    search: searchTerm,
+    role: 'member'
+  });
+
+  const { data: packagesData } = useGetPackagesQuery({ limit: 1000 });
+  const [addUserMutation, { isLoading: isAdding }] = useAddUserMutation();
+  const [assignPackageMutation, { isLoading: isAssigning }] = useAssignPackageMutation();
+
+  const items = usersData?.data?.users || [];
+  const total = usersData?.total || usersData?.results || 0;
+  const packages = packagesData?.data?.packages || packagesData?.data || [];
 
   const [isRegisterModalOpen, setIsRegisterModalOpen] = React.useState(false);
   const [isAssignModalOpen, setIsAssignModalOpen] = React.useState(false);
@@ -77,20 +87,6 @@ const RegistrationList = () => {
     }
   };
 
-  const loadData = React.useCallback(() => {
-    dispatch(fetchUsers({
-      page: currentPage,
-      limit,
-      search: searchTerm,
-      role: 'member'
-    }));
-    dispatch(fetchPackages({ limit: 1000 }));
-  }, [dispatch, currentPage, searchTerm]);
-
-  React.useEffect(() => {
-    loadData();
-  }, [loadData]);
-
   const onRegisterStudent = async (data) => {
     try {
       const formData = new FormData();
@@ -103,12 +99,11 @@ const RegistrationList = () => {
       if (profileFile) formData.append('profilePicture', profileFile);
       if (idPhotoFile) formData.append('idPhoto', idPhotoFile);
 
-      await dispatch(addUser(formData)).unwrap();
+      await addUserMutation(formData).unwrap();
       toast.success('Student registered successfully!');
       closeRegisterModal();
-      loadData();
     } catch (err) {
-      toast.error(err.message || 'Registration failed');
+      // Error is handled by global handler
     }
   };
 
@@ -123,13 +118,12 @@ const RegistrationList = () => {
 
   const onAssignPackage = async (data) => {
     try {
-      await dispatch(updateUser({ id: selectedUser._id, package: data.packageId })).unwrap();
+      await assignPackageMutation({ userId: selectedUser._id, packageId: data.packageId }).unwrap();
       toast.success('Package assigned successfully!');
       setIsAssignModalOpen(false);
       resetAssign();
-      loadData();
     } catch (err) {
-      toast.error(err.message || 'Assignment failed');
+      // Error handled by global handler
     }
   };
 
@@ -165,7 +159,7 @@ const RegistrationList = () => {
       return (
         <tr>
           <td colSpan="7" className="p-12">
-            <ErrorState message={error} onRetry={loadData} />
+            <ErrorState message={error.data?.message || 'Error loading members'} onRetry={refetch} />
           </td>
         </tr>
       );
@@ -512,11 +506,11 @@ const RegistrationList = () => {
                   </button>
                   <button 
                     type="submit" 
-                    disabled={loading}
+                    disabled={isAdding}
                     className="flex-[2] bg-[#044343] text-white font-black py-5 rounded-3xl shadow-xl shadow-teal-900/10 active:scale-95 transition-all text-sm uppercase tracking-widest flex items-center justify-center gap-3 disabled:opacity-70 disabled:cursor-not-allowed"
                   >
-                    {loading ? <Loader2 size={20} className="animate-spin" /> : 'Execute Member Registration'}
-                    {!loading && <ArrowRight size={20} />}
+                    {isAdding ? <Loader2 size={20} className="animate-spin" /> : 'Execute Member Registration'}
+                    {!isAdding && <ArrowRight size={20} />}
                   </button>
                 </div>
               </form>
@@ -561,10 +555,10 @@ const RegistrationList = () => {
 
                 <button 
                   type="submit" 
-                  disabled={loading}
+                  disabled={isAssigning}
                   className="w-full bg-[#044343] text-white font-black py-4 rounded-2xl shadow-xl shadow-teal-900/10 active:scale-95 transition-all uppercase tracking-widest text-xs flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
                 >
-                  {loading ? <Loader2 size={18} className="animate-spin" /> : 'Confirm Package Activation'}
+                  {isAssigning ? <Loader2 size={18} className="animate-spin" /> : 'Confirm Package Activation'}
                 </button>
               </form>
             </motion.div>

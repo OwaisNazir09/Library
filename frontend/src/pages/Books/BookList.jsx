@@ -1,6 +1,4 @@
-import React from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { fetchBooks, addBook, updateBook, deleteBook } from '../../store/slices/bookSlice';
+import { useGetBooksQuery, useAddBookMutation, useUpdateBookMutation, useDeleteBookMutation } from '../../store/api/booksApi';
 import { Search, Plus, MoreHorizontal, BookOpen, ChevronRight, X, ArrowRight, Upload, ImagePlus, Loader2 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { useForm } from 'react-hook-form';
@@ -9,14 +7,24 @@ import LoadingSkeleton from '../../components/common/LoadingSkeleton';
 import ErrorState from '../../components/common/ErrorState';
 import EmptyState from '../../components/common/EmptyState';
 import Pagination from '../../components/common/Pagination';
-
+import React from 'react';
 const BookList = () => {
-  const dispatch = useDispatch();
-  const { items, loading, error, total } = useSelector((state) => state.books);
-  
   const [currentPage, setCurrentPage] = React.useState(1);
   const [searchTerm, setSearchTerm] = React.useState('');
   const limit = 8;
+
+  const { data: booksData, isLoading: loading, error, refetch } = useGetBooksQuery({
+    page: currentPage,
+    limit,
+    search: searchTerm
+  });
+
+  const [addBook, { isLoading: isAdding }] = useAddBookMutation();
+  const [updateBook, { isLoading: isUpdating }] = useUpdateBookMutation();
+  const [deleteBook] = useDeleteBookMutation();
+
+  const items = booksData?.data?.books || [];
+  const total = booksData?.total || booksData?.results || 0;
 
   const [isModalOpen, setIsModalOpen] = React.useState(false);
   const [selectedBook, setSelectedBook] = React.useState(null);
@@ -32,38 +40,26 @@ const BookList = () => {
     }
   };
 
-  const loadBooks = React.useCallback(() => {
-    dispatch(fetchBooks({ 
-      page: currentPage, 
-      limit,
-      search: searchTerm 
-    }));
-  }, [dispatch, currentPage, searchTerm]);
-
-  React.useEffect(() => {
-    loadBooks();
-  }, [loadBooks]);
-
   const onAddBook = async (data) => {
     const formData = new FormData();
-    Object.entries(data).forEach(([key, val]) => { 
+    Object.entries(data).forEach(([key, val]) => {
       if (val !== undefined && val !== null && val !== "") {
-        formData.append(key, val); 
+        formData.append(key, val);
       }
     });
     if (coverFile) formData.append('coverImage', coverFile);
 
-    let result;
-    if (selectedBook) {
-      result = await dispatch(updateBook({ id: selectedBook._id, data: formData }));
-    } else {
-      result = await dispatch(addBook(formData));
-    }
-
-    if (addBook.fulfilled.match(result) || updateBook.fulfilled.match(result)) {
-      toast.success(selectedBook ? 'Book updated' : 'Book successfully registered');
+    try {
+      if (selectedBook) {
+        await updateBook({ id: selectedBook._id, data: formData }).unwrap();
+        toast.success('Book updated');
+      } else {
+        await addBook(formData).unwrap();
+        toast.success('Book successfully registered');
+      }
       closeModal();
-      loadBooks();
+    } catch (err) {
+      // Error is handled by global handler
     }
   };
 
@@ -102,10 +98,11 @@ const BookList = () => {
 
   const onDelete = async (id) => {
     if (window.confirm('Archive this book from the library?')) {
-      const result = await dispatch(deleteBook(id));
-      if (deleteBook.fulfilled.match(result)) {
+      try {
+        await deleteBook(id).unwrap();
         toast.success('Book removed from inventory');
-        loadBooks();
+      } catch (err) {
+        // Handled globally
       }
     }
   };
@@ -121,13 +118,13 @@ const BookList = () => {
     }
 
     if (error) {
-      return <ErrorState message={error} onRetry={loadBooks} />;
+      return <ErrorState message={error.data?.message || 'Error loading books'} onRetry={refetch} />;
     }
 
     if (!Array.isArray(items) || items.length === 0) {
       return (
-        <EmptyState 
-          title="Inventory is Empty" 
+        <EmptyState
+          title="Inventory is Empty"
           message="Start building your library by adding your first book to the collection."
           onAction={() => setIsModalOpen(true)}
           actionLabel="Add My First Book"
@@ -142,36 +139,35 @@ const BookList = () => {
           <div key={book.id || book._id} className="glass-card flex flex-col group overflow-hidden hover:translate-y-[-8px] transition-all duration-500">
             <div className={`h-64 bg-slate-50 p-6 pb-0 flex justify-center items-end relative overflow-hidden`}>
               <div className="absolute top-4 right-4 z-10 flex gap-2">
-                  <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${
-                    book.availableCopies > 0 ? 'bg-emerald-500 text-white' : 'bg-rose-500 text-white'
+                <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${book.availableCopies > 0 ? 'bg-emerald-500 text-white' : 'bg-rose-500 text-white'
                   }`}>
-                    {book.availableCopies > 0 ? 'Available' : 'No Availability'}
-                  </span>
-                  <button onClick={() => onDelete(book.id || book._id)} className="bg-white/90 text-rose-500 p-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity">
-                    <X size={14} />
-                  </button>
+                  {book.availableCopies > 0 ? 'Available' : 'No Availability'}
+                </span>
+                <button onClick={() => onDelete(book.id || book._id)} className="bg-white/90 text-rose-500 p-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity">
+                  <X size={14} />
+                </button>
               </div>
               <div className="w-36 h-52 bg-white rounded-lg shadow-2xl relative z-0 transform group-hover:scale-105 group-hover:-translate-y-2 transition-all duration-500 shadow-teal-900/20 flex items-center justify-center">
-                 {book.coverImage ? (
-                   <img src={book.coverImage} alt={book.title} className="w-full h-full object-cover rounded-lg" />
-                 ) : (
-                   <BookOpen size={48} className="text-slate-200" />
-                 )}
+                {book.coverImage ? (
+                  <img src={book.coverImage} alt={book.title} className="w-full h-full object-cover rounded-lg" />
+                ) : (
+                  <BookOpen size={48} className="text-slate-200" />
+                )}
               </div>
             </div>
             <div className="p-6 flex flex-col flex-1">
               <div className="flex justify-between items-start mb-2">
-                 <span className="text-[10px] font-black text-[#044343] bg-teal-50 px-2 py-0.5 rounded uppercase tracking-widest">{book.category || 'General'}</span>
-                 <button 
+                <span className="text-[10px] font-black text-[#044343] bg-teal-50 px-2 py-0.5 rounded uppercase tracking-widest">{book.category || 'General'}</span>
+                <button
                   onClick={() => openEditModal(book)}
                   className="text-slate-300 hover:text-slate-600"
-                 >
-                   <MoreHorizontal size={20} />
-                 </button>
+                >
+                  <MoreHorizontal size={20} />
+                </button>
               </div>
               <h3 className="text-lg font-black text-slate-900 leading-tight mb-1 line-clamp-1">{book.title}</h3>
               <p className="text-xs text-slate-400 font-bold mb-6 italic">{book.author}</p>
-              
+
               <div className="mt-auto flex items-center justify-between pt-4 border-t border-slate-100">
                 <div>
                   <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Available</p>
@@ -192,7 +188,7 @@ const BookList = () => {
     <div className="space-y-8 pb-8">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
-           <div className="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">
+          <div className="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">
             <span>Inventory</span>
             <ChevronRight size={10} />
             <span className="text-[#044343]">All Books</span>
@@ -202,9 +198,9 @@ const BookList = () => {
         <div className="flex items-center gap-3">
           <div className="relative">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-            <input 
-              type="text" 
-              placeholder="Search by title, author, category..." 
+            <input
+              type="text"
+              placeholder="Search by title, author, category..."
               value={searchTerm}
               onChange={onSearchChange}
               className="pl-12 pr-4 py-3 bg-white border border-slate-100 rounded-2xl w-80 shadow-sm focus:ring-2 focus:ring-[#044343]/5 outline-none font-medium text-sm"
@@ -219,7 +215,7 @@ const BookList = () => {
 
       {renderContent()}
 
-      <Pagination 
+      <Pagination
         total={total}
         limit={limit}
         currentPage={currentPage}
@@ -229,9 +225,9 @@ const BookList = () => {
       {/* Add/Edit Book Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm overflow-hidden">
-          <motion.div 
-            initial={{ scale: 0.9, opacity: 0 }} 
-            animate={{ scale: 1, opacity: 1 }} 
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
             className="bg-white w-full max-w-4xl max-h-[90vh] rounded-[3rem] p-10 shadow-2xl relative overflow-y-auto custom-scrollbar"
           >
             <button onClick={closeModal} className="absolute top-8 right-8 text-slate-400 hover:text-slate-600 bg-slate-50 p-2 rounded-xl transition-colors">
@@ -276,23 +272,23 @@ const BookList = () => {
                   </div>
                   <div className="md:col-span-2 space-y-1.5 pt-4">
                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Book Description</label>
-                    <textarea 
-                       {...register('description')} 
-                       rows="5"
-                       className="w-full bg-slate-50 border border-slate-100 rounded-3xl py-4 px-6 outline-none focus:ring-2 focus:ring-[#044343]/5 focus:bg-white resize-none font-medium text-sm"
-                       placeholder="Enter book summary or key details..."
+                    <textarea
+                      {...register('description')}
+                      rows="5"
+                      className="w-full bg-slate-50 border border-slate-100 rounded-3xl py-4 px-6 outline-none focus:ring-2 focus:ring-[#044343]/5 focus:bg-white resize-none font-medium text-sm"
+                      placeholder="Enter book summary or key details..."
                     ></textarea>
                   </div>
                 </div>
 
                 {/* Right Column: Sections */}
                 <div className="lg:col-span-2 space-y-10">
-                  
+
                   {/* Section 1: Book Details */}
                   <div className="bg-slate-50/50 p-8 rounded-[2rem] border border-slate-100 space-y-6">
                     <div className="flex items-center gap-2 mb-2">
-                       <span className="w-1.5 h-6 bg-[#044343] rounded-full"></span>
-                       <h3 className="text-xs font-black text-[#044343] uppercase tracking-widest">Section 1: Book Details</h3>
+                      <span className="w-1.5 h-6 bg-[#044343] rounded-full"></span>
+                      <h3 className="text-xs font-black text-[#044343] uppercase tracking-widest">Section 1: Book Details</h3>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                       <div className="md:col-span-2 space-y-1.5">
@@ -329,8 +325,8 @@ const BookList = () => {
                   {/* Section 2: Inventory Details */}
                   <div className="bg-slate-50/50 p-8 rounded-[2rem] border border-slate-100 space-y-6">
                     <div className="flex items-center gap-2 mb-2">
-                       <span className="w-1.5 h-6 bg-[#044343] rounded-full"></span>
-                       <h3 className="text-xs font-black text-[#044343] uppercase tracking-widest">Section 2: Inventory Details</h3>
+                      <span className="w-1.5 h-6 bg-[#044343] rounded-full"></span>
+                      <h3 className="text-xs font-black text-[#044343] uppercase tracking-widest">Section 2: Inventory Details</h3>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
                       <div className="space-y-1.5">
@@ -363,8 +359,8 @@ const BookList = () => {
                   {/* Section 3: Shelf / Location Details */}
                   <div className="bg-slate-50/50 p-8 rounded-[2rem] border border-slate-100 space-y-6">
                     <div className="flex items-center gap-2 mb-2">
-                       <span className="w-1.5 h-6 bg-[#044343] rounded-full"></span>
-                       <h3 className="text-xs font-black text-[#044343] uppercase tracking-widest">Section 3: Shelf / Location Details</h3>
+                      <span className="w-1.5 h-6 bg-[#044343] rounded-full"></span>
+                      <h3 className="text-xs font-black text-[#044343] uppercase tracking-widest">Section 3: Shelf / Location Details</h3>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
                       <div className="space-y-1.5">
@@ -390,20 +386,20 @@ const BookList = () => {
               </div>
 
               <div className="flex gap-4 pt-6">
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   onClick={closeModal}
                   className="flex-1 bg-white border border-slate-200 text-slate-400 font-black py-4 rounded-3xl hover:bg-slate-50 transition-all uppercase tracking-widest text-sm"
                 >
                   Discard Changes
                 </button>
-                <button 
-                  type="submit" 
-                  disabled={loading}
+                <button
+                  type="submit"
+                  disabled={isAdding || isUpdating}
                   className="flex-[2] bg-[#044343] text-white font-black py-4 rounded-3xl shadow-xl shadow-teal-900/10 hover:bg-[#033636] transition-all flex items-center justify-center gap-3 uppercase tracking-widest text-sm disabled:opacity-70 disabled:cursor-not-allowed"
                 >
-                  {loading ? <Loader2 size={18} className="animate-spin" /> : (selectedBook ? 'Save Book Changes' : 'Initialize Book Entry')}
-                  {!loading && <ArrowRight size={18} />}
+                  {(isAdding || isUpdating) ? <Loader2 size={18} className="animate-spin" /> : (selectedBook ? 'Save Book Changes' : 'Initialize Book Entry')}
+                  {!(isAdding || isUpdating) && <ArrowRight size={18} />}
                 </button>
               </div>
             </form>

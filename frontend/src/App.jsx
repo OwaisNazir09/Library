@@ -22,8 +22,12 @@ import Reminders from './pages/Reminders/Reminders';
 import Fines from './pages/Fines/Fines';
 import DigitalLibrary from './pages/DigitalLibrary/DigitalLibrary';
 import LandingPage from './pages/Landing/LandingPage';
-import LedgerList from './pages/Ledger/LedgerList';
-import LedgerDetail from './pages/Ledger/LedgerDetail';
+import FinanceDashboard from './pages/Finance/FinanceDashboard';
+import StudentAccounts from './pages/Finance/StudentAccounts';
+import StudentLedger from './pages/Finance/StudentLedger';
+import Transactions from './pages/Finance/Transactions';
+import Receipts from './pages/Finance/Receipts';
+import FinanceReports from './pages/Finance/FinanceReports';
 
 import ProtectedRoute from './components/common/ProtectedRoute';
 
@@ -60,8 +64,12 @@ const App = () => {
           <Route path="reports" element={<Reports />} />
           <Route path="reminders" element={<Reminders />} />
           <Route path="fines" element={<Fines />} />
-          <Route path="ledger" element={<LedgerList />} />
-          <Route path="ledger/:studentId" element={<LedgerDetail />} />
+          <Route path="finance" element={<FinanceDashboard />} />
+          <Route path="finance/accounts" element={<StudentAccounts />} />
+          <Route path="finance/accounts/:studentId" element={<StudentLedger />} />
+          <Route path="finance/transactions" element={<Transactions />} />
+          <Route path="finance/receipts" element={<Receipts />} />
+          <Route path="finance/reports" element={<FinanceReports />} />
           <Route path="notifications" element={<NotificationList />} />
           <Route path="tables" element={<Tables />} />
           <Route path="digital-library" element={<DigitalLibrary />} />

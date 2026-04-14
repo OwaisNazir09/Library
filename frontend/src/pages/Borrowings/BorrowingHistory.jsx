@@ -1,8 +1,8 @@
 import React from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { fetchBorrowings, returnBook, issueBook } from '../../store/slices/borrowingSlice';
-import { fetchBooks } from '../../store/slices/bookSlice';
-import { fetchUsers } from '../../store/slices/userSlice';
+import { useNavigate } from 'react-router-dom';
+import { useGetBorrowingsQuery, useReturnBookMutation, useIssueBookMutation } from '../../store/api/circulationApi';
+import { useGetBooksQuery } from '../../store/api/booksApi';
+import { useGetUsersQuery } from '../../store/api/usersApi';
 import { 
   Search, 
   Filter, 
@@ -29,14 +29,26 @@ import { format, isAfter } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const BorrowingHistory = () => {
-  const dispatch = useDispatch();
-  const { items, loading, error, total } = useSelector((state) => state.borrowings);
-  const { items: books } = useSelector((state) => state.books);
-  const { items: users } = useSelector((state) => state.users);
-
   const [currentPage, setCurrentPage] = React.useState(1);
   const [searchTerm, setSearchTerm] = React.useState('');
   const limit = 10;
+
+  const { data: borrowingsData, isLoading: loading, error, refetch } = useGetBorrowingsQuery({
+    page: currentPage,
+    limit,
+    search: searchTerm
+  });
+
+  const { data: booksData } = useGetBooksQuery({ limit: 1000 });
+  const { data: usersData } = useGetUsersQuery({ limit: 1000 });
+
+  const items = borrowingsData?.data?.borrowings || [];
+  const total = borrowingsData?.total || borrowingsData?.results || 0;
+  const books = booksData?.data?.books || booksData?.data || [];
+  const users = usersData?.data?.users || usersData?.data || [];
+
+  const [issueBookMutation, { isLoading: isIssuing }] = useIssueBookMutation();
+  const [returnBookMutation, { isLoading: isReturning }] = useReturnBookMutation();
 
   const [isIssueModalOpen, setIsIssueModalOpen] = React.useState(false);
   const { register, handleSubmit, reset, watch, setValue } = useForm({
@@ -48,39 +60,23 @@ const BorrowingHistory = () => {
 
   const watchBorrowedDate = watch('borrowedDate');
 
-  const loadBorrowings = React.useCallback(() => {
-    dispatch(fetchBorrowings({
-      page: currentPage,
-      limit,
-      search: searchTerm
-    }));
-    // We don't paginate books and users for the dropdowns usually, but could if list is large
-    // For now, load all for dropdowns
-    dispatch(fetchBooks({ limit: 1000 }));
-    dispatch(fetchUsers({ limit: 1000 }));
-  }, [dispatch, currentPage, searchTerm]);
-
-  React.useEffect(() => {
-    loadBorrowings();
-  }, [loadBorrowings]);
-
   const onIssueSubmit = async (data) => {
-    const result = await dispatch(issueBook(data));
-    if (issueBook.fulfilled.match(result)) {
+    try {
+      await issueBookMutation(data).unwrap();
       toast.success('Book issued effectively!');
       setIsIssueModalOpen(false);
       reset();
-      loadBorrowings();
-    } else {
-      toast.error(result.payload?.message || 'Failed to issue book');
+    } catch (err) {
+      // Handled globally
     }
   };
 
   const handleReturn = async (id) => {
-    const result = await dispatch(returnBook(id));
-    if (returnBook.fulfilled.match(result)) {
+    try {
+      await returnBookMutation(id).unwrap();
       toast.success('Book successfully returned to inventory');
-      loadBorrowings();
+    } catch (err) {
+      // Handled globally
     }
   };
 
@@ -118,7 +114,7 @@ const BorrowingHistory = () => {
       return (
         <tr>
           <td colSpan="9" className="p-12">
-            <ErrorState message={error} onRetry={loadBorrowings} />
+            <ErrorState message={error.data?.message || 'Error loading borrowings'} onRetry={refetch} />
           </td>
         </tr>
       );
@@ -197,10 +193,10 @@ const BorrowingHistory = () => {
             {record.status === 'borrowed' ? (
               <button
                 onClick={() => handleReturn(record.id || record._id)}
-                disabled={loading}
+                disabled={isReturning}
                 className="px-4 py-2 bg-[#044343] text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-[#033636] transition-all shadow-md shadow-teal-900/10 active:scale-95 flex items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
               >
-                {loading ? <Loader2 size={12} className="animate-spin" /> : 'Return Book'}
+                {isReturning ? <Loader2 size={12} className="animate-spin" /> : 'Return Book'}
               </button>
             ) : (
               <button className="p-2 text-slate-300 hover:text-slate-600 rounded-lg transition-colors">
@@ -397,11 +393,11 @@ const BorrowingHistory = () => {
                   </button>
                   <button
                     type="submit"
-                    disabled={loading}
+                    disabled={isIssuing}
                     className="flex-[2] bg-[#044343] text-white font-black py-5 rounded-3xl shadow-xl shadow-teal-900/20 active:scale-95 transition-all text-sm uppercase tracking-widest flex items-center justify-center gap-3 disabled:opacity-70 disabled:cursor-not-allowed"
                   >
-                    {loading ? <Loader2 size={20} className="animate-spin" /> : 'Confirm Issuance Logic'}
-                    {!loading && <ArrowUpRight size={20} />}
+                    {isIssuing ? <Loader2 size={20} className="animate-spin" /> : 'Confirm Issuance Logic'}
+                    {!isIssuing && <ArrowUpRight size={20} />}
                   </button>
                 </div>
               </form>

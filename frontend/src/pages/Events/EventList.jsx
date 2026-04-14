@@ -1,6 +1,4 @@
-import React from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { fetchEvents, createEvent } from '../../store/slices/eventSlice';
+import { useGetEventsQuery, useAddEventMutation } from '../../store/api/eventsApi';
 import {
   Calendar as CalendarIcon,
   MapPin,
@@ -37,8 +35,11 @@ import LoadingSkeleton from '../../components/common/LoadingSkeleton';
 import ErrorState from '../../components/common/ErrorState';
 
 const EventList = () => {
-  const dispatch = useDispatch();
-  const { items, loading, error } = useSelector((state) => state.events);
+  const { data: eventsData, isLoading: loading, error, refetch } = useGetEventsQuery();
+  const [addEventMutation, { isLoading: isAdding }] = useAddEventMutation();
+
+  const items = eventsData?.data?.events || eventsData?.data || [];
+
   const [currentMonth, setCurrentMonth] = React.useState(new Date());
   const [selectedDate, setSelectedDate] = React.useState(new Date());
   const [isModalOpen, setIsModalOpen] = React.useState(false);
@@ -54,26 +55,20 @@ const EventList = () => {
     }
   };
 
-  const loadEvents = React.useCallback(() => {
-    dispatch(fetchEvents());
-  }, [dispatch]);
-
-  React.useEffect(() => {
-    loadEvents();
-  }, [loadEvents]);
-
   const onAddEvent = async (data) => {
-    const formData = new FormData();
-    Object.entries(data).forEach(([key, val]) => { if (val) formData.append(key, val); });
-    if (bannerFile) formData.append('bannerImage', bannerFile);
+    try {
+      const formData = new FormData();
+      Object.entries(data).forEach(([key, val]) => { if (val) formData.append(key, val); });
+      if (bannerFile) formData.append('bannerImage', bannerFile);
 
-    const result = await dispatch(createEvent(formData));
-    if (createEvent.fulfilled.match(result)) {
+      await addEventMutation(formData).unwrap();
       toast.success('Event scheduled successfully!');
       setIsModalOpen(false);
       reset();
       setBannerPreview(null);
       setBannerFile(null);
+    } catch (err) {
+      // Handled globally
     }
   };
 
@@ -113,7 +108,7 @@ const EventList = () => {
   }
 
   if (error) {
-    return <ErrorState message={error} onRetry={loadEvents} />;
+    return <ErrorState message={error.data?.message || 'Error loading events'} onRetry={refetch} />;
   }
 
   return (
@@ -368,10 +363,10 @@ const EventList = () => {
               </div>
               <button 
                 type="submit" 
-                disabled={loading}
+                disabled={isAdding}
                 className="w-full bg-[#044343] text-white font-black py-4 rounded-2xl mt-4 shadow-xl shadow-teal-900/10 active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
               >
-                {loading ? <Loader2 size={18} className="animate-spin" /> : 'Publish Event'}
+                {isAdding ? <Loader2 size={18} className="animate-spin" /> : 'Publish Event'}
               </button>
             </form>
           </motion.div>

@@ -1,7 +1,5 @@
-import React from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { fetchTables, bookTable } from '../../store/slices/tableSlice';
-import { Coffee, Users, Clock, X, Calendar } from 'lucide-react';
+import { useGetTablesQuery, useBookTableMutation } from '../../store/api/studyDeskApi';
+import { Coffee, Users, Clock, X, Calendar, Loader2 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { useForm } from 'react-hook-form';
 import { motion } from 'framer-motion';
@@ -10,25 +8,21 @@ import ErrorState from '../../components/common/ErrorState';
 import EmptyState from '../../components/common/EmptyState';
 
 const TableBooking = () => {
-  const dispatch = useDispatch();
-  const { items, loading, error } = useSelector((state) => state.tables);
+  const { data: tablesData, isLoading: loading, error, refetch } = useGetTablesQuery();
+  const [bookTableMutation, { isLoading: isBooking }] = useBookTableMutation();
+
+  const items = tablesData?.data?.tables || tablesData?.data || [];
   const [selectedTable, setSelectedTable] = React.useState(null);
   const { register, handleSubmit, reset } = useForm();
 
-  const loadTables = React.useCallback(() => {
-    dispatch(fetchTables());
-  }, [dispatch]);
-
-  React.useEffect(() => {
-    loadTables();
-  }, [loadTables]);
-
   const onBook = async (data) => {
-    const result = await dispatch(bookTable({ tableId: selectedTable.id || selectedTable._id, ...data }));
-    if (bookTable.fulfilled.match(result)) {
+    try {
+      await bookTableMutation({ tableId: selectedTable.id || selectedTable._id, ...data }).unwrap();
       toast.success('Table reservation confirmed');
       setSelectedTable(null);
       reset();
+    } catch (err) {
+      // Handled globally
     }
   };
 
@@ -38,7 +32,7 @@ const TableBooking = () => {
     }
 
     if (error) {
-      return <ErrorState message={error} onRetry={loadTables} />;
+      return <ErrorState message={error.data?.message || 'Error loading table availability'} onRetry={refetch} />;
     }
 
     if (!Array.isArray(items) || items.length === 0) {
@@ -141,8 +135,12 @@ const TableBooking = () => {
                   </div>
                 </div>
               </div>
-              <button type="submit" className="w-full bg-[#044343] text-white font-black py-4 rounded-3xl mt-4 shadow-xl shadow-teal-900/10 active:scale-95 transition-all">
-                Confirm Reservation
+              <button 
+                type="submit" 
+                disabled={isBooking}
+                className="w-full bg-[#044343] text-white font-black py-4 rounded-3xl mt-4 shadow-xl shadow-teal-900/10 active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+              >
+                {isBooking ? <Loader2 size={18} className="animate-spin" /> : 'Confirm Reservation'}
               </button>
             </form>
           </motion.div>

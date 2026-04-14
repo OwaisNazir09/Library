@@ -31,3 +31,4 @@
 {"level":"error","message":"UNHANDLED REJECTION! Shutting down...","service":"library-service","timestamp":"2026-04-13 20:03:42"}
 {"http_code":400,"level":"error","message":"Empty file","name":"Error","service":"library-service","timestamp":"2026-04-13 20:03:42"}
 {"level":"error","message":"UNCAUGHT EXCEPTION! Shutting down...","service":"library-service","timestamp":"2026-04-13 20:32:33"}
+{"level":"error","message":"Tenant identification error: Operation `tenants.findOne()` buffering timed out after 10000ms","service":"library-service","stack":"MongooseError: Operation `tenants.findOne()` buffering timed out after 10000ms\n    at Timeout.<anonymous> (/home/owaiseeee/library-multitenant/backend/node_modules/mongoose/lib/drivers/node-mongodb-native/collection.js:185:23)\n    at listOnTimeout (node:internal/timers:605:17)\n    at process.processTimers (node:internal/timers:541:7)","timestamp":"2026-04-14 21:06:19"}
