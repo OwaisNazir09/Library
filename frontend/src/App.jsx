@@ -28,6 +28,7 @@ import StudentLedger from './pages/Finance/StudentLedger';
 import Transactions from './pages/Finance/Transactions';
 import Receipts from './pages/Finance/Receipts';
 import FinanceReports from './pages/Finance/FinanceReports';
+import AccountManagement from './pages/Finance/AccountManagement';
 
 import ProtectedRoute from './components/common/ProtectedRoute';
 
@@ -65,9 +66,12 @@ const App = () => {
           <Route path="reminders" element={<Reminders />} />
           <Route path="fines" element={<Fines />} />
           <Route path="finance" element={<FinanceDashboard />} />
-          <Route path="finance/accounts" element={<StudentAccounts />} />
-          <Route path="finance/accounts/:studentId" element={<StudentLedger />} />
+          <Route path="finance/student-accounts" element={<StudentAccounts />} />
+          <Route path="finance/student-accounts/:studentId" element={<StudentLedger />} />
           <Route path="finance/transactions" element={<Transactions />} />
+          <Route path="finance/accounts" element={<AccountManagement />} />
+          <Route path="finance/expenses" element={<Transactions type="expense" />} />
+          <Route path="finance/income" element={<Transactions type="income" />} />
           <Route path="finance/receipts" element={<Receipts />} />
           <Route path="finance/reports" element={<FinanceReports />} />
           <Route path="notifications" element={<NotificationList />} />

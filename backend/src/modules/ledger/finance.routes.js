@@ -7,31 +7,31 @@ const router = express.Router();
 router.use(protect);
 router.use(restrictTo('librarian', 'admin', 'super_admin'));
 
-// Dashboard
+// --- Dashboard & Summary ---
 router.get('/stats', financeController.getFinanceStats);
 
-// Student Accounts
-router.get('/accounts', financeController.getStudentAccounts);
-router.get('/accounts/:studentId', financeController.getStudentAccount);
+// --- Account Management ---
+router.get('/accounts', financeController.getAccounts);
+router.post('/accounts', financeController.addAccount);
+router.get('/accounts/:id/ledger', financeController.getAccountLedger);
+
+// --- Financial Entry Entry (Double Entry) ---
+router.post('/transactions', financeController.addTransaction);
+router.post('/transactions/journal', financeController.addJournalEntry);
+router.post('/transactions/transfer', financeController.addTransfer);
+
+// --- Student Specific Unified Entries ---
 router.post('/accounts/:studentId/payment', financeController.addPayment);
 router.post('/accounts/:studentId/charge', financeController.addCharge);
-router.post('/accounts/:studentId/credit-note', financeController.addCreditNote);
-router.post('/accounts/:studentId/debit-note', financeController.addDebitNote);
 
-// Expenses (library operational)
-router.post('/transactions/expense', financeController.addExpense);
-
-// Transactions
+// --- Statement & History ---
 router.get('/transactions', financeController.getTransactions);
-
-// Receipts
 router.get('/receipts', financeController.getReceipts);
 router.get('/receipts/:id', financeController.getReceipt);
 
-// Reports
-router.get('/reports/daily', financeController.getDailyReport);
-router.get('/reports/monthly', financeController.getMonthlyReport);
-router.get('/reports/pending', financeController.getPendingReport);
-router.get('/reports/pl', financeController.getPLReport);
+// --- Professional Reports ---
+router.get('/reports/trial-balance', financeController.getTrialBalance);
+router.get('/reports/profit-loss', financeController.getProfitAndLoss);
+router.get('/reports/balance-sheet', financeController.getBalanceSheet);
 
 export default router;

@@ -1,3 +1,4 @@
+import React from 'react';
 import { useGetEventsQuery, useAddEventMutation } from '../../store/api/eventsApi';
 import {
   Calendar as CalendarIcon,

@@ -490,6 +490,16 @@ const RegistrationList = () => {
                             ))}
                           </select>
                         </div>
+                        <div className="grid grid-cols-2 gap-5 md:col-span-2">
+                           <div className="space-y-1.5">
+                             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 text-teal-600">Registration Fee (₹)</label>
+                             <input type="number" {...register('registrationFee')} className="w-full bg-teal-50/30 border border-teal-100 rounded-2xl py-3 px-6 outline-none focus:ring-2 focus:ring-[#044343]/10 font-bold" placeholder="0" />
+                           </div>
+                           <div className="space-y-1.5">
+                             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 text-teal-600">Security Deposit (₹)</label>
+                             <input type="number" {...register('securityDeposit')} className="w-full bg-teal-50/30 border border-teal-100 rounded-2xl py-3 px-6 outline-none focus:ring-2 focus:ring-[#044343]/10 font-bold" placeholder="0" />
+                           </div>
+                        </div>
                         <div className="md:col-span-2 space-y-1.5">
                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Administrator Notes</label>
                            <textarea {...register('notes')} rows="4" className="w-full bg-white border border-slate-200 rounded-3xl py-4 px-6 outline-none focus:ring-2 focus:ring-[#044343]/10 resize-none text-sm font-medium" placeholder="Additional details, restrictions or preferences..."></textarea>

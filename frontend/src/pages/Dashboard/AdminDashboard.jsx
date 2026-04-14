@@ -12,30 +12,6 @@ import {
 } from 'recharts';
 
 
-const categoryData = [
-  { name: 'Fiction', value: 35, color: '#044343' },
-  { name: 'Children\'s', value: 15, color: '#10B981' },
-  { name: 'History', value: 27, color: '#A7F3D0' },
-  { name: 'Novels', value: 23, color: '#D1FAE5' },
-];
-
-const revenueData = [
-  { name: 'Membership Fees', value: 7000 },
-  { name: 'Overdue Fines', value: 6000 },
-  { name: 'Events', value: 4910 },
-  { name: 'Others', value: 2761 },
-];
-
-const trendData = [
-  { name: 'Sat', checkins: 0, borrowed: 1000 },
-  { name: 'Sun', checkins: 2000, borrowed: 1500 },
-  { name: 'Mon', checkins: 1500, borrowed: 2500 },
-  { name: 'Tue', checkins: 3000, borrowed: 3500 },
-  { name: 'Wed', checkins: 4300, borrowed: 2100 },
-  { name: 'Thu', checkins: 3800, borrowed: 4000 },
-  { name: 'Fri', checkins: 4500, borrowed: 3000 },
-];
-
 import { useGetDashboardStatsQuery } from '../../store/api/dashboardApi';
 import { useGetFinanceStatsQuery } from '../../store/api/financeApi';
 import ErrorState from '../../components/common/ErrorState';
@@ -61,6 +37,16 @@ const AdminDashboard = () => {
   const loading = dashboardLoading || financeLoading;
   const error = dashboardError || financeError;
 
+  const { 
+    categoryData = [], 
+    trendData = [], 
+    topBorrowedBook = null, 
+    topAuthors = [], 
+    overdueItems = [], 
+    recentActivities = [], 
+    revenueData = [] 
+  } = stats || {};
+
   const handleRetry = () => {
     refetchDashboard();
     refetchFinance();
@@ -70,8 +56,8 @@ const AdminDashboard = () => {
     { label: 'Total Books', value: stats?.totalBooks || '0', change: '+120', sub: 'In collection', icon: BookOpen, color: 'text-teal-600', bg: 'bg-teal-50' },
     { label: 'Active Members', value: stats?.totalUsers || '0', change: '+3.7%', sub: 'Total members', icon: Users, color: 'text-sky-600', bg: 'bg-sky-50' },
     { label: 'Study Desks', value: stats?.tables?.total || '0', change: `${stats?.tables?.available || 0} Avail`, sub: 'Private Desks', icon: Coffee, color: 'text-amber-600', bg: 'bg-amber-50' },
-    { label: 'Collected Fees', value: `₹${ledgerStats?.totalCollected || 0}`, change: `+₹${ledgerStats?.todayCollection || 0}`, sub: 'Today', icon: ShoppingCart, color: 'text-emerald-600', bg: 'bg-emerald-50' },
-    { label: 'Pending Dues', value: `₹${ledgerStats?.totalPending || 0}`, change: `${ledgerStats?.overdueCount || 0} Students`, sub: 'Overdue', icon: AlertCircle, color: 'text-rose-600', bg: 'bg-rose-50' },
+    { label: 'Collected Fees', value: `₹${ledgerStats?.totalIncome || 0}`, change: `+₹...`, sub: 'Total Income', icon: ShoppingCart, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+    { label: 'Pending Dues', value: `₹${ledgerStats?.pendingFees || 0}`, change: `Receivables`, sub: 'Overdue', icon: AlertCircle, color: 'text-rose-600', bg: 'bg-rose-50' },
     { label: 'Expired Desks', value: stats?.tables?.expired || '0', change: 'Action Req', sub: 'Pending unassign', icon: AlertCircle, color: 'text-rose-600', bg: 'bg-rose-50' },
   ];
 
@@ -139,8 +125,8 @@ const AdminDashboard = () => {
             </ResponsiveContainer>
             <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 flex flex-col items-center pointer-events-none">
               <div className="w-1.5 h-1.5 rounded-full bg-[#044343] mb-1" />
-              <p className="text-xs font-bold text-slate-900">Fiction</p>
-              <p className="text-[10px] text-slate-400 font-bold">35% - 1,877 Books</p>
+              <p className="text-xs font-bold text-slate-900">{categoryData[0]?.name || 'No Data'}</p>
+              <p className="text-[10px] text-slate-400 font-bold">{categoryData[0]?.value || 0}% - {categoryData[0]?.count || 0} Books</p>
             </div>
           </div>
           <div className="grid grid-cols-2 gap-4 mt-2">
@@ -150,7 +136,7 @@ const AdminDashboard = () => {
                   <span className="text-xs font-bold text-slate-900">{cat.name}</span>
                   <span className="text-xs font-bold text-slate-400">{cat.value}%</span>
                 </div>
-                <p className="text-[10px] text-slate-400 font-medium">479 Books</p>
+                <p className="text-[10px] text-slate-400 font-medium">{cat.count} Borrows</p>
               </div>
             ))}
           </div>
@@ -164,26 +150,30 @@ const AdminDashboard = () => {
               <option>This week</option>
             </select>
           </div>
-          <div className="bg-slate-50 rounded-2xl p-4 flex flex-col items-center group cursor-pointer relative">
-            <div className="w-full h-48 rounded-xl overflow-hidden mb-4 shadow-sm group-hover:shadow-md transition-shadow">
-              <img src="https://images.unsplash.com/photo-1543004471-24b622242139?q=80&w=400" alt="Harry Potter" className="w-full h-full object-cover" />
-            </div>
-            <div className="text-center">
-              <span className="text-[10px] font-bold text-slate-400 px-2 py-0.5 bg-white border border-slate-100 rounded-md">Fiction</span>
-              <h4 className="text-sm font-bold text-slate-900 mt-2">Harry Potter and the Deathly Hallows</h4>
-              <p className="text-[10px] text-slate-400 font-bold mt-1 uppercase tracking-tight">J. K. Rowling</p>
-            </div>
-            <div className="mt-4 flex gap-6 border-t border-slate-200 pt-4 w-full justify-center">
-              <div className="text-center">
-                <p className="text-[10px] text-slate-400 font-bold uppercase">Borrowers</p>
-                <p className="text-xs font-black text-[#044343]">247</p>
+          {topBorrowedBook ? (
+            <div className="bg-slate-50 rounded-2xl p-4 flex flex-col items-center group cursor-pointer relative">
+              <div className="w-full h-48 rounded-xl overflow-hidden mb-4 shadow-sm group-hover:shadow-md transition-shadow">
+                <img src={topBorrowedBook?.coverImage || "https://images.unsplash.com/photo-1543004471-24b622242139?q=80&w=400"} alt={topBorrowedBook?.title} className="w-full h-full object-cover" />
               </div>
               <div className="text-center">
-                <p className="text-[10px] text-slate-400 font-bold uppercase">Available</p>
-                <p className="text-xs font-black text-rose-500">21 Copies</p>
+                <span className="text-[10px] font-bold text-slate-400 px-2 py-0.5 bg-white border border-slate-100 rounded-md">{topBorrowedBook?.category || 'Fiction'}</span>
+                <h4 className="text-sm font-bold text-slate-900 mt-2">{topBorrowedBook?.title}</h4>
+                <p className="text-[10px] text-slate-400 font-bold mt-1 uppercase tracking-tight">{topBorrowedBook?.author}</p>
+              </div>
+              <div className="mt-4 flex gap-6 border-t border-slate-200 pt-4 w-full justify-center">
+                <div className="text-center">
+                  <p className="text-[10px] text-slate-400 font-bold uppercase">Borrowers</p>
+                  <p className="text-xs font-black text-[#044343]">{topBorrowedBook?.borrowers || 0}</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-[10px] text-slate-400 font-bold uppercase">Available</p>
+                  <p className="text-xs font-black text-rose-500">{topBorrowedBook?.available || 0} Copies</p>
+                </div>
               </div>
             </div>
-          </div>
+          ) : (
+            <div className="p-8 text-center text-slate-400 text-xs font-bold">No Top Books yet...</div>
+          )}
         </div>
       </div>
 
@@ -194,7 +184,7 @@ const AdminDashboard = () => {
           <div className="flex items-center justify-between mb-6">
             <div>
               <h3 className="text-lg font-bold text-slate-900">Revenue Breakdown</h3>
-              <p className="text-xs text-slate-400 font-bold mt-1">Total <span className="text-xl font-black text-slate-900 ml-2">$20,671</span></p>
+              <p className="text-xs text-slate-400 font-bold mt-1">Total <span className="text-xl font-black text-slate-900 ml-2">₹{ledgerStats?.totalIncome || 0}</span></p>
             </div>
             <select className="text-[10px] font-bold text-slate-400 bg-transparent border-none outline-none">
               <option>This week</option>
@@ -265,11 +255,7 @@ const AdminDashboard = () => {
             </select>
           </div>
           <div className="space-y-6">
-            {[
-              { name: 'Miguel de Cervantes', books: 13, borrowers: 687, award: '🥇' },
-              { name: 'Jane Austen', books: 11, borrowers: 587, award: '🥈' },
-              { name: 'Paulo Coelho', books: 10, borrowers: 497, award: '🥉' },
-            ].map((author, i) => (
+            {topAuthors.map((author, i) => (
               <div key={i} className="flex items-center gap-4 group cursor-pointer">
                 <div className="w-12 h-12 rounded-2xl overflow-hidden bg-slate-100 border-2 border-white shadow-sm flex-shrink-0">
                   <img src={`https://i.pravatar.cc/150?u=${i + 10}`} alt={author.name} className="w-full h-full object-cover" />
@@ -314,16 +300,22 @@ const AdminDashboard = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50">
-                {[
-                  { name: 'John Smith', id: 'USR-2007', book: 'Don Quixote', author: 'Miguel de Cervantes', days: '05 Days', fine: '$4.5' },
-                  { name: 'Emma', id: 'USR-2025', book: 'Pride and Prejudice', author: 'Jane Austen', days: '04 Days', fine: '$3.5' },
-                  { name: 'Sarah', id: 'USR-2068', book: 'The Alchemist', author: 'Paulo Coelho', days: '07 Days', fine: '$5.5' },
-                ].map((row, i) => (
+                {overdueItems.length === 0 ? (
+                  <tr>
+                    <td colSpan="5" className="py-8 text-center text-slate-400 text-xs font-bold">No overdue items.</td>
+                  </tr>
+                ) : overdueItems.map((row, i) => (
                   <tr key={i} className="group hover:bg-slate-50/50 transition-colors">
                     <td className="py-4">
                       <div className="flex items-center gap-3 text-slate-900">
                         <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0" >
-                          <img src={`https://i.pravatar.cc/150?u=${row.id}`} alt="user" />
+                          {row.profilePicture ? (
+                            <img src={row.profilePicture} alt="user" className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full bg-slate-100 flex items-center justify-center text-xs font-bold text-slate-400">
+                               {row.name?.charAt(0) || <Users size={14} />}
+                            </div>
+                          )}
                         </div>
                         <div>
                           <p className="text-xs font-bold leading-tight">{row.name}</p>
@@ -378,12 +370,12 @@ const AdminDashboard = () => {
               <p className="text-xs font-bold text-slate-900">{stats?.activeBorrowings || '0'} copies</p>
             </div>
             <div>
-              <p className="text-[9px] font-bold text-slate-400 uppercase">Reserved</p>
-              <p className="text-xs font-bold text-slate-900">1,071 copies</p>
+              <p className="text-[9px] font-bold text-slate-400 uppercase">Reserved / Held</p>
+              <p className="text-xs font-bold text-slate-900">0 copies</p>
             </div>
             <div>
               <p className="text-[9px] font-bold text-slate-400 uppercase">Damaged</p>
-              <p className="text-xs font-bold text-rose-500">57 copies</p>
+              <p className="text-xs font-bold text-rose-500">0 copies</p>
             </div>
           </div>
         </div>
@@ -397,11 +389,9 @@ const AdminDashboard = () => {
             </select>
           </div>
           <div className="space-y-6">
-            {[
-              { type: 'issue', title: 'Book Issued', desc: 'John Smith (USR-2007) borrowed The Great Gatsby Book.', time: '10:30 AM', date: 'Jan 09,2025', color: 'bg-emerald-50 text-emerald-600' },
-              { type: 'register', title: 'New Member Registered', desc: 'John Smith (USR-2007) borrowed The Great Gatsby Book.', time: '9:25 AM', date: 'Jan 09,2025', color: 'bg-teal-50 text-teal-600' },
-              { type: 'return', title: 'Returned Books', desc: 'Raoul Assencio (USR-2125) signed up with standard Membership.', time: '9:50 AM', date: 'Jan 09,2025', color: 'bg-slate-50 text-slate-400' },
-            ].map((activity, i) => (
+            {recentActivities.length === 0 ? (
+              <div className="py-8 text-center text-slate-400 text-xs font-bold">No recent activities.</div>
+            ) : recentActivities.map((activity, i) => (
               <div key={i} className="flex gap-4">
                 <div className={`w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0 ${activity.color}`}>
                   <CheckCircle2 size={18} />

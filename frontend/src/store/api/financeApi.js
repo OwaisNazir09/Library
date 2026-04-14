@@ -6,15 +6,28 @@ export const financeApi = baseApi.injectEndpoints({
       query: () => '/finance/stats',
       providesTags: ['Finance', 'Dashboard'],
     }),
-    getStudentAccounts: builder.query({
-      query: ({ page = 1, limit = 10, search = '' } = {}) =>
-        `/finance/accounts?page=${page}&limit=${limit}&search=${search}`,
+
+    getAccounts: builder.query({
+      query: (params) => ({
+        url: '/finance/accounts',
+        params
+      }),
       providesTags: ['Finance'],
     }),
-    getStudentAccount: builder.query({
-      query: (studentId) => `/finance/accounts/${studentId}`,
-      providesTags: (result, error, arg) => [{ type: 'Finance', id: arg }],
+    addAccount: builder.mutation({
+      query: (data) => ({
+        url: '/finance/accounts',
+        method: 'POST',
+        body: data,
+      }),
+      invalidatesTags: ['Finance'],
     }),
+    getAccountLedger: builder.query({
+      query: (id) => `/finance/accounts/${id}/ledger`,
+      providesTags: (result, error, id) => [{ type: 'Finance', id }],
+    }),
+
+    // --- Transactions ---
     getTransactions: builder.query({
       query: (params) => ({
         url: '/finance/transactions',
@@ -22,17 +35,32 @@ export const financeApi = baseApi.injectEndpoints({
       }),
       providesTags: ['Finance'],
     }),
-    getReceipts: builder.query({
-      query: (params) => ({
-        url: '/finance/receipts',
-        params,
+    addTransaction: builder.mutation({
+      query: (data) => ({
+        url: '/finance/transactions',
+        method: 'POST',
+        body: data,
       }),
-      providesTags: ['Finance'],
+      invalidatesTags: ['Finance', 'Dashboard'],
     }),
-    getReceipt: builder.query({
-      query: (id) => `/finance/receipts/${id}`,
-      providesTags: (result, error, id) => [{ type: 'Finance', id }],
+    addJournalEntry: builder.mutation({
+      query: (data) => ({
+        url: '/finance/transactions/journal',
+        method: 'POST',
+        body: data,
+      }),
+      invalidatesTags: ['Finance', 'Dashboard'],
     }),
+    addTransfer: builder.mutation({
+      query: (data) => ({
+        url: '/finance/transactions/transfer',
+        method: 'POST',
+        body: data,
+      }),
+      invalidatesTags: ['Finance', 'Dashboard'],
+    }),
+
+    // --- Student Specific Shortcuts ---
     addPayment: builder.mutation({
       query: ({ studentId, data }) => ({
         url: `/finance/accounts/${studentId}/payment`,
@@ -53,52 +81,31 @@ export const financeApi = baseApi.injectEndpoints({
         'Finance', 'Dashboard', { type: 'Finance', id: studentId }
       ],
     }),
-    addCreditNote: builder.mutation({
-      query: ({ studentId, data }) => ({
-        url: `/finance/accounts/${studentId}/credit-note`,
-        method: 'POST',
-        body: data,
-      }),
-      invalidatesTags: (result, error, { studentId }) => [
-        'Finance', 'Dashboard', { type: 'Finance', id: studentId }
-      ],
-    }),
-    addDebitNote: builder.mutation({
-      query: ({ studentId, data }) => ({
-        url: `/finance/accounts/${studentId}/debit-note`,
-        method: 'POST',
-        body: data,
-      }),
-      invalidatesTags: (result, error, { studentId }) => [
-        'Finance', 'Dashboard', { type: 'Finance', id: studentId }
-      ],
-    }),
-    addExpense: builder.mutation({
-      query: (data) => ({
-        url: '/finance/transactions/expense',
-        method: 'POST',
-        body: data,
-      }),
-      invalidatesTags: ['Finance', 'Dashboard'],
-    }),
 
-    getDailyReport: builder.query({
+    // --- Receipts ---
+    getReceipts: builder.query({
       query: (params) => ({
-        url: '/finance/reports/daily',
+        url: '/finance/receipts',
         params,
       }),
       providesTags: ['Finance'],
     }),
-    getMonthlyReport: builder.query({
-      query: () => '/finance/reports/monthly',
+    getReceipt: builder.query({
+      query: (id) => `/finance/receipts/${id}`,
+      providesTags: (result, error, id) => [{ type: 'Finance', id }],
+    }),
+
+    // --- Professional Reports ---
+    getTrialBalance: builder.query({
+      query: () => '/finance/reports/trial-balance',
       providesTags: ['Finance'],
     }),
-    getPendingReport: builder.query({
-      query: () => '/finance/reports/pending-fees',
-      providesTags: ['Finance'],
-    }),
-    getPLReport: builder.query({
+    getProfitAndLoss: builder.query({
       query: () => '/finance/reports/profit-loss',
+      providesTags: ['Finance'],
+    }),
+    getBalanceSheet: builder.query({
+      query: () => '/finance/reports/balance-sheet',
       providesTags: ['Finance'],
     }),
   }),
@@ -106,18 +113,18 @@ export const financeApi = baseApi.injectEndpoints({
 
 export const {
   useGetFinanceStatsQuery,
-  useGetStudentAccountsQuery,
-  useGetStudentAccountQuery,
+  useGetAccountsQuery,
+  useAddAccountMutation,
+  useGetAccountLedgerQuery,
   useGetTransactionsQuery,
-  useGetReceiptsQuery,
-  useGetReceiptQuery,
+  useAddTransactionMutation,
+  useAddJournalEntryMutation,
+  useAddTransferMutation,
   useAddPaymentMutation,
   useAddChargeMutation,
-  useAddCreditNoteMutation,
-  useAddDebitNoteMutation,
-  useAddExpenseMutation,
-  useGetDailyReportQuery,
-  useGetMonthlyReportQuery,
-  useGetPendingReportQuery,
-  useGetPLReportQuery,
+  useGetReceiptsQuery,
+  useGetReceiptQuery,
+  useGetTrialBalanceQuery,
+  useGetProfitAndLossQuery,
+  useGetBalanceSheetQuery,
 } = financeApi;

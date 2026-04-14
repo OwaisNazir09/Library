@@ -45,10 +45,11 @@ const groups = [
     label: 'FINANCE',
     items: [
       { name: 'Finance Dashboard', icon: LayoutGrid, path: '/app/finance' },
-      { name: 'Student Accounts', icon: Users, path: '/app/finance/accounts' },
+      { name: 'Chart of Accounts', icon: Library, path: '/app/finance/accounts' },
+      { name: 'Student Ledgers', icon: Users, path: '/app/finance/student-accounts' },
       { name: 'Transactions', icon: DollarSign, path: '/app/finance/transactions' },
       { name: 'Receipts', icon: Receipt, path: '/app/finance/receipts' },
-      { name: 'Finance Reports', icon: BarChart2, path: '/app/finance/reports' },
+      { name: 'Financial Reports', icon: BarChart2, path: '/app/finance/reports' },
     ]
   },
   {

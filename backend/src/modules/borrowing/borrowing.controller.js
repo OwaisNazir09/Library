@@ -23,11 +23,9 @@ export const borrowBook = async (req, res, next) => {
       tenantId: req.tenantId
     });
 
-    // Update book availability
     book.availableCopies -= 1;
     await book.save();
 
-    // Update user total borrowed
     await User.findByIdAndUpdate(userId || req.user._id, { $inc: { totalBorrowed: 1 } });
 
     res.status(201).json({
@@ -72,7 +70,6 @@ export const returnBook = async (req, res, next) => {
           status: 'unpaid'
         });
 
-        // Increment user's total fines
         await User.findByIdAndUpdate(borrowing.user, { $inc: { totalFines: amount } });
       }
     }

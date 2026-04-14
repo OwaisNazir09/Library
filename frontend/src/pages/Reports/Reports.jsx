@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Book, Users, Repeat, DollarSign, TrendingUp, BarChart2 } from 'lucide-react';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { getReportsSummary, getMonthlyAnalytics } from '../../services/reportService';
 
 const Reports = () => {
@@ -13,6 +13,7 @@ const Reports = () => {
   });
   
   const [chartData, setChartData] = useState([]);
+  const [popularBooks, setPopularBooks] = useState([]);
   const [isLive, setIsLive] = useState(false);
 
   useEffect(() => {
@@ -26,7 +27,8 @@ const Reports = () => {
           setIsLive(true);
         }
         if (analyticalRes?.data) {
-          setChartData(analyticalRes.data);
+          setChartData(analyticalRes.data.trend || []);
+          setPopularBooks(analyticalRes.data.popularBooks || []);
         }
       } catch (err) {
         console.warn("Analytics API failed.", err);
@@ -99,15 +101,27 @@ const Reports = () => {
           </div>
         </div>
 
-        <div className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm">
+        <div className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm flex flex-col">
           <div className="flex items-center justify-between mb-8">
             <h2 className="text-lg font-black text-slate-900">Popular Books</h2>
             <div className="p-2 bg-slate-50 text-slate-400 rounded-xl">
               <BarChart2 size={18} />
             </div>
           </div>
-          <div className="space-y-6 flex items-center justify-center h-full text-slate-400 font-bold">
-            Data driven automatically via Library interactions.
+          <div className="flex-1 min-h-[250px]">
+             {popularBooks.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={popularBooks} layout="vertical" margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="#f1f5f9" />
+                    <XAxis type="number" hide />
+                    <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#475569', fontWeight: 700 }} width={120} />
+                    <Tooltip cursor={{fill: 'transparent'}} contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
+                    <Bar dataKey="value" fill="#044343" radius={[0, 4, 4, 0]} barSize={20} />
+                  </BarChart>
+                </ResponsiveContainer>
+             ) : (
+                <div className="h-full flex items-center justify-center text-slate-400 text-xs font-bold">No books borrowed yet.</div>
+             )}
           </div>
         </div>
       </div>

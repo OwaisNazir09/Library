@@ -6,17 +6,31 @@ export const getAdminStats = async (req, res, next) => {
   try {
     const totalTenants = await Tenant.countDocuments();
 
-    const { User } = getModels(mongoose.connection);
-    const totalAdmins = await User.countDocuments({ role: 'super_admin' });
+    const { User, Book, Transaction } = getModels(mongoose.connection);
+
+    const [totalAdmins, totalSystemUsers, totalBooks] = await Promise.all([
+      User.countDocuments({ role: 'super_admin' }),
+      User.countDocuments(),
+      Book ? Book.countDocuments() : Promise.resolve(0)
+    ]);
+
+    let revenueSum = 0;
+    if (Transaction) {
+      const revAgg = await Transaction.aggregate([
+        { $match: { type: 'fee_charge' } },
+        { $group: { _id: null, total: { $sum: '$amount' } } }
+      ]);
+      revenueSum = revAgg.length > 0 ? revAgg[0].total : 0;
+    }
 
     res.status(200).json({
       status: 'success',
       data: {
         totalTenants,
         totalAdmins,
-        totalSystemUsers: 1204, // Mocked for now, would aggregate in production
-        totalBooks: 45000,      // Mocked
-        revenue: '$12,450'      // Mocked
+        totalSystemUsers,
+        totalBooks,
+        revenue: `$${revenueSum.toLocaleString()}`
       }
     });
   } catch (err) {
@@ -40,10 +54,10 @@ export const getAllTenants = async (req, res, next) => {
 export const createTenant = async (req, res, next) => {
   try {
     const { name, subdomain, email, password } = req.body;
-    
+
     // 1. Create the tenant entry
     const newTenant = await Tenant.create({ name, subdomain, email });
-    
+
     // 2. Create the initial Librarian for this tenant
     const { User } = getModels(req.db);
     await User.create({
@@ -75,7 +89,7 @@ export const deleteTenant = async (req, res, next) => {
       data: null
     });
   }
- catch (err) {
+  catch (err) {
     next(err);
   }
 };

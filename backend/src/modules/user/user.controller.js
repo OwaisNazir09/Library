@@ -19,11 +19,10 @@ export const getAllUsers = async (req, res, next) => {
     features.query = features.query.populate('package');
     const users = await features.query;
 
-    // Auto-calculate expiration for returned users
     const updatedUsers = users.map(user => {
       if (user.packageEndDate && new Date(user.packageEndDate) < new Date() && user.subscriptionStatus === 'active') {
         user.subscriptionStatus = 'expired';
-        user.save(); // Save in background
+        user.save();
       }
       return user;
     });
@@ -71,7 +70,6 @@ export const updateUser = async (req, res, next) => {
     const { User } = getModels(req.db);
     const filter = req.tenantId ? { _id: req.params.id, tenantId: req.tenantId } : { _id: req.params.id };
 
-    // If package is being assigned/changed
     if (req.body.package) {
       const pkg = await Package.findById(req.body.package);
       if (pkg) {
@@ -133,7 +131,6 @@ export const deleteUser = async (req, res, next) => {
       throw error;
     }
 
-    // Delete assets from Cloudinary
     if (user.profilePicturePublicId) {
       await deleteCloudinaryImage(user.profilePicturePublicId);
     }
@@ -147,9 +144,21 @@ export const deleteUser = async (req, res, next) => {
   }
 };
 
+const recalcBalance = (account) => {
+  account.currentBalance =
+    (account.openingBalance || 0) +
+    (account.totalCharged || 0) +
+    (account.debitNoteTotal || 0) -
+    (account.totalPaid || 0) -
+    (account.creditNoteTotal || 0);
+  account.status =
+    account.currentBalance <= 0 ? 'clear' :
+      account.currentBalance > 0 ? 'due' : 'clear';
+};
+
 export const createUser = async (req, res, next) => {
   try {
-    const { User, Ledger, LedgerEntry } = getModels(req.db);
+    const { User, StudentAccount, Transaction } = getModels(req.db);
 
     let pkg;
     if (req.body.package) {
@@ -179,54 +188,102 @@ export const createUser = async (req, res, next) => {
       password: req.body.password || 'password123'
     });
 
-    // --- Create Ledger for New User ---
-    const ledgerId = `LED-${Math.floor(1000 + Math.random() * 9000)}`;
+    // --- Auto Create Student Account (Ledger) ---
+    const {
+      ensureStudentAccount,
+      recordTransaction
+    } = await import('../ledger/finance.controller.js');
+    const { Account } = getModels(req.db);
 
-    // Calculate initial fees based on pkg or explicit fee passing
-    const monthlyFee = Number(req.body.monthlyFee) || (pkg ? Number(pkg.price) : 0);
-    const admissionFee = Number(req.body.admissionFee) || 0;
-    const initialBalance = monthlyFee + admissionFee;
+    const studentAccount = await ensureStudentAccount(req.db, req.tenantId, newUser._id, newUser.fullName);
 
-    const ledger = await Ledger.create({
-      tenantId: req.tenantId,
-      studentId: newUser._id,
-      ledgerId,
-      totalFee: initialBalance,
-      totalPaid: 0,
-      balance: initialBalance,
-      status: initialBalance > 0 ? 'due' : 'clear'
-    });
+    // Helper to get or create income accounts
+    const getIncomeAcc = async (name, subType = 'Operating Income') => {
+      let acc = await Account.findOne({ tenantId: req.tenantId, name });
+      if (!acc) {
+        acc = await Account.create({
+          tenantId: req.tenantId,
+          name,
+          type: 'Income',
+          subType,
+          isSystem: true
+        });
+      }
+      return acc;
+    };
 
-    if (admissionFee > 0) {
-      await LedgerEntry.create({
-        tenantId: req.tenantId,
-        ledger: ledger._id,
-        studentId: newUser._id,
-        description: 'Admission Fee',
-        type: 'debit',
-        amount: admissionFee,
-        runningBalance: admissionFee,
-        category: 'admission_fee'
+    // Helper to get or create liability accounts
+    const getLiabilityAcc = async (name, subType = 'Deposit') => {
+      let acc = await Account.findOne({ tenantId: req.tenantId, name });
+      if (!acc) {
+        acc = await Account.create({
+          tenantId: req.tenantId,
+          name,
+          type: 'Liabilities',
+          subType,
+          isSystem: true
+        });
+      }
+      return acc;
+    };
+
+    const regFee = Number(req.body.registrationFee) || 0;
+    if (regFee > 0) {
+      const regIncomeAcc = await getIncomeAcc('Registration Fees');
+      await recordTransaction(req.db, req.tenantId, {
+        debitAccountId: studentAccount._id,
+        creditAccountId: regIncomeAcc._id,
+        amount: regFee,
+        type: 'fee_charge',
+        description: 'Initial Registration Fee',
+        userId: req.user?._id
       });
     }
 
-    if (monthlyFee > 0) {
-      await LedgerEntry.create({
-        tenantId: req.tenantId,
-        ledger: ledger._id,
-        studentId: newUser._id,
-        description: 'Monthly/Package Fee',
-        type: 'debit',
-        amount: monthlyFee,
-        runningBalance: initialBalance, // since it happens after admission fee
-        category: 'monthly_fee'
+    const secDeposit = Number(req.body.securityDeposit) || 0;
+    if (secDeposit > 0) {
+      const secLiabilityAcc = await getLiabilityAcc('Security Deposits');
+      await recordTransaction(req.db, req.tenantId, {
+        debitAccountId: studentAccount._id,
+        creditAccountId: secLiabilityAcc._id,
+        amount: secDeposit,
+        type: 'fee_charge',
+        description: 'Refundable Security Deposit',
+        userId: req.user?._id
       });
     }
-    // ------------------------------------
+
+    // Auto-add Membership Fee from package
+    const membershipFee = pkg ? Number(pkg.price) : 0;
+    if (membershipFee > 0) {
+      const memIncomeAcc = await getIncomeAcc('Membership Income');
+      await recordTransaction(req.db, req.tenantId, {
+        debitAccountId: studentAccount._id,
+        creditAccountId: memIncomeAcc._id,
+        amount: membershipFee,
+        type: 'fee_charge',
+        description: `Membership Fee (${pkg.name})`,
+        userId: req.user?._id
+      });
+    }
+
+    // Auto-add Study Desk Fee if exists
+    const deskFee = Number(req.body.studyDeskFee) || 0;
+    if (deskFee > 0) {
+      const deskIncomeAcc = await getIncomeAcc('Study Desk Income');
+      await recordTransaction(req.db, req.tenantId, {
+        debitAccountId: studentAccount._id,
+        creditAccountId: deskIncomeAcc._id,
+        amount: deskFee,
+        type: 'fee_charge',
+        description: 'Study Desk Fee',
+        userId: req.user?._id
+      });
+    }
 
     res.status(201).json({
       status: 'success',
-      data: { user: newUser, ledger }
+      data: { user: newUser, account: studentAccount }
     });
 
   } catch (err) {

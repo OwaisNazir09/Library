@@ -32,7 +32,7 @@ import { useForm } from 'react-hook-form';
 import { format } from 'date-fns';
 import LoadingSkeleton from '../../components/common/LoadingSkeleton';
 import Pagination from '../../components/common/Pagination';
-
+import { useState } from 'react';
 const CATEGORIES = [
   'Competitive Exams',
   'School Books',
@@ -69,7 +69,7 @@ const DigitalLibrary = () => {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingResource, setEditingResource] = useState(null);
-  
+
   const [filePreview, setFilePreview] = useState(null);
   const [coverPreview, setCoverPreview] = useState(null);
   const [resourceFile, setResourceFile] = useState(null);
@@ -104,7 +104,7 @@ const DigitalLibrary = () => {
       Object.entries(data).forEach(([key, val]) => {
         if (val !== undefined && val !== null) formData.append(key, val);
       });
-      
+
       if (resourceFile) formData.append('file', resourceFile);
       if (coverFile) formData.append('coverImage', coverFile);
 
@@ -232,7 +232,7 @@ const DigitalLibrary = () => {
               className="pl-12 pr-4 py-2.5 bg-slate-50 border-none rounded-2xl w-full focus:ring-2 focus:ring-[#044343]/5 outline-none font-bold text-xs"
             />
           </div>
-          <select 
+          <select
             value={selectedCategory}
             onChange={(e) => setSelectedCategory(e.target.value)}
             className="px-4 py-2.5 bg-slate-50 border-none rounded-2xl text-xs font-bold outline-none cursor-pointer h-[42px]"
@@ -240,7 +240,7 @@ const DigitalLibrary = () => {
             <option value="All">All Categories</option>
             {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
           </select>
-          <select 
+          <select
             value={selectedVisibility}
             onChange={(e) => setSelectedVisibility(e.target.value)}
             className="px-4 py-2.5 bg-slate-50 border-none rounded-2xl text-xs font-bold outline-none cursor-pointer h-[42px]"
@@ -251,13 +251,13 @@ const DigitalLibrary = () => {
           </select>
         </div>
         <div className="flex items-center gap-2 bg-slate-50 p-1.5 rounded-2xl self-end lg:self-auto">
-          <button 
+          <button
             onClick={() => setViewMode('grid')}
             className={`p-2 rounded-xl transition-all ${viewMode === 'grid' ? 'bg-white text-[#044343] shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
           >
             <LayoutGrid size={18} />
           </button>
-          <button 
+          <button
             onClick={() => setViewMode('table')}
             className={`p-2 rounded-xl transition-all ${viewMode === 'table' ? 'bg-white text-[#044343] shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
           >
@@ -290,55 +290,55 @@ const DigitalLibrary = () => {
                       </div>
                     )}
                     <div className="absolute top-4 left-4 flex gap-2">
-                       <span className={`px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest backdrop-blur-md ${resource.visibility === 'global' ? 'bg-blue-500/10 text-blue-100' : 'bg-[#044343]/10 text-teal-100'}`}>
-                         {resource.visibility}
-                       </span>
+                      <span className={`px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest backdrop-blur-md ${resource.visibility === 'global' ? 'bg-blue-500/10 text-blue-100' : 'bg-[#044343]/10 text-teal-100'}`}>
+                        {resource.visibility}
+                      </span>
                     </div>
                     {resource.isFeatured && (
-                       <div className="absolute top-4 right-4 bg-amber-400 text-white p-2 rounded-xl shadow-lg">
-                         <Star size={14} fill="currentColor" />
-                       </div>
+                      <div className="absolute top-4 right-4 bg-amber-400 text-white p-2 rounded-xl shadow-lg">
+                        <Star size={14} fill="currentColor" />
+                      </div>
                     )}
                     <div className="absolute inset-x-0 bottom-0 p-6 translate-y-full group-hover:translate-y-0 transition-transform duration-500 bg-gradient-to-t from-black/80 via-black/40 to-transparent flex gap-3">
-                       <button 
+                      <button
                         onClick={() => handleDownload(resource)}
                         className="flex-1 bg-white text-[#044343] py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2"
-                       >
-                         <Download size={14} /> Download
-                       </button>
-                       <button 
+                      >
+                        <Download size={14} /> Download
+                      </button>
+                      <button
                         onClick={() => window.open(resource.fileUrl, '_blank')}
                         className="w-12 h-12 bg-white/20 backdrop-blur-md text-white rounded-2xl flex items-center justify-center hover:bg-white/30"
-                       >
-                         <Eye size={20} />
-                       </button>
+                      >
+                        <Eye size={20} />
+                      </button>
                     </div>
                   </div>
-                  
+
                   <div className="p-6 pt-2 flex flex-col flex-1">
                     <div className="flex items-start justify-between gap-4 mb-2">
                       <h3 className="text-sm font-black text-slate-900 leading-tight group-hover:text-[#044343] transition-colors line-clamp-2">{resource.title}</h3>
                       <div className="flex gap-1 shrink-0">
-                         <button onClick={() => openModal(resource)} className="p-1.5 text-slate-300 hover:text-blue-600 rounded-lg hover:bg-blue-50 transition-all">
-                           <Edit size={14} />
-                         </button>
-                         <button onClick={() => handleDelete(resource._id)} className="p-1.5 text-slate-300 hover:text-rose-600 rounded-lg hover:bg-rose-50 transition-all">
-                           <Trash2 size={14} />
-                         </button>
+                        <button onClick={() => openModal(resource)} className="p-1.5 text-slate-300 hover:text-blue-600 rounded-lg hover:bg-blue-50 transition-all">
+                          <Edit size={14} />
+                        </button>
+                        <button onClick={() => handleDelete(resource._id)} className="p-1.5 text-slate-300 hover:text-rose-600 rounded-lg hover:bg-rose-50 transition-all">
+                          <Trash2 size={14} />
+                        </button>
                       </div>
                     </div>
                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4">{resource.category} • {resource.subject || 'No Subject'}</p>
                     <div className="mt-auto pt-4 border-t border-slate-50 flex items-center justify-between">
-                       <div className="flex items-center gap-2">
-                          <div className="w-6 h-6 rounded-lg bg-teal-50 flex items-center justify-center text-[#044343]">
-                             <Clock size={12} />
-                          </div>
-                          <span className="text-[9px] font-bold text-slate-400 whitespace-nowrap">{format(new Date(resource.createdAt), 'MMM dd, yyyy')}</span>
-                       </div>
-                       <div className="flex items-center gap-1.5 h-6 bg-slate-50 px-2.5 rounded-full">
-                          <Download size={10} className="text-teal-600" />
-                          <span className="text-[10px] font-black text-slate-600 tracking-tighter">{resource.downloadCount || 0}</span>
-                       </div>
+                      <div className="flex items-center gap-2">
+                        <div className="w-6 h-6 rounded-lg bg-teal-50 flex items-center justify-center text-[#044343]">
+                          <Clock size={12} />
+                        </div>
+                        <span className="text-[9px] font-bold text-slate-400 whitespace-nowrap">{format(new Date(resource.createdAt), 'MMM dd, yyyy')}</span>
+                      </div>
+                      <div className="flex items-center gap-1.5 h-6 bg-slate-50 px-2.5 rounded-full">
+                        <Download size={10} className="text-teal-600" />
+                        <span className="text-[10px] font-black text-slate-600 tracking-tighter">{resource.downloadCount || 0}</span>
+                      </div>
                     </div>
                   </div>
                 </motion.div>
@@ -363,13 +363,13 @@ const DigitalLibrary = () => {
                       <tr key={resource._id} className="hover:bg-slate-50/50 transition-colors group">
                         <td className="px-8 py-5">
                           <div className="flex items-center gap-4">
-                             <div className="w-10 h-10 rounded-xl bg-[#044343] flex items-center justify-center text-white shrink-0">
-                               <FileText size={18} />
-                             </div>
-                             <div>
-                               <p className="text-sm font-black text-slate-900 line-clamp-1">{resource.title}</p>
-                               <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tight">{format(new Date(resource.createdAt), 'MMM dd, yyyy')}</p>
-                             </div>
+                            <div className="w-10 h-10 rounded-xl bg-[#044343] flex items-center justify-center text-white shrink-0">
+                              <FileText size={18} />
+                            </div>
+                            <div>
+                              <p className="text-sm font-black text-slate-900 line-clamp-1">{resource.title}</p>
+                              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tight">{format(new Date(resource.createdAt), 'MMM dd, yyyy')}</p>
+                            </div>
                           </div>
                         </td>
                         <td className="px-6 py-5">
@@ -378,38 +378,38 @@ const DigitalLibrary = () => {
                           </span>
                         </td>
                         <td className="px-6 py-5">
-                           <div className="flex items-center gap-2">
-                              <div className="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 text-[8px] font-black uppercase">
-                                {resource.uploadedBy?.fullName?.charAt(0)}
-                              </div>
-                              <span className="text-xs font-bold text-slate-600 truncate max-w-[120px]">{resource.uploadedBy?.fullName}</span>
-                           </div>
+                          <div className="flex items-center gap-2">
+                            <div className="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 text-[8px] font-black uppercase">
+                              {resource.uploadedBy?.fullName?.charAt(0)}
+                            </div>
+                            <span className="text-xs font-bold text-slate-600 truncate max-w-[120px]">{resource.uploadedBy?.fullName}</span>
+                          </div>
                         </td>
                         <td className="px-6 py-5 text-center">
-                           {resource.visibility === 'global' ? (
-                             <Globe size={16} className="mx-auto text-blue-500" />
-                           ) : (
-                             <Lock size={16} className="mx-auto text-teal-600" />
-                           )}
+                          {resource.visibility === 'global' ? (
+                            <Globe size={16} className="mx-auto text-blue-500" />
+                          ) : (
+                            <Lock size={16} className="mx-auto text-teal-600" />
+                          )}
                         </td>
                         <td className="px-6 py-5 text-center">
                           <span className="text-xs font-black text-slate-900">{resource.downloadCount || 0}</span>
                         </td>
                         <td className="px-8 py-5 text-right">
-                           <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                             <button onClick={() => window.open(resource.fileUrl, '_blank')} className="p-2 text-slate-400 hover:text-[#044343] hover:bg-slate-100 rounded-xl transition-all">
-                               <Eye size={18} />
-                             </button>
-                             <button onClick={() => handleDownload(resource)} className="p-2 text-slate-400 hover:text-[#044343] hover:bg-slate-100 rounded-xl transition-all">
-                               <Download size={18} />
-                             </button>
-                             <button onClick={() => openModal(resource)} className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all">
-                               <Edit size={18} />
-                             </button>
-                             <button onClick={() => handleDelete(resource._id)} className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all">
-                               <Trash2 size={18} />
-                             </button>
-                           </div>
+                          <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button onClick={() => window.open(resource.fileUrl, '_blank')} className="p-2 text-slate-400 hover:text-[#044343] hover:bg-slate-100 rounded-xl transition-all">
+                              <Eye size={18} />
+                            </button>
+                            <button onClick={() => handleDownload(resource)} className="p-2 text-slate-400 hover:text-[#044343] hover:bg-slate-100 rounded-xl transition-all">
+                              <Download size={18} />
+                            </button>
+                            <button onClick={() => openModal(resource)} className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all">
+                              <Edit size={18} />
+                            </button>
+                            <button onClick={() => handleDelete(resource._id)} className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all">
+                              <Trash2 size={18} />
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -418,7 +418,7 @@ const DigitalLibrary = () => {
               </div>
             </div>
           )}
-          <Pagination 
+          <Pagination
             total={total}
             limit={limit}
             currentPage={currentPage}
@@ -431,16 +431,16 @@ const DigitalLibrary = () => {
       <AnimatePresence>
         {isModalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm overflow-hidden">
-            <motion.div 
-              initial={{ scale: 0.9, opacity: 0 }} 
-              animate={{ scale: 1, opacity: 1 }} 
-              exit={{ scale: 0.9, opacity: 0 }} 
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
               className="bg-white w-full max-w-4xl max-h-[90vh] rounded-[3rem] p-10 shadow-2xl relative overflow-y-auto custom-scrollbar"
             >
               <button onClick={closeModal} className="absolute top-8 right-8 text-slate-400 hover:text-slate-900 bg-slate-50 p-2 rounded-xl">
                 <X size={24} />
               </button>
-              
+
               <div className="mb-10">
                 <h2 className="text-3xl font-black text-slate-900">{editingResource ? 'Modify Resource' : 'Publish New Resource'}</h2>
                 <p className="text-slate-500 font-medium mt-1">Populate details and upload assets for students to access.</p>
@@ -448,46 +448,46 @@ const DigitalLibrary = () => {
 
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-12">
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
-                  
+
                   {/* Left: Files */}
                   <div className="space-y-10">
                     <div className="space-y-4">
-                       <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">E-Resource Asset (PDF) *</label>
-                       <div className="relative group">
-                         <input type="file" onChange={onFileChange} className="hidden" id="resourceFile" accept=".pdf" />
-                         <label htmlFor="resourceFile" className="cursor-pointer block w-full aspect-video rounded-3xl bg-slate-50 border-2 border-dashed border-slate-200 overflow-hidden hover:border-[#044343]/30 transition-all flex flex-col items-center justify-center gap-3 p-6 text-center">
-                           {filePreview ? (
-                             <>
-                               <CheckCircle2 size={32} className="text-[#044343]" />
-                               <span className="text-[10px] font-black text-[#044343] truncate w-full px-4">{filePreview}</span>
-                               <span className="text-[8px] font-bold text-slate-400 uppercase">Click to Swap File</span>
-                             </>
-                           ) : (
-                             <>
-                               <FileText size={32} className="text-slate-300" />
-                               <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Select PDF Document</span>
-                               <span className="text-[8px] font-bold text-slate-300">Max Size: 50MB</span>
-                             </>
-                           )}
-                         </label>
-                       </div>
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">E-Resource Asset (PDF) *</label>
+                      <div className="relative group">
+                        <input type="file" onChange={onFileChange} className="hidden" id="resourceFile" accept=".pdf" />
+                        <label htmlFor="resourceFile" className="cursor-pointer block w-full aspect-video rounded-3xl bg-slate-50 border-2 border-dashed border-slate-200 overflow-hidden hover:border-[#044343]/30 transition-all flex flex-col items-center justify-center gap-3 p-6 text-center">
+                          {filePreview ? (
+                            <>
+                              <CheckCircle2 size={32} className="text-[#044343]" />
+                              <span className="text-[10px] font-black text-[#044343] truncate w-full px-4">{filePreview}</span>
+                              <span className="text-[8px] font-bold text-slate-400 uppercase">Click to Swap File</span>
+                            </>
+                          ) : (
+                            <>
+                              <FileText size={32} className="text-slate-300" />
+                              <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Select PDF Document</span>
+                              <span className="text-[8px] font-bold text-slate-300">Max Size: 50MB</span>
+                            </>
+                          )}
+                        </label>
+                      </div>
                     </div>
 
                     <div className="space-y-4">
-                       <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Cover Preview (Optional)</label>
-                       <div className="relative group">
-                         <input type="file" onChange={onCoverChange} className="hidden" id="coverImg" accept="image/*" />
-                         <label htmlFor="coverImg" className="cursor-pointer block w-full aspect-[4/5] rounded-[2.5rem] bg-slate-50 border-2 border-dashed border-slate-200 overflow-hidden hover:border-[#044343]/30 transition-all">
-                           {coverPreview ? (
-                             <img src={coverPreview} className="w-full h-full object-cover" />
-                           ) : (
-                             <div className="w-full h-full flex flex-col items-center justify-center gap-3">
-                               <ImageIcon size={32} className="text-slate-300" />
-                               <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Upload Cover</span>
-                             </div>
-                           )}
-                         </label>
-                       </div>
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Cover Preview (Optional)</label>
+                      <div className="relative group">
+                        <input type="file" onChange={onCoverChange} className="hidden" id="coverImg" accept="image/*" />
+                        <label htmlFor="coverImg" className="cursor-pointer block w-full aspect-[4/5] rounded-[2.5rem] bg-slate-50 border-2 border-dashed border-slate-200 overflow-hidden hover:border-[#044343]/30 transition-all">
+                          {coverPreview ? (
+                            <img src={coverPreview} className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full flex flex-col items-center justify-center gap-3">
+                              <ImageIcon size={32} className="text-slate-300" />
+                              <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Upload Cover</span>
+                            </div>
+                          )}
+                        </label>
+                      </div>
                     </div>
                   </div>
 
@@ -517,48 +517,48 @@ const DigitalLibrary = () => {
                     </div>
 
                     <div className="bg-slate-50/50 p-8 rounded-[2rem] border border-slate-100 space-y-8">
-                       <div className="flex flex-col md:flex-row gap-8">
-                          <div className="flex-1 space-y-4">
-                             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-2">
-                               <Eye size={12} className="text-[#044343]" />
-                               Visibility Policy
-                             </label>
-                             <div className="grid grid-cols-2 gap-3">
-                                <label className={`cursor-pointer group flex flex-col p-4 rounded-2xl border-2 transition-all ${visibilityValue === 'library' ? 'bg-[#044343] border-[#044343]' : 'bg-white border-slate-100 hover:border-[#044343]/20'}`}>
-                                   <input type="radio" value="library" {...register('visibility')} className="hidden" />
-                                   <Lock size={18} className={`mb-2 ${visibilityValue === 'library' ? 'text-white/60' : 'text-slate-400 group-hover:text-[#044343]'}`} />
-                                   <span className={`text-[10px] font-black uppercase tracking-widest ${visibilityValue === 'library' ? 'text-white' : 'text-slate-600'}`}>Library Private</span>
-                                </label>
-                                <label className={`cursor-pointer group flex flex-col p-4 rounded-2xl border-2 transition-all ${visibilityValue === 'global' ? 'bg-blue-600 border-blue-600' : 'bg-white border-slate-100 hover:border-blue-600/20'}`}>
-                                   <input type="radio" value="global" {...register('visibility')} className="hidden" />
-                                   <Globe size={18} className={`mb-2 ${visibilityValue === 'global' ? 'text-white/60' : 'text-slate-400 group-hover:text-blue-600'}`} />
-                                   <span className={`text-[10px] font-black uppercase tracking-widest ${visibilityValue === 'global' ? 'text-white' : 'text-slate-600'}`}>Global Public</span>
-                                </label>
-                             </div>
+                      <div className="flex flex-col md:flex-row gap-8">
+                        <div className="flex-1 space-y-4">
+                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-2">
+                            <Eye size={12} className="text-[#044343]" />
+                            Visibility Policy
+                          </label>
+                          <div className="grid grid-cols-2 gap-3">
+                            <label className={`cursor-pointer group flex flex-col p-4 rounded-2xl border-2 transition-all ${visibilityValue === 'library' ? 'bg-[#044343] border-[#044343]' : 'bg-white border-slate-100 hover:border-[#044343]/20'}`}>
+                              <input type="radio" value="library" {...register('visibility')} className="hidden" />
+                              <Lock size={18} className={`mb-2 ${visibilityValue === 'library' ? 'text-white/60' : 'text-slate-400 group-hover:text-[#044343]'}`} />
+                              <span className={`text-[10px] font-black uppercase tracking-widest ${visibilityValue === 'library' ? 'text-white' : 'text-slate-600'}`}>Library Private</span>
+                            </label>
+                            <label className={`cursor-pointer group flex flex-col p-4 rounded-2xl border-2 transition-all ${visibilityValue === 'global' ? 'bg-blue-600 border-blue-600' : 'bg-white border-slate-100 hover:border-blue-600/20'}`}>
+                              <input type="radio" value="global" {...register('visibility')} className="hidden" />
+                              <Globe size={18} className={`mb-2 ${visibilityValue === 'global' ? 'text-white/60' : 'text-slate-400 group-hover:text-blue-600'}`} />
+                              <span className={`text-[10px] font-black uppercase tracking-widest ${visibilityValue === 'global' ? 'text-white' : 'text-slate-600'}`}>Global Public</span>
+                            </label>
                           </div>
+                        </div>
 
-                          <div className="flex-1 space-y-4">
-                             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-2">
-                               <TrendingUp size={12} className="text-[#044343]" />
-                               Promotion Options
-                             </label>
-                             <div className="bg-white p-4 rounded-2xl border border-slate-100 flex items-center justify-between">
-                                <div className="flex items-center gap-3">
-                                   <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${watch('isFeatured') ? 'bg-amber-50 text-amber-500' : 'bg-slate-50 text-slate-300'}`}>
-                                     <Star size={18} fill={watch('isFeatured') ? 'currentColor' : 'none'} />
-                                   </div>
-                                   <div>
-                                     <p className="text-[10px] font-black text-slate-900 uppercase">Mark as Featured</p>
-                                     <p className="text-[8px] font-bold text-slate-400">Pin to top of recommendations</p>
-                                   </div>
-                                </div>
-                                <label className="relative inline-flex items-center cursor-pointer">
-                                  <input type="checkbox" {...register('isFeatured')} className="sr-only peer" />
-                                  <div className="w-11 h-6 bg-slate-100 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#044343]"></div>
-                                </label>
-                             </div>
+                        <div className="flex-1 space-y-4">
+                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-2">
+                            <TrendingUp size={12} className="text-[#044343]" />
+                            Promotion Options
+                          </label>
+                          <div className="bg-white p-4 rounded-2xl border border-slate-100 flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${watch('isFeatured') ? 'bg-amber-50 text-amber-500' : 'bg-slate-50 text-slate-300'}`}>
+                                <Star size={18} fill={watch('isFeatured') ? 'currentColor' : 'none'} />
+                              </div>
+                              <div>
+                                <p className="text-[10px] font-black text-slate-900 uppercase">Mark as Featured</p>
+                                <p className="text-[8px] font-bold text-slate-400">Pin to top of recommendations</p>
+                              </div>
+                            </div>
+                            <label className="relative inline-flex items-center cursor-pointer">
+                              <input type="checkbox" {...register('isFeatured')} className="sr-only peer" />
+                              <div className="w-11 h-6 bg-slate-100 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#044343]"></div>
+                            </label>
                           </div>
-                       </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -567,8 +567,8 @@ const DigitalLibrary = () => {
                   <button type="button" onClick={closeModal} className="flex-1 bg-white border border-slate-200 text-slate-400 font-black py-5 rounded-3xl transition-all uppercase tracking-widest text-sm">
                     Discard Entry
                   </button>
-                  <button 
-                    type="submit" 
+                  <button
+                    type="submit"
                     disabled={isAdding || isUpdating}
                     className="flex-[2] bg-[#044343] text-white font-black py-5 rounded-3xl shadow-xl shadow-teal-900/10 active:scale-95 transition-all text-sm uppercase tracking-widest flex items-center justify-center gap-3 disabled:opacity-70 disabled:cursor-not-allowed"
                   >

@@ -17,11 +17,11 @@ const Receipts = () => {
   const limit = 12;
 
   const { data: receiptsData, isLoading: loading } = useGetReceiptsQuery({ page: currentPage, limit });
-  const receipts = receiptsData?.receipts || [];
+  const receipts = receiptsData?.data || [];
   const totalReceipts = receiptsData?.total || 0;
 
   const { data: currentReceiptDoc } = useGetReceiptQuery(selectedReceiptId, { skip: !selectedReceiptId });
-  const currentReceipt = currentReceiptDoc?.receipt;
+  const currentReceipt = currentReceiptDoc?.data;
 
   const handleViewReceipt = (id) => {
     setSelectedReceiptId(id);

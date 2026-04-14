@@ -6,7 +6,7 @@ import eventSchema from '../modules/event/event.model.js';
 import notificationSchema from '../modules/notification/notification.model.js';
 import fineSchema from '../modules/fines/fine.model.js';
 import resourceSchema from '../modules/resource/resource.model.js';
-import { studentAccountSchema, transactionSchema, receiptSchema } from '../modules/ledger/finance.model.js';
+import { accountSchema, transactionSchema, receiptSchema } from '../modules/ledger/finance.model.js';
 
 export const getModels = (connection) => {
   return {
@@ -18,8 +18,14 @@ export const getModels = (connection) => {
     Notification: connection.models.Notification || connection.model('Notification', notificationSchema),
     Fine: connection.models.Fine || connection.model('Fine', fineSchema),
     Resource: connection.models.Resource || connection.model('Resource', resourceSchema),
-    StudentAccount: connection.models.StudentAccount || connection.model('StudentAccount', studentAccountSchema),
+    
+    // Professional Accounting System
+    Account: connection.models.Account || connection.model('Account', accountSchema),
     Transaction: connection.models.Transaction || connection.model('Transaction', transactionSchema),
     Receipt: connection.models.Receipt || connection.model('Receipt', receiptSchema),
+
+    // Backward Compatibility
+    InternalAccount: connection.models.Account || connection.model('Account', accountSchema),
+    StudentAccount: connection.models.Account || connection.model('Account', accountSchema),
   };
 };
