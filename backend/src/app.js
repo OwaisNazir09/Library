@@ -24,6 +24,8 @@ import reportsRoutes from "./modules/reports/reports.routes.js";
 import queryRoutes from "./modules/query/query.routes.js";
 import resourceRoutes from "./modules/resource/resource.routes.js";
 import financeRoutes from "./modules/ledger/finance.routes.js";
+import blogRoutes from "./modules/blog/blog.routes.js";
+import attendanceRoutes from "./modules/attendance/attendance.routes.js";
 
 const app = express();
 
@@ -32,7 +34,13 @@ app.use(
     origin: [
       "http://localhost:3000",
       "http://localhost:5173",
+      "http://localhost:8081",
+      "http://192.168.31.145:8081",
+      "http://localhost:19000",
+      "http://localhost:19001",
+      "http://localhost:19002",
       "https://majestic-druid-c3c9b3.netlify.app",
+      "https://libsystems.blinkbitlabs.com"
     ],
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
@@ -85,6 +93,8 @@ app.use("/api/reports", reportsRoutes);
 app.use("/api/queries", queryRoutes);
 app.use("/api/resources", resourceRoutes);
 app.use("/api/finance", financeRoutes);
+app.use("/api/blogs", blogRoutes);
+app.use("/api/attendance", attendanceRoutes);
 
 app.all("*", (req, res, next) => {
   const err = new Error(`Can't find ${req.originalUrl} on this server!`);

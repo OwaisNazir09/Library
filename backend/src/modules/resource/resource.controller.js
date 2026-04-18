@@ -1,6 +1,41 @@
 import { getModels } from '../../utils/helpers.js';
 import ApiFeatures from '../../utils/apiFeatures.js';
 import { deleteCloudinaryImage } from '../../middleware/upload.middleware.js';
+import Tenant from '../tenant/tenant.model.js';
+
+export const getPublicResources = async (req, res, next) => {
+  try {
+    const { Resource } = getModels(req.db);
+
+    console.log('[Resources] Fetching public resources with query:', req.query);
+    const query = {
+      $or: [
+        { visibility: 'global' },
+        { isFeatured: true }
+      ]
+    };
+
+    const features = new ApiFeatures(Resource.find(query), req.query)
+      .filter()
+      .search(['title', 'category', 'subject', 'tags'])
+      .sort()
+      .limitFields()
+      .paginate();
+
+    const resources = await features.query.populate('uploadedBy', 'fullName email');
+    const total = await Resource.countDocuments(query);
+
+    res.status(200).json({
+      status: 'success',
+      results: resources.length,
+      total,
+      data: { resources }
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
 
 export const getAllResources = async (req, res, next) => {
   try {

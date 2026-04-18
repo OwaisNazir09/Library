@@ -2,7 +2,8 @@ import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import { toast } from "react-hot-toast";
 
 const baseQuery = fetchBaseQuery({
-  baseUrl: "https://library-7qme.onrender.com/api",
+  // baseUrl: "https://library-7qme.onrender.com/api",
+  baseUrl: 'http://192.168.31.145:3245/api',
   prepareHeaders: (headers) => {
     const token = localStorage.getItem("token");
     const tenantId = localStorage.getItem("tenantId");
@@ -83,6 +84,7 @@ export const baseApi = createApi({
     "Settings",
     "Dashboard",
     "Admin",
+    "Attendance",
   ],
   endpoints: () => ({}),
 });

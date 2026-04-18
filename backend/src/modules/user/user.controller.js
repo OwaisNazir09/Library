@@ -12,7 +12,7 @@ export const getAllUsers = async (req, res, next) => {
     const features = new ApiFeatures(User.find(filter).populate('package').populate('assignedTable'), req.query)
       .filter()
       .search(['fullName', 'email'])
-      .sort()
+      .sort({ createdAt: 1 })
       .limitFields()
       .paginate();
 

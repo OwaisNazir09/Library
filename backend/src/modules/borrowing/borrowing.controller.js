@@ -113,6 +113,24 @@ export const getUserBorrowings = async (req, res, next) => {
   }
 };
 
+export const getMyBorrowings = async (req, res, next) => {
+  try {
+    const { Borrowing } = getModels(req.db);
+    const filter = { user: req.user._id };
+    if (req.tenantId) filter.tenantId = req.tenantId;
+
+    const borrowings = await Borrowing.find(filter).populate('book').sort({ borrowedDate: -1 });
+
+    res.status(200).json({
+      status: 'success',
+      results: borrowings.length,
+      data: { borrowings }
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
 export const getOverdueBooks = async (req, res, next) => {
   try {
     const { Borrowing } = getModels(req.db);
@@ -143,7 +161,7 @@ export const getAllBorrowings = async (req, res, next) => {
 
     const features = new ApiFeatures(Borrowing.find(filter), req.query)
       .filter()
-      .sort()
+      .sort({ createdAt: 1 })
       .paginate();
 
     features.query = features.query

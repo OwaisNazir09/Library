@@ -34,6 +34,7 @@ const createSendToken = (user, statusCode, res) => {
 
 export const signup = async (req, res, next) => {
   try {
+    console.log('[Auth] Signup attempt:', req.body);
     const { User } = getModels(req.db);
     const newUser = await User.create({
       fullName: req.body.fullName,
@@ -50,6 +51,7 @@ export const signup = async (req, res, next) => {
 
 export const login = async (req, res, next) => {
   try {
+    console.log('[Auth] Login attempt:', req.body.email);
     const { email, password } = req.body;
 
     if (!email || !password) {

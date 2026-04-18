@@ -14,6 +14,7 @@ import RegistrationList from './pages/Users/RegistrationList';
 import PackageList from './pages/Packages/PackageList';
 import BorrowingHistory from './pages/Borrowings/BorrowingHistory';
 import EventList from './pages/Events/EventList';
+import AttendanceList from './pages/Attendance/AttendanceList';
 import NotificationList from './pages/Notifications/NotificationList';
 import Tables from './pages/Tables/Tables';
 import Settings from './pages/Settings/Settings';
@@ -62,6 +63,7 @@ const App = () => {
           <Route path="packages" element={<PackageList />} />
           <Route path="borrowings" element={<BorrowingHistory />} />
           <Route path="events" element={<EventList />} />
+          <Route path="attendance" element={<AttendanceList />} />
           <Route path="reports" element={<Reports />} />
           <Route path="reminders" element={<Reminders />} />
           <Route path="fines" element={<Fines />} />

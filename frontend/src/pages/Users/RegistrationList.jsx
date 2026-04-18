@@ -413,8 +413,12 @@ const RegistrationList = () => {
                           <input {...register('phone', { required: true })} className="w-full bg-white border border-slate-200 rounded-2xl py-3 px-6 outline-none focus:ring-2 focus:ring-[#044343]/10" placeholder="+91 98765 43210" />
                         </div>
                         <div className="space-y-1.5">
-                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Email Address</label>
-                          <input {...register('email')} type="email" className="w-full bg-white border border-slate-200 rounded-2xl py-3 px-6 outline-none focus:ring-2 focus:ring-[#044343]/10" placeholder="owaiseeee@example.com" />
+                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Email Address *</label>
+                          <input {...register('email', { required: true })} type="email" className="w-full bg-white border border-slate-200 rounded-2xl py-3 px-6 outline-none focus:ring-2 focus:ring-[#044343]/10" placeholder="owaiseeee@example.com" />
+                        </div>
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Login Password</label>
+                          <input {...register('password')} type="password" title="Default is password123" className="w-full bg-white border border-slate-200 rounded-2xl py-3 px-6 outline-none focus:ring-2 focus:ring-[#044343]/10" placeholder="••••••••" />
                         </div>
                         <div className="space-y-1.5">
                           <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Date of Birth</label>

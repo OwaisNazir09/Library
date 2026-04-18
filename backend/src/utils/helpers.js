@@ -8,6 +8,9 @@ import fineSchema from '../modules/fines/fine.model.js';
 import resourceSchema from '../modules/resource/resource.model.js';
 import { accountSchema, transactionSchema, receiptSchema } from '../modules/ledger/finance.model.js';
 
+import blogSchema from '../modules/blog/blog.model.js';
+import attendanceSchema from '../modules/attendance/attendance.model.js';
+
 export const getModels = (connection) => {
   return {
     User: connection.models.User || connection.model('User', userSchema),
@@ -19,6 +22,10 @@ export const getModels = (connection) => {
     Fine: connection.models.Fine || connection.model('Fine', fineSchema),
     Resource: connection.models.Resource || connection.model('Resource', resourceSchema),
     
+    // News & Community
+    Blog: connection.models.Blog || connection.model('Blog', blogSchema),
+    Attendance: connection.models.Attendance || connection.model('Attendance', attendanceSchema),
+
     // Professional Accounting System
     Account: connection.models.Account || connection.model('Account', accountSchema),
     Transaction: connection.models.Transaction || connection.model('Transaction', transactionSchema),

@@ -28,6 +28,7 @@ const groups = [
       { name: 'Books', icon: BookOpen, path: '/app/books' },
       { name: 'Book Circulation', icon: PlusCircle, path: '/app/borrowings' },
       { name: 'Library Activities', icon: Library, path: '/app/events' },
+      { name: 'Attendance Logs', icon: Clock, path: '/app/attendance' },
       { name: 'Student Registrations', icon: Users, path: '/app/registrations' },
       { name: 'Membership Packages', icon: LayoutGrid, path: '/app/packages' },
       { name: 'Study Desks', icon: Coffee, path: '/app/tables' },
