@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
-  Image, Alert, ActivityIndicator, FlatList, RefreshControl
+  Image, Alert, ActivityIndicator, FlatList, RefreshControl,
+  Modal, TextInput
 } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
 import { useSelector, useDispatch } from 'react-redux';
 import {
   User, Mail, Phone, Settings, LogOut,
@@ -12,6 +14,7 @@ import {
 import { logout } from '../store/authSlice';
 import { fetchMyLibraries } from '../store/librarySlice';
 import { fetchMyAttendance } from '../store/attendanceSlice';
+import { updateUserProfile } from '../store/authSlice';
 import { colors } from '../utils/colors';
 
 export default function Profile({ navigation }) {
@@ -20,6 +23,14 @@ export default function Profile({ navigation }) {
   const { joinedLibraries, loading: libLoading } = useSelector((state) => state.libraries);
   const { records: attendanceRecords, loading: attLoading } = useSelector((state) => state.attendance);
   const [refreshing, setRefreshing] = useState(false);
+  const [editModalVisible, setEditModalVisible] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
+  
+  // Field states
+  const [fullName, setFullName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [city, setCity] = useState('');
+  const [newAvatar, setNewAvatar] = useState(null);
 
   const loadData = async () => {
     if (!isGuest && token) {
@@ -45,6 +56,55 @@ export default function Profile({ navigation }) {
       { text: 'Cancel', style: 'cancel' },
       { text: 'Logout', style: 'destructive', onPress: () => dispatch(logout()) },
     ]);
+  };
+
+  const openEditModal = () => {
+    setFullName(user?.fullName || '');
+    setPhone(user?.phone || '');
+    setCity(user?.city || '');
+    setEditModalVisible(true);
+  };
+
+  const pickImage = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.5,
+    });
+
+    if (!result.canceled) {
+      setNewAvatar(result.assets[0]);
+    }
+  };
+
+  const handleUpdate = async () => {
+    setIsUpdating(true);
+    const formData = new FormData();
+    formData.append('fullName', fullName);
+    formData.append('phone', phone);
+    formData.append('city', city);
+
+    if (newAvatar) {
+      const uriParts = newAvatar.uri.split('.');
+      const fileType = uriParts[uriParts.length - 1];
+      formData.append('profilePicture', {
+        uri: newAvatar.uri,
+        name: `profile.${fileType}`,
+        type: `image/${fileType}`,
+      });
+    }
+
+    try {
+      await dispatch(updateUserProfile(formData)).unwrap();
+      Alert.alert('Success', 'Profile updated successfully!');
+      setEditModalVisible(false);
+      setNewAvatar(null);
+    } catch (err) {
+      Alert.alert('Error', err || 'Failed to update profile');
+    } finally {
+      setIsUpdating(false);
+    }
   };
 
   const renderGuestView = () => (
@@ -78,14 +138,16 @@ export default function Profile({ navigation }) {
       <View style={styles.header}>
         <View style={styles.profileInfo}>
           <View style={styles.avatarWrapper}>
-            {user?.profilePicture ? (
+            {newAvatar ? (
+               <Image source={{ uri: newAvatar.uri }} style={styles.avatar} />
+            ) : user?.profilePicture ? (
               <Image source={{ uri: user.profilePicture }} style={styles.avatar} />
             ) : (
               <View style={[styles.avatarPlaceholder, { backgroundColor: colors.primary }]}>
                 <Text style={styles.avatarInitial}>{user?.fullName?.charAt(0).toUpperCase()}</Text>
               </View>
             )}
-            <TouchableOpacity style={styles.editAvatarBtn}>
+            <TouchableOpacity style={styles.editAvatarBtn} onPress={pickImage}>
               <Camera size={14} color="#fff" />
             </TouchableOpacity>
           </View>
@@ -97,8 +159,8 @@ export default function Profile({ navigation }) {
             </View>
           </View>
         </View>
-        <TouchableOpacity style={styles.settingsBtn}>
-          <Settings size={22} color={colors.text} />
+        <TouchableOpacity style={styles.settingsBtn} onPress={openEditModal}>
+          <Edit2 size={20} color={colors.text} />
         </TouchableOpacity>
       </View>
 
@@ -119,8 +181,8 @@ export default function Profile({ navigation }) {
           <Text style={styles.sectionTitle}>Account Details</Text>
           <View style={styles.infoList}>
             <InfoRow icon={Mail} label="Email" value={user?.email} />
-            <InfoRow icon={Phone} label="Contact" value={user?.phone || 'Add phone number'} isAction onPress={() => Alert.alert('Edit Contact', 'Profile editing features coming soon!')} />
-            <InfoRow icon={MapPin} label="Address" value={user?.city || 'Add address'} isAction onPress={() => Alert.alert('Edit Address', 'Profile editing features coming soon!')} />
+            <InfoRow icon={Phone} label="Contact" value={user?.phone || 'Add phone number'} isAction onPress={openEditModal} />
+            <InfoRow icon={MapPin} label="Address" value={user?.city || 'Add address'} isAction onPress={openEditModal} />
           </View>
         </View>
 
@@ -167,6 +229,66 @@ export default function Profile({ navigation }) {
 
         <View style={{ height: 40 }} />
       </ScrollView>
+
+      {/* Edit Profile Modal */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={editModalVisible}
+        onRequestClose={() => setEditModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+               <Text style={styles.modalTitle}>Edit Profile</Text>
+               <TouchableOpacity onPress={() => setEditModalVisible(false)}>
+                  <Text style={styles.closeBtn}>Close</Text>
+               </TouchableOpacity>
+            </View>
+
+            <ScrollView>
+               <View style={styles.inputGroup}>
+                  <Text style={styles.inputLabel}>Full Name</Text>
+                  <TextInput 
+                     style={styles.input}
+                     value={fullName}
+                     onChangeText={setFullName}
+                     placeholder="Your full name"
+                  />
+               </View>
+
+               <View style={styles.inputGroup}>
+                  <Text style={styles.inputLabel}>Phone Number</Text>
+                  <TextInput 
+                     style={styles.input}
+                     value={phone}
+                     onChangeText={setPhone}
+                     placeholder="+91 98765 43210"
+                     keyboardType="phone-pad"
+                  />
+               </View>
+
+               <View style={styles.inputGroup}>
+                  <Text style={styles.inputLabel}>City / Address</Text>
+                  <TextInput 
+                     style={styles.input}
+                     value={city}
+                     onChangeText={setCity}
+                     placeholder="Srinagar, Kashmir"
+                  />
+               </View>
+
+               <TouchableOpacity 
+                  style={[styles.saveBtn, isUpdating && { opacity: 0.7 }]}
+                  onPress={handleUpdate}
+                  disabled={isUpdating}
+               >
+                  {isUpdating ? <ActivityIndicator color="#fff" /> : <Text style={styles.saveBtnText}>Update Profile</Text>}
+               </TouchableOpacity>
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -244,6 +366,18 @@ const styles = StyleSheet.create({
   guestSub: { fontSize: 14, color: colors.lightText, textAlign: 'center', lineHeight: 22, paddingHorizontal: 20, marginBottom: 35 },
   actionBtn: { backgroundColor: colors.primary, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 16, borderRadius: 16, elevation: 4 },
   actionBtnText: { color: '#fff', fontSize: 16, fontWeight: '700', marginRight: 8 },
-  outlineBtn: { backgroundColor: '#fff', borderWeight: 1, borderColor: colors.primary, alignItems: 'center', paddingVertical: 16, borderRadius: 16 },
+  outlineBtn: { backgroundColor: '#fff', borderWidth: 1, borderColor: colors.primary, alignItems: 'center', paddingVertical: 16, borderRadius: 16 },
   outlineBtnText: { color: colors.primary, fontSize: 16, fontWeight: '700' },
+  
+  // Modal Styles
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
+  modalContent: { backgroundColor: '#fff', borderTopLeftRadius: 30, borderTopRightRadius: 30, padding: 25, height: '70%' },
+  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 25 },
+  modalTitle: { fontSize: 20, fontWeight: '800', color: colors.text },
+  closeBtn: { fontSize: 14, fontWeight: '700', color: '#6b7280' },
+  inputGroup: { marginBottom: 20 },
+  inputLabel: { fontSize: 12, fontWeight: '700', color: colors.lightText, marginBottom: 8, textTransform: 'uppercase' },
+  input: { backgroundColor: '#f9fafb', borderWidth: 1, borderColor: '#f1f1f1', borderRadius: 12, padding: 15, fontSize: 14, color: colors.text },
+  saveBtn: { backgroundColor: colors.primary, borderRadius: 16, padding: 18, alignItems: 'center', marginTop: 10, elevation: 4 },
+  saveBtnText: { color: '#fff', fontSize: 16, fontWeight: '800' },
 });

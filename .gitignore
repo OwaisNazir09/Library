@@ -7,6 +7,9 @@ node_modules/
 # Environment variables
 .env
 
+./backend/.env
+./mobile/.env
+./frontend/.env
 # Build folders
 dist/
 build/
@@ -30,3 +33,19 @@ __pycache__/
 # Temporary files
 *.tmp
 *.swp
+
+# Firebase Secrets
+google-services.json
+*firebase-adminsdk*.json
+backend/src/config/*.json
+
+# Environment files
+.env
+.env.*
+
+# Node
+node_modules/
+
+# Build
+android/build/
+android/app/build/

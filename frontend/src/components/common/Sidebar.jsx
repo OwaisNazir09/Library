@@ -15,7 +15,8 @@ import {
   LogOut,
   Coffee,
   X,
-  Receipt
+  Receipt,
+  Bell
 } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import { logout } from '../../store/slices/authSlice';
@@ -56,6 +57,7 @@ const groups = [
   {
     label: 'SETTING & OTHERS',
     items: [
+      { name: 'Push Notifications', icon: Bell, path: '/app/notifications/send' },
       { name: 'Setting', icon: Settings, path: '/app/settings' },
       { name: 'Help & Support', icon: HelpCircle, path: '/app/support' },
     ]

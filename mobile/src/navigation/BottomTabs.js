@@ -1,7 +1,7 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useSelector } from 'react-redux';
-import { Home as HomeIcon, FileText, QrCode, Library, User } from 'lucide-react-native';
+import { Home as HomeIcon, FileText, QrCode, Library, User, Wallet } from 'lucide-react-native';
 import { colors } from '../utils/colors';
 
 // Screens
@@ -10,6 +10,7 @@ import Blogs from '../screens/Blogs';
 import QRScanner from '../screens/QRScanner';
 import Libraries from '../screens/Libraries';
 import Profile from '../screens/Profile';
+import Ledger from '../screens/Ledger';
 
 const Tab = createBottomTabNavigator();
 
@@ -21,10 +22,13 @@ export default function BottomTabs() {
       initialRouteName="Home"
       screenOptions={({ route }) => ({
         headerShown: true,
+        headerStyle: { backgroundColor: '#fff', elevation: 1, shadowOpacity: 0.1, borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
+        headerTintColor: colors.primary,
+        headerTitleStyle: { fontWeight: '800' },
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.lightText,
-        tabBarStyle: { 
-          paddingBottom: 8, 
+        tabBarStyle: {
+          paddingBottom: 8,
           height: 65,
           borderTopWidth: 1,
           borderTopColor: '#f0f0f0',
@@ -40,6 +44,7 @@ export default function BottomTabs() {
           else if (route.name === 'Blogs') icon = <FileText size={size} color={color} strokeWidth={focused ? 2.5 : 2} />;
           else if (route.name === 'QRScanner') icon = <QrCode size={size} color={color} strokeWidth={focused ? 2.5 : 2} />;
           else if (route.name === 'Libraries') icon = <Library size={size} color={color} strokeWidth={focused ? 2.5 : 2} />;
+          else if (route.name === 'Ledger') icon = <Wallet size={size} color={color} strokeWidth={focused ? 2.5 : 2} />;
           else if (route.name === 'Profile') icon = <User size={size} color={color} strokeWidth={focused ? 2.5 : 2} />;
           return icon;
         },
@@ -47,10 +52,10 @@ export default function BottomTabs() {
     >
       <Tab.Screen name="Home" component={Home} options={{ tabBarLabel: 'Resource' }} />
       <Tab.Screen name="Blogs" component={Blogs} options={{ tabBarLabel: 'Blogs' }} />
-      <Tab.Screen 
-        name="QRScanner" 
-        component={QRScanner} 
-        options={{ tabBarLabel: 'Scan QR', title: 'Presence Scanner' }} 
+      <Tab.Screen
+        name="QRScanner"
+        component={QRScanner}
+        options={{ tabBarLabel: 'Scan QR', title: 'Presence Scanner' }}
         listeners={({ navigation }) => ({
           tabPress: e => {
             if (isGuest) {
@@ -61,6 +66,9 @@ export default function BottomTabs() {
         })}
       />
       <Tab.Screen name="Libraries" component={Libraries} options={{ tabBarLabel: 'Libraries' }} />
+      {!isGuest && (
+        <Tab.Screen name="Ledger" component={Ledger} options={{ tabBarLabel: 'Finance', title: 'Payments & Ledger' }} />
+      )}
       <Tab.Screen name="Profile" component={Profile} options={{ tabBarLabel: 'My Profile' }} />
     </Tab.Navigator>
   );

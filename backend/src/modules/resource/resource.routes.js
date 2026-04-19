@@ -6,7 +6,8 @@ import {
   updateResource,
   deleteResource,
   trackDownload,
-  getPublicResources
+  getPublicResources,
+  getLibraryResources
 } from './resource.controller.js';
 import { protect, restrictTo } from '../../middleware/auth.js';
 import { createResourceUploader } from '../../middleware/upload.middleware.js';
@@ -15,6 +16,7 @@ const router = express.Router();
 const upload = createResourceUploader();
 
 router.get('/public', getPublicResources);
+router.get('/library/:libraryId', protect, getLibraryResources);
 
 router.route('/')
   .get(protect, getAllResources)

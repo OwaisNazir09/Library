@@ -5,6 +5,8 @@ import libraryReducer from './librarySlice';
 import blogReducer from './blogSlice';
 import attendanceReducer from './attendanceSlice';
 import userReducer from './userSlice';
+import downloadsReducer from './downloadsSlice';
+import financeReducer from './financeSlice';
 
 export const store = configureStore({
   reducer: {
@@ -14,5 +16,7 @@ export const store = configureStore({
     blogs: blogReducer,
     attendance: attendanceReducer,
     user: userReducer,
+    downloads: downloadsReducer,
+    finance: financeReducer,
   },
 });

@@ -161,12 +161,14 @@ export const getAllBorrowings = async (req, res, next) => {
 
     const features = new ApiFeatures(Borrowing.find(filter), req.query)
       .filter()
-      .sort({ createdAt: 1 })
+      .search(['status'])
+      .sort()
       .paginate();
 
     features.query = features.query
       .populate('user', 'fullName name _id email role')
-      .populate('book', 'title isbn availableCopies _id');
+      .populate('book', 'title isbn availableCopies _id')
+      .sort('-borrowedDate -createdAt');
 
     const borrowings = await features.query;
     const total = await Borrowing.countDocuments(filter);

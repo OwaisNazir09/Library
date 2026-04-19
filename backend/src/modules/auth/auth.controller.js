@@ -34,16 +34,47 @@ const createSendToken = (user, statusCode, res) => {
 
 export const signup = async (req, res, next) => {
   try {
-    console.log('[Auth] Signup attempt:', req.body);
+    console.log('[Auth] Signup attempt:', req.body.email);
     const { User } = getModels(req.db);
+    
+    // Map uploaded files to documents schema
+    const formattedDocs = [];
+    if (req.files && req.files.length > 0) {
+      req.files.forEach(file => {
+        formattedDocs.push({
+          name: file.originalname || 'Document',
+          fileUrl: file.path,
+          publicId: file.filename,
+          status: 'pending'
+        });
+      });
+    }
+
+    // Create use with extended data
     const newUser = await User.create({
       fullName: req.body.fullName,
       email: req.body.email,
       password: req.body.password,
-      role: req.body.role || 'member'
+      role: 'member', // Default for public signup
+      tenantId: req.body.tenantId,
+      phone: req.body.phone,
+      addressLine1: req.body.address,
+      userType: req.body.userType,
+      idNumber: req.body.idNumber,
+      package: req.body.packageId,
+      selectedServices: req.body.selectedServices ? JSON.parse(req.body.selectedServices) : [],
+      documents: formattedDocs,
+      status: 'pending' // Force pending for all new signs
     });
 
-    createSendToken(newUser, 201, res);
+    res.status(201).json({
+      status: 'success',
+      message: 'Registration successful! Your account is pending admin approval.',
+      data: {
+        userId: newUser._id,
+        status: newUser.status
+      }
+    });
   } catch (err) {
     next(err);
   }
@@ -66,6 +97,17 @@ export const login = async (req, res, next) => {
     if (!user || !(await user.correctPassword(password, user.password))) {
       const error = new Error('Incorrect email or password');
       error.statusCode = 401;
+      throw error;
+    }
+
+    // Check Approval Status (Admins can always login)
+    if (user.role === 'member' && user.status !== 'approved') {
+      let msg = 'Your account is pending approval.';
+      if (user.status === 'rejected') msg = `Your registration was rejected. Reason: ${user.rejectionReason || 'No reason provided.'}`;
+      if (user.status === 'suspended') msg = 'Your account has been suspended.';
+      
+      const error = new Error(msg);
+      error.statusCode = 403;
       throw error;
     }
 

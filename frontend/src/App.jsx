@@ -16,6 +16,7 @@ import BorrowingHistory from './pages/Borrowings/BorrowingHistory';
 import EventList from './pages/Events/EventList';
 import AttendanceList from './pages/Attendance/AttendanceList';
 import NotificationList from './pages/Notifications/NotificationList';
+import SendNotification from './pages/Notifications/SendNotification';
 import Tables from './pages/Tables/Tables';
 import Settings from './pages/Settings/Settings';
 import Reports from './pages/Reports/Reports';
@@ -77,6 +78,7 @@ const App = () => {
           <Route path="finance/receipts" element={<Receipts />} />
           <Route path="finance/reports" element={<FinanceReports />} />
           <Route path="notifications" element={<NotificationList />} />
+          <Route path="notifications/send" element={<SendNotification />} />
           <Route path="tables" element={<Tables />} />
           <Route path="digital-library" element={<DigitalLibrary />} />
           <Route path="settings" element={<Settings />} />

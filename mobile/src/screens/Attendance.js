@@ -1,15 +1,20 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import {
-  View, Text, StyleSheet, FlatList, ActivityIndicator, RefreshControl
+  View, Text, StyleSheet, ScrollView, ActivityIndicator,
+  RefreshControl, TouchableOpacity
 } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
+import { Calendar } from 'react-native-calendars';
+import { format, parseISO } from 'date-fns';
 import { fetchMyAttendance } from '../store/attendanceSlice';
 import { colors } from '../utils/colors';
+import { Clock, CheckCircle, XCircle, Info, ChevronRight, Calendar as CalIcon } from 'lucide-react-native';
 
 export default function Attendance() {
   const dispatch = useDispatch();
   const { records, loading, error } = useSelector(state => state.attendance);
-  const [refreshing, setRefreshing] = React.useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(format(new Date(), 'yyyy-MM-dd'));
 
   useEffect(() => {
     dispatch(fetchMyAttendance());
@@ -21,137 +26,218 @@ export default function Attendance() {
     setRefreshing(false);
   };
 
-  const formatDate = (isoStr) => {
-    if (!isoStr) return '';
-    const d = new Date(isoStr);
-    return d.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
-  };
+  const markedDates = useMemo(() => {
+    const marks = {};
+    records.forEach(record => {
+      const dateStr = format(parseISO(record.checkIn), 'yyyy-MM-dd');
+      marks[dateStr] = {
+        marked: true,
+        dotColor: colors.primary,
+        customStyles: {
+          container: {
+            backgroundColor: dateStr === selectedDate ? colors.primary + '20' : 'transparent',
+            borderRadius: 8,
+          },
+          text: {
+            color: dateStr === selectedDate ? colors.primary : colors.text,
+            fontWeight: '700',
+          }
+        }
+      };
+    });
+
+    // Add selected date highlighting
+    if (!marks[selectedDate]) {
+      marks[selectedDate] = {
+        selected: true,
+        selectedColor: colors.secondary + '20',
+        selectedTextColor: colors.secondary,
+      };
+    } else {
+      marks[selectedDate] = {
+        ...marks[selectedDate],
+        selected: true,
+        selectedColor: colors.primary,
+        selectedTextColor: '#fff',
+      };
+    }
+
+    return marks;
+  }, [records, selectedDate]);
+
+  const selectedRecords = useMemo(() => {
+    return records.filter(r => format(parseISO(r.checkIn), 'yyyy-MM-dd') === selectedDate);
+  }, [records, selectedDate]);
 
   const formatTime = (isoStr) => {
     if (!isoStr) return '';
-    return new Date(isoStr).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+    return format(parseISO(isoStr), 'hh:mm a');
   };
-
-  const AttendanceCard = ({ item }) => (
-    <View style={styles.card}>
-      <View style={styles.cardLeft}>
-        <Text style={styles.cardIcon}>{item.method === 'qr' ? '📷' : '✋'}</Text>
-      </View>
-      <View style={styles.cardContent}>
-        <Text style={styles.cardDate}>{formatDate(item.checkIn)}</Text>
-        <Text style={styles.cardTime}>Check-in: {formatTime(item.checkIn)}</Text>
-        {item.checkOut && <Text style={styles.cardTime}>Check-out: {formatTime(item.checkOut)}</Text>}
-        <View style={styles.methodBadge}>
-          <Text style={styles.methodText}>via {item.method?.toUpperCase()}</Text>
-        </View>
-      </View>
-      <View style={styles.cardRight}>
-        <View style={styles.checkDot} />
-      </View>
-    </View>
-  );
 
   return (
     <View style={styles.container}>
-      {/* Summary */}
-      <View style={styles.summaryBox}>
-        <View style={styles.summaryItem}>
-          <Text style={styles.summaryCount}>{records.length}</Text>
-          <Text style={styles.summaryLabel}>Total Visits</Text>
-        </View>
-        <View style={styles.summaryDivider} />
-        <View style={styles.summaryItem}>
-          <Text style={styles.summaryCount}>
-            {records.filter(r => {
-              const d = new Date(r.checkIn);
-              const now = new Date();
-              return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
-            }).length}
-          </Text>
-          <Text style={styles.summaryLabel}>This Month</Text>
-        </View>
-        <View style={styles.summaryDivider} />
-        <View style={styles.summaryItem}>
-          <Text style={styles.summaryCount}>
-            {records.filter(r => {
-              const d = new Date(r.checkIn);
-              const now = new Date();
-              return d.toDateString() === now.toDateString();
-            }).length}
-          </Text>
-          <Text style={styles.summaryLabel}>Today</Text>
-        </View>
-      </View>
-
-      {error && (
-        <View style={styles.errorBox}>
-          <Text style={styles.errorText}>⚠ {error}</Text>
-        </View>
-      )}
-
-      {loading && !refreshing ? (
-        <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: 40 }} />
-      ) : (
-        <FlatList
-          data={records}
-          keyExtractor={(item, i) => item._id || i.toString()}
-          renderItem={({ item }) => <AttendanceCard item={item} />}
-          contentContainerStyle={styles.list}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />}
-          ListEmptyComponent={
-            <View style={styles.emptyContainer}>
-              <Text style={styles.emptyIcon}>📋</Text>
-              <Text style={styles.emptyText}>No attendance records</Text>
-              <Text style={styles.emptySubText}>Scan a QR code to record your visit</Text>
+      <ScrollView
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={colors.primary} />}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.header}>
+          <Text style={styles.title}>Attendance History</Text>
+          <View style={styles.statsContainer}>
+            <View style={styles.statItem}>
+              <Text style={styles.statVal}>{records.length}</Text>
+              <Text style={styles.statLabel}>Visits</Text>
             </View>
-          }
-        />
-      )}
+            <View style={styles.vDivider} />
+            <View style={styles.statItem}>
+              <Text style={styles.statVal}>{records.filter(r => !!r.checkOut).length}</Text>
+              <Text style={styles.statLabel}>Completed</Text>
+            </View>
+          </View>
+        </View>
+
+        <View style={styles.calendarCard}>
+          <Calendar
+            current={selectedDate}
+            onDayPress={day => setSelectedDate(day.dateString)}
+            markedDates={markedDates}
+            theme={{
+              backgroundColor: '#ffffff',
+              calendarBackground: '#ffffff',
+              textSectionTitleColor: '#b6c1cd',
+              selectedDayBackgroundColor: colors.primary,
+              selectedDayTextColor: '#ffffff',
+              todayTextColor: colors.primary,
+              dayTextColor: '#2d4150',
+              textDisabledColor: '#d9e1e8',
+              dotColor: colors.primary,
+              selectedDotColor: '#ffffff',
+              arrowColor: colors.primary,
+              disabledArrowColor: '#d9e1e8',
+              monthTextColor: colors.text,
+              indicatorColor: colors.primary,
+              textDayFontWeight: '500',
+              textMonthFontWeight: '800',
+              textDayHeaderFontWeight: '600',
+              textDayFontSize: 14,
+              textMonthFontSize: 18,
+              textDayHeaderFontSize: 12
+            }}
+          />
+        </View>
+
+        <View style={styles.detailsSection}>
+          <Text style={styles.sectionTitle}>
+            {format(parseISO(selectedDate), 'MMMM do, yyyy')}
+          </Text>
+
+          {loading ? (
+            <ActivityIndicator color={colors.primary} style={{ marginTop: 20 }} />
+          ) : selectedRecords.length > 0 ? (
+            selectedRecords.map((record, index) => (
+              <View key={record._id || index} style={styles.detailCard}>
+                <View style={styles.cardHeader}>
+                  <View style={styles.methodTag}>
+                    <Text style={styles.methodText}>{record.method.toUpperCase()}</Text>
+                  </View>
+                  <CheckCircle size={18} color={record.checkOut ? '#4caf50' : '#ff9800'} />
+                </View>
+
+                <View style={styles.cardRow}>
+                  <View style={styles.timeInfo}>
+                    <Clock size={16} color={colors.lightText} />
+                    <Text style={styles.timeLabel}>Entry</Text>
+                    <Text style={styles.timeVal}>{formatTime(record.checkIn)}</Text>
+                  </View>
+                  <View style={styles.hDivider} />
+                  <View style={styles.timeInfo}>
+                    <Clock size={16} color={colors.lightText} />
+                    <Text style={styles.timeLabel}>Exit</Text>
+                    <Text style={styles.timeVal}>{record.checkOut ? formatTime(record.checkOut) : '--:--'}</Text>
+                  </View>
+                </View>
+
+                {record.note && (
+                  <View style={styles.noteBox}>
+                    <Info size={14} color={colors.lightText} />
+                    <Text style={styles.noteText}>{record.note}</Text>
+                  </View>
+                )}
+              </View>
+            ))
+          ) : (
+            <View style={styles.emptyDetails}>
+              <CalIcon size={40} color="#e5e7eb" strokeWidth={1.5} />
+              <Text style={styles.emptyText}>No records for this day</Text>
+              <Text style={styles.emptySub}>Scan at the library desk to record visit.</Text>
+            </View>
+          )}
+        </View>
+        <View style={{ height: 40 }} />
+      </ScrollView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background },
-  summaryBox: {
-    flexDirection: 'row',
-    backgroundColor: colors.primary,
-    padding: 20,
-  },
-  summaryItem: { flex: 1, alignItems: 'center' },
-  summaryCount: { fontSize: 28, fontWeight: '800', color: '#fff' },
-  summaryLabel: { fontSize: 12, color: 'rgba(255,255,255,0.8)', marginTop: 4 },
-  summaryDivider: { width: 1, backgroundColor: 'rgba(255,255,255,0.3)' },
-  errorBox: { margin: 12, backgroundColor: '#ffe0e0', borderRadius: 8, padding: 10 },
-  errorText: { color: '#c00', fontSize: 13 },
-  list: { padding: 12 },
-  card: {
+  container: { flex: 1, backgroundColor: '#f9fafb' },
+  header: {
     backgroundColor: '#fff',
-    borderRadius: 12,
-    marginBottom: 10,
+    padding: 24,
+    paddingTop: 60,
+    borderBottomLeftRadius: 32,
+    borderBottomRightRadius: 32,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+  },
+  title: { fontSize: 28, fontWeight: '900', color: colors.text, marginBottom: 16 },
+  statsContainer: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.primary + '10', borderRadius: 20, padding: 16 },
+  statItem: { flex: 1, alignItems: 'center' },
+  statVal: { fontSize: 20, fontWeight: '800', color: colors.primary },
+  statLabel: { fontSize: 11, fontWeight: '600', color: colors.lightText, marginTop: 2, textTransform: 'uppercase' },
+  vDivider: { width: 1, height: 30, backgroundColor: colors.primary + '20' },
+  calendarCard: {
+    backgroundColor: '#fff',
+    margin: 16,
+    borderRadius: 24,
+    padding: 8,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 15,
+  },
+  detailsSection: { paddingHorizontal: 20 },
+  sectionTitle: { fontSize: 16, fontWeight: '800', color: colors.text, marginBottom: 16, marginTop: 8 },
+  detailCard: {
+    backgroundColor: '#fff',
+    borderRadius: 20,
+    padding: 16,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#f0f0f0',
+  },
+  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
+  methodTag: { backgroundColor: '#f0f4ff', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8 },
+  methodText: { fontSize: 10, fontWeight: '800', color: colors.primary },
+  cardRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  timeInfo: { flex: 1, alignItems: 'center' },
+  timeLabel: { fontSize: 10, fontWeight: '700', color: colors.lightText, marginTop: 4, textTransform: 'uppercase' },
+  timeVal: { fontSize: 16, fontWeight: '800', color: colors.text, marginTop: 2 },
+  hDivider: { width: 1, height: 24, backgroundColor: '#f0f0f0' },
+  noteBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 14,
-    elevation: 1,
+    backgroundColor: '#f9fafb',
+    padding: 10,
+    borderRadius: 12,
+    marginTop: 16,
+    gap: 8,
   },
-  cardLeft: { width: 40, alignItems: 'center' },
-  cardIcon: { fontSize: 24 },
-  cardContent: { flex: 1, marginLeft: 10 },
-  cardDate: { fontSize: 14, fontWeight: '700', color: colors.text },
-  cardTime: { fontSize: 12, color: colors.lightText, marginTop: 2 },
-  methodBadge: {
-    backgroundColor: '#eef3ff',
-    borderRadius: 4,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    alignSelf: 'flex-start',
-    marginTop: 4,
-  },
-  methodText: { fontSize: 10, fontWeight: '700', color: colors.primary },
-  cardRight: { width: 20, alignItems: 'center' },
-  checkDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: '#4caf50' },
-  emptyContainer: { alignItems: 'center', paddingTop: 60 },
-  emptyIcon: { fontSize: 48, marginBottom: 12 },
-  emptyText: { fontSize: 16, fontWeight: '600', color: colors.text },
-  emptySubText: { fontSize: 13, color: colors.lightText, marginTop: 4 },
+  noteText: { fontSize: 12, color: colors.lightText, flex: 1 },
+  emptyDetails: { alignItems: 'center', paddingVertical: 40 },
+  emptyText: { fontSize: 15, fontWeight: '700', color: colors.text, marginTop: 12 },
+  emptySub: { fontSize: 12, color: colors.lightText, marginTop: 4 },
 });

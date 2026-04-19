@@ -16,10 +16,18 @@ export const notificationApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ['Notification'],
     }),
+    sendPushNotification: builder.mutation({
+      query: (data) => ({
+        url: '/notifications/send',
+        method: 'POST',
+        body: data,
+      }),
+    }),
   }),
 });
 
 export const {
   useGetNotificationsQuery,
   useMarkAsReadMutation,
+  useSendPushNotificationMutation,
 } = notificationApi;

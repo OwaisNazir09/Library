@@ -1,5 +1,9 @@
 import React from 'react';
-import { View, StyleSheet, Animated } from 'react-native';
+import { View, StyleSheet, Animated, Dimensions } from 'react-native';
+
+const { width } = Dimensions.get('window');
+const COLUMN_COUNT = 2;
+const ITEM_WIDTH = (width - 48) / COLUMN_COUNT;
 
 const SkeletonCard = () => {
   const animatedValue = new Animated.Value(0);
@@ -29,13 +33,9 @@ const SkeletonCard = () => {
   return (
     <View style={styles.card}>
       <Animated.View style={[styles.image, { opacity }]} />
-      <View style={styles.content}>
-        <Animated.View style={[styles.line, { width: '80%', opacity }]} />
-        <Animated.View style={[styles.line, { width: '40%', height: 10, opacity }]} />
-        <View style={styles.footer}>
-          <Animated.View style={[styles.line, { width: 60, height: 20, borderRadius: 4, opacity }]} />
-          <Animated.View style={[styles.line, { width: 40, height: 10, opacity }]} />
-        </View>
+      <View style={styles.titleWrapper}>
+        <Animated.View style={[styles.line, { width: '90%', opacity }]} />
+        <Animated.View style={[styles.line, { width: '60%', opacity }]} />
       </View>
     </View>
   );
@@ -43,35 +43,26 @@ const SkeletonCard = () => {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    marginBottom: 14,
-    flexDirection: 'row',
-    padding: 10,
-    elevation: 1,
+    width: ITEM_WIDTH,
+    marginBottom: 20,
+    alignItems: 'center',
   },
   image: {
-    width: 65,
-    height: 85,
-    borderRadius: 8,
-    backgroundColor: '#e0e0e0',
+    width: '100%',
+    aspectRatio: 0.7,
+    borderRadius: 12,
+    backgroundColor: '#f1f5f9',
   },
-  content: {
-    flex: 1,
-    paddingLeft: 12,
-    justifyContent: 'center',
+  titleWrapper: {
+    width: '100%',
+    marginTop: 10,
+    alignItems: 'center',
+    gap: 6
   },
   line: {
-    height: 14,
-    backgroundColor: '#e0e0e0',
-    borderRadius: 7,
-    marginBottom: 8,
-  },
-  footer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: 4,
+    height: 12,
+    backgroundColor: '#f1f5f9',
+    borderRadius: 6,
   },
 });
 

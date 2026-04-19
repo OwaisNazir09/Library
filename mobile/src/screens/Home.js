@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import {
   View, Text, StyleSheet, FlatList, TextInput,
   TouchableOpacity, ActivityIndicator, RefreshControl, Image, Dimensions
@@ -6,7 +7,7 @@ import {
 import { useSelector, useDispatch } from 'react-redux';
 import {
   Search, BookOpen, GraduationCap, FileText,
-  File, ClipboardList, ChevronRight
+  File, ClipboardList, ChevronRight, Wallet, CreditCard
 } from 'lucide-react-native';
 import { fetchPublicResources, fetchAllResources } from '../store/resourceSlice';
 import { colors } from '../utils/colors';
@@ -43,6 +44,12 @@ export default function Home({ navigation }) {
       dispatch(fetchAllResources(params));
     }
   }, [dispatch, search, category, isGuest]);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadResources();
+    }, [loadResources])
+  );
 
   useEffect(() => {
     loadResources();
@@ -135,7 +142,7 @@ export default function Home({ navigation }) {
       <View style={{ flex: 1 }}>
         {loading && !refreshing ? (
           <View style={styles.skeletonGrid}>
-             {[1,2,3,4].map(i => <View key={i} style={styles.skeletonWrapper}><SkeletonCard /></View>)}
+            {[1, 2, 3, 4].map(i => <View key={i} style={styles.skeletonWrapper}><SkeletonCard /></View>)}
           </View>
         ) : error ? (
           <ErrorState message={error} onRetry={loadResources} />
@@ -167,6 +174,22 @@ export default function Home({ navigation }) {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fff' },
   welcomeSection: { paddingHorizontal: 16, paddingTop: 60, paddingBottom: 10 },
+  welcomeRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  paymentBtn: {
+    backgroundColor: colors.primary,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 14,
+    gap: 8,
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  paymentBtnText: { color: '#fff', fontSize: 13, fontWeight: '700' },
   welcomeText: { fontSize: 24, fontWeight: '800', color: colors.text },
   subWelcome: { fontSize: 13, color: colors.lightText, marginTop: 4 },
   header: { padding: 16, backgroundColor: '#fff' },
@@ -197,20 +220,25 @@ const styles = StyleSheet.create({
   row: { justifyContent: 'space-between' },
   bookCard: {
     width: ITEM_WIDTH,
-    marginBottom: 20,
+    marginBottom: 16,
     alignItems: 'center',
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 8,
+    borderWidth: 1,
+    borderColor: colors.border || '#f1f5f9',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 5,
   },
   imageContainer: {
     width: '100%',
     aspectRatio: 0.7,
     borderRadius: 12,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: '#f8fafc',
     overflow: 'hidden',
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
     marginBottom: 10,
   },
   bookCover: { width: '100%', height: '100%', resizeMode: 'cover' },
@@ -219,7 +247,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 6,
     right: 6,
-    backgroundColor: 'rgba(52, 199, 89, 0.9)',
+    backgroundColor: colors.secondary,
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 4,
@@ -231,6 +259,7 @@ const styles = StyleSheet.create({
     color: colors.text,
     textAlign: 'center',
     paddingHorizontal: 4,
+    marginBottom: 4,
   },
   skeletonGrid: { padding: 16, flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' },
   skeletonWrapper: { width: ITEM_WIDTH, marginBottom: 16 },

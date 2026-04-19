@@ -1,12 +1,12 @@
 import express from 'express';
-import { getMyNotifications, markAsRead } from './notification.controller.js';
-import { protect } from '../../middleware/auth.js';
+import { sendNotification } from './notification.controller.js';
+import { protect, restrictTo } from '../../middleware/auth.js';
 
 const router = express.Router();
 
 router.use(protect);
+router.use(restrictTo('admin', 'librarian', 'super_admin'));
 
-router.get('/', getMyNotifications);
-router.patch('/mark-as-read', markAsRead);
+router.post('/send', sendNotification);
 
 export default router;

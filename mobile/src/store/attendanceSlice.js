@@ -63,7 +63,13 @@ const attendanceSlice = createSlice({
         state.scanning = false;
         state.scanSuccess = true;
         state.lastScan = action.payload;
-        state.records.unshift(action.payload);
+        
+        const index = state.records.findIndex(r => r._id === action.payload._id);
+        if (index !== -1) {
+          state.records[index] = action.payload;
+        } else {
+          state.records.unshift(action.payload);
+        }
       })
       .addCase(scanQRAttendance.rejected, (state, action) => {
         state.scanning = false;

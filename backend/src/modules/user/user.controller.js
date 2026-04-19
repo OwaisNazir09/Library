@@ -291,6 +291,155 @@ export const createUser = async (req, res, next) => {
   }
 };
 
+export const approveRegistration = async (req, res, next) => {
+  try {
+    const { User, Account } = getModels(req.db);
+    const filter = req.tenantId ? { _id: req.params.id, tenantId: req.tenantId } : { _id: req.params.id };
+    const user = await User.findOne(filter).populate('package');
+
+    if (!user) {
+      const error = new Error('No user found with that ID');
+      error.statusCode = 404;
+      throw error;
+    }
+
+    if (user.status === 'approved') {
+      const error = new Error('User is already approved');
+      error.statusCode = 400;
+      throw error;
+    }
+
+    user.status = 'approved';
+
+    user.documents.forEach(doc => { doc.status = 'verified'; });
+
+    if (user.package) {
+      user.packageStartDate = new Date();
+      user.packageEndDate = addDays(new Date(), user.package.duration);
+      user.subscriptionStatus = 'active';
+    }
+
+    await user.save();
+
+    // --- Auto Create Student Account (Ledger) ---
+    const { ensureStudentAccount, recordTransaction } = await import('../ledger/finance.controller.js');
+    const studentAccount = await ensureStudentAccount(req.db, req.tenantId, user._id, user.fullName);
+
+    const getIncomeAcc = async (name, subType = 'Operating Income') => {
+      let acc = await Account.findOne({ tenantId: req.tenantId, name });
+      if (!acc) {
+        acc = await Account.create({ tenantId: req.tenantId, name, type: 'Income', subType, isSystem: true });
+      }
+      return acc;
+    };
+
+    const getLiabilityAcc = async (name, subType = 'Deposit') => {
+      let acc = await Account.findOne({ tenantId: req.tenantId, name });
+      if (!acc) {
+        acc = await Account.create({ tenantId: req.tenantId, name, type: 'Liabilities', subType, isSystem: true });
+      }
+      return acc;
+    };
+
+    // Auto-add Membership Fee from package
+    const membershipFee = user.package ? Number(user.package.price) : 0;
+    if (membershipFee > 0) {
+      const memIncomeAcc = await getIncomeAcc('Membership Income');
+      await recordTransaction(req.db, req.tenantId, {
+        debitAccountId: studentAccount._id,
+        creditAccountId: memIncomeAcc._id,
+        amount: membershipFee,
+        type: 'fee_charge',
+        description: `Membership Fee (${user.package.name})`,
+        userId: req.user?._id
+      });
+    }
+
+    // Process selected services mapped fees 
+    if (user.selectedServices && user.selectedServices.includes('Study Desk')) {
+      const deskFee = req.body.studyDeskFee ? Number(req.body.studyDeskFee) : (req.body.servicesFee ? Number(req.body.servicesFee) : 0);
+      if (deskFee > 0) {
+        const deskIncomeAcc = await getIncomeAcc('Study Desk Income');
+        await recordTransaction(req.db, req.tenantId, {
+          debitAccountId: studentAccount._id,
+          creditAccountId: deskIncomeAcc._id,
+          amount: deskFee,
+          type: 'fee_charge',
+          description: 'Study Desk Fee',
+          userId: req.user?._id
+        });
+      }
+    }
+
+    const regFee = Number(req.body.registrationFee) || 0;
+    if (regFee > 0) {
+      const regIncomeAcc = await getIncomeAcc('Registration Fees');
+      await recordTransaction(req.db, req.tenantId, {
+        debitAccountId: studentAccount._id,
+        creditAccountId: regIncomeAcc._id,
+        amount: regFee,
+        type: 'fee_charge',
+        description: 'Initial Registration Fee',
+        userId: req.user?._id
+      });
+    }
+
+    const secDeposit = Number(req.body.securityDeposit) || 0;
+    if (secDeposit > 0) {
+      const secLiabilityAcc = await getLiabilityAcc('Security Deposits');
+      await recordTransaction(req.db, req.tenantId, {
+        debitAccountId: studentAccount._id,
+        creditAccountId: secLiabilityAcc._id,
+        amount: secDeposit,
+        type: 'fee_charge',
+        description: 'Refundable Security Deposit',
+        userId: req.user?._id
+      });
+    }
+
+    res.status(200).json({
+      status: 'success',
+      message: 'User approved securely and ledger generated.',
+      data: { user, account: studentAccount }
+    });
+
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const rejectRegistration = async (req, res, next) => {
+  try {
+    const { User } = getModels(req.db);
+    const filter = req.tenantId ? { _id: req.params.id, tenantId: req.tenantId } : { _id: req.params.id };
+
+    if (!req.body.rejectionReason) {
+      const error = new Error('Rejection reason is required');
+      error.statusCode = 400;
+      throw error;
+    }
+
+    const user = await User.findOneAndUpdate(filter, {
+      status: 'rejected',
+      rejectionReason: req.body.rejectionReason
+    }, { new: true });
+
+    if (!user) {
+      const error = new Error('No user found with that ID');
+      error.statusCode = 404;
+      throw error;
+    }
+
+    res.status(200).json({
+      status: 'success',
+      message: 'Registration rejected.',
+      data: { user }
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
 export const getMe = (req, res, next) => {
   req.params.id = req.user.id;
   next();

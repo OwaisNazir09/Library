@@ -5,6 +5,9 @@ import { protect, restrictTo } from '../../middleware/auth.js';
 const router = express.Router();
 
 router.use(protect);
+// --- Student/Member Personal Access ---
+router.get('/me/ledger', financeController.getMyLedger);
+
 router.use(restrictTo('librarian', 'admin', 'super_admin'));
 
 // --- Dashboard & Summary ---

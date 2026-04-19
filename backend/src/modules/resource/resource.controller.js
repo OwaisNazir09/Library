@@ -8,17 +8,12 @@ export const getPublicResources = async (req, res, next) => {
     const { Resource } = getModels(req.db);
 
     console.log('[Resources] Fetching public resources with query:', req.query);
-    const query = {
-      $or: [
-        { visibility: 'global' },
-        { isFeatured: true }
-      ]
-    };
+    const query = { visibility: 'global' };
 
     const features = new ApiFeatures(Resource.find(query), req.query)
       .filter()
       .search(['title', 'category', 'subject', 'tags'])
-      .sort()
+      .sort('-isFeatured -createdAt')
       .limitFields()
       .paginate();
 
@@ -43,15 +38,15 @@ export const getAllResources = async (req, res, next) => {
 
     const query = {
       $or: [
-        { tenantId: req.tenantId },
-        { visibility: 'global' }
+        { visibility: 'global' },
+        { visibility: 'library', tenantId: req.tenantId }
       ]
     };
 
     const features = new ApiFeatures(Resource.find(query), req.query)
       .filter()
       .search(['title', 'category', 'subject', 'tags'])
-      .sort()
+      .sort('-isFeatured -createdAt') // Default sort
       .limitFields()
       .paginate();
 
@@ -211,6 +206,36 @@ export const trackDownload = async (req, res, next) => {
     res.status(200).json({
       status: 'success',
       data: { downloadCount: resource.downloadCount }
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+export const getLibraryResources = async (req, res, next) => {
+  try {
+    const { Resource } = getModels(req.db);
+    const { libraryId } = req.params;
+
+    const query = {
+      tenantId: libraryId,
+      visibility: { $in: ['global', 'library'] }
+    };
+
+    const features = new ApiFeatures(Resource.find(query), req.query)
+      .filter()
+      .search(['title', 'category', 'subject', 'tags'])
+      .sort()
+      .limitFields()
+      .paginate();
+
+    const resources = await features.query.populate('uploadedBy', 'fullName email');
+    const total = await Resource.countDocuments(query);
+
+    res.status(200).json({
+      status: 'success',
+      results: resources.length,
+      total,
+      data: { resources }
     });
   } catch (err) {
     next(err);

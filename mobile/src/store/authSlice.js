@@ -20,12 +20,10 @@ export const loginUser = createAsyncThunk(
 
 export const registerUser = createAsyncThunk(
   'auth/registerUser',
-  async ({ fullName, email, password }, { rejectWithValue }) => {
+  async (formData, { rejectWithValue }) => {
     try {
-      const res = await authApi.register({ fullName, email, password });
-      const { token, data: { user }, tenantId } = res.data;
-      await saveAuthData(token, tenantId);
-      return { user, token, tenantId };
+      const res = await authApi.register(formData);
+      return { message: res.data.message };
     } catch (err) {
       return rejectWithValue(err.message);
     }
@@ -45,6 +43,18 @@ export const loadAuthFromStorage = createAsyncThunk(
     } catch (err) {
       await clearAuthData();
       return null;
+    }
+  }
+);
+
+export const updateUserProfile = createAsyncThunk(
+  'auth/updateUserProfile',
+  async (formData, { rejectWithValue }) => {
+    try {
+      const res = await authApi.updateMe(formData);
+      return res.data.data.user;
+    } catch (err) {
+      return rejectWithValue(err.message);
     }
   }
 );
@@ -111,10 +121,7 @@ const authSlice = createSlice({
       })
       .addCase(registerUser.fulfilled, (state, action) => {
         state.loading = false;
-        state.user = action.payload.user;
-        state.token = action.payload.token;
-        state.tenantId = action.payload.tenantId ?? null;
-        state.isGuest = false;
+        // User is not logged in because registration is pending admin approval
       })
       .addCase(registerUser.rejected, (state, action) => {
         state.loading = false;
@@ -137,6 +144,20 @@ const authSlice = createSlice({
       .addCase(loadAuthFromStorage.rejected, (state) => {
         state.isGuest = true;
         state.initialized = true;
+      });
+
+    // updateUserProfile
+    builder
+      .addCase(updateUserProfile.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(updateUserProfile.fulfilled, (state, action) => {
+        state.loading = false;
+        state.user = action.payload;
+      })
+      .addCase(updateUserProfile.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
       });
   }
 });

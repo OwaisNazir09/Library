@@ -1,27 +1,31 @@
 {
   "expo": {
-    "name": "mobile",
+    "name": "Welib",
     "slug": "mobile",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/appicon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/splash-icon.png",
+      "image": "./assets/appicon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
-    },
-    "ios": {
-      "supportsTablet": true
+      "backgroundColor": "#F8FAFB"
     },
     "android": {
+      "package": "libaray.management",
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage": "./assets/appicon.png",
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true
     },
+    "ios": {
+      "bundleIdentifier": "libaray.management",
+      "supportsTablet": true
+    },
+    "plugins": [
+    ],
     "web": {
       "favicon": "./assets/favicon.png"
     }

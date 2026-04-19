@@ -77,8 +77,8 @@ const resourceSchema = new mongoose.Schema({
   }
 });
 
-// Index for visibility and tenant
-resourceSchema.index({ tenantId: 1, visibility: 1 });
-resourceSchema.index({ visibility: 1 });
+// Optimizing for visibility, tenant and sorting
+resourceSchema.index({ visibility: 1, isFeatured: -1, createdAt: -1 });
+resourceSchema.index({ tenantId: 1, visibility: 1, isFeatured: -1, createdAt: -1 });
 
 export default resourceSchema;

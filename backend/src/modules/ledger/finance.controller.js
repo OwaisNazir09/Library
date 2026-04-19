@@ -177,6 +177,45 @@ export const getAccountLedger = async (req, res, next) => {
   } catch (err) { next(err); }
 };
 
+export const getMyLedger = async (req, res, next) => {
+  try {
+    const { Account, Transaction } = getModels(req.db);
+    const studentId = req.user._id;
+
+    const account = await Account.findOne({ 
+      studentId, 
+      tenantId: req.tenantId, 
+      subType: 'Student Receivable' 
+    }).populate('studentId', 'fullName email phone');
+
+    if (!account) {
+      return res.status(200).json({
+        status: 'success',
+        data: { account: null, transactions: [], totalTransactions: 0 }
+      });
+    }
+
+    const txFilter = {
+      tenantId: req.tenantId,
+      $or: [
+        { debitAccountId: account._id },
+        { creditAccountId: account._id }
+      ]
+    };
+
+    const transactions = await Transaction.find(txFilter)
+      .sort({ date: -1 })
+      .limit(50);
+
+    const totalTransactions = await Transaction.countDocuments(txFilter);
+
+    res.status(200).json({
+      status: 'success',
+      data: { account, transactions, totalTransactions }
+    });
+  } catch (err) { next(err); }
+};
+
 
 
 // ── Add Payment (Income from Student) ────────────────────────────────────────

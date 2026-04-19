@@ -78,6 +78,41 @@ const userSchema = new mongoose.Schema({
     enum: ['active', 'expired', 'inactive'],
     default: 'inactive'
   },
+  // --- Approval Workflow Fields ---
+  status: {
+    type: String,
+    enum: ['pending', 'approved', 'rejected', 'suspended'],
+    default: 'pending'
+  },
+  registrationDate: {
+    type: Date,
+    default: Date.now
+  },
+  rejectionReason: String,
+  documents: [
+    {
+      name: String,
+      fileUrl: String,
+      publicId: String,
+      status: {
+        type: String,
+        enum: ['pending', 'verified', 'rejected'],
+        default: 'pending'
+      }
+    }
+  ],
+  selectedServices: [
+    {
+      type: String,
+      enum: ['Study Desk', 'Digital Library', 'Book Access', 'Locker', 'Internet']
+    }
+  ],
+  userType: {
+    type: String,
+    enum: ['Student', 'Professional', 'Other'],
+    default: 'Student'
+  },
+  // --------------------------------
   notes: String,
   createdAt: {
     type: Date,

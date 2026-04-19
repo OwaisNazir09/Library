@@ -12,23 +12,46 @@ export const scanQR = async (req, res, next) => {
     const AttendanceModel = await getAttendanceModel(req.db);
 
     const { libraryId, timestamp, note } = req.body;
+    const targetLibraryId = libraryId || req.tenantId;
 
-    const record = await AttendanceModel.create({
-      tenantId: req.tenantId,
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    let activeAttendance = await AttendanceModel.findOne({
       userId: req.user._id,
-      libraryId: libraryId || req.tenantId,
-      checkIn: timestamp ? new Date(timestamp) : new Date(),
-      method: 'qr',
-      note
+      tenantId: req.tenantId,
+      checkIn: { $gte: today },
+      checkOut: { $exists: false }
     });
 
-    const populated = await record.populate('userId', 'fullName email');
+    if (activeAttendance) {
+      activeAttendance.checkOut = new Date();
+      await activeAttendance.save();
 
-    res.status(201).json({
-      status: 'success',
-      message: 'Attendance recorded successfully',
-      data: { attendance: populated }
-    });
+      const populated = await activeAttendance.populate('userId', 'fullName email');
+      return res.status(200).json({
+        status: 'success',
+        message: 'Checked out successfully',
+        data: { attendance: populated }
+      });
+    } else {
+      // Check In
+      const record = await AttendanceModel.create({
+        tenantId: req.tenantId,
+        userId: req.user._id,
+        libraryId: targetLibraryId,
+        checkIn: timestamp ? new Date(timestamp) : new Date(),
+        method: 'qr',
+        note
+      });
+
+      const populated = await record.populate('userId', 'fullName email');
+      res.status(201).json({
+        status: 'success',
+        message: 'Checked in successfully',
+        data: { attendance: populated }
+      });
+    }
   } catch (err) {
     next(err);
   }

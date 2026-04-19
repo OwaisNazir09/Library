@@ -49,7 +49,7 @@ export default function MyBooks({ navigation }) {
     return (
       <TouchableOpacity 
         style={styles.card}
-        onPress={() => navigation.navigate('ResourceDetail', { resource: item.book })}
+        onPress={() => navigation.navigate('BookDetail', { resource: item.book })}
       >
         <View style={styles.cardHeader}>
            <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status, item.dueDate) + '20' }]}>

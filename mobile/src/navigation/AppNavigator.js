@@ -12,13 +12,24 @@ import Register from '../screens/Register';
 import Attendance from '../screens/Attendance';
 import Downloads from '../screens/Downloads';
 import MyBooks from '../screens/MyBooks';
+import BookDetail from '../screens/BookDetail';
+import Ledger from '../screens/Ledger';
 
 const Stack = createNativeStackNavigator();
 
-export default function AppNavigator() {
+export default function AppNavigator({ navigationRef }) {
   return (
-    <NavigationContainer>
-      <Stack.Navigator initialRouteName="BottomTabs" screenOptions={{ headerShown: false }}>
+    <NavigationContainer ref={navigationRef}>
+      <Stack.Navigator 
+        initialRouteName="BottomTabs" 
+        screenOptions={{ 
+          headerShown: false,
+          headerStyle: { backgroundColor: '#fff', elevation: 1, shadowOpacity: 0.1 },
+          headerTintColor: '#044343',
+          headerTitleStyle: { fontWeight: '800' },
+          headerBackTitleVisible: false
+        }}
+      >
         <Stack.Screen name="BottomTabs" component={BottomTabs} />
         <Stack.Screen name="ResourceDetail" component={ResourceDetail} options={{ headerShown: true, title: 'Resource Details' }} />
         <Stack.Screen name="BlogDetail" component={BlogDetail} options={{ headerShown: true, title: 'Blog Details' }} />
@@ -29,6 +40,8 @@ export default function AppNavigator() {
         <Stack.Screen name="Attendance" component={Attendance} options={{ headerShown: true, title: 'Attendance' }} />
         <Stack.Screen name="Downloads" component={Downloads} options={{ headerShown: true, title: 'Downloads / Books' }} />
         <Stack.Screen name="MyBooks" component={MyBooks} options={{ headerShown: true, title: 'My Borrowed Books' }} />
+        <Stack.Screen name="BookDetail" component={BookDetail} options={{ headerShown: true, title: 'Book Details' }} />
+        <Stack.Screen name="Ledger" component={Ledger} options={{ headerShown: true, title: 'Payments & Ledger' }} />
       </Stack.Navigator>
     </NavigationContainer>
   );

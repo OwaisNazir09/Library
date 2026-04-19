@@ -2,7 +2,9 @@ import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // For Android emulator/Physical device, use your machine's LAN IP:
-export const BASE_URL = 'http://192.168.31.145:3245/api';
+// export const BASE_URL = 'http://192.168.31.145:3245/api';
+
+export const BASE_URL = 'https://library-7qme.onrender.com/api';
 
 // ─── Keys ─────────────────────────────────────────────────────────────────────
 export const AUTH_TOKEN_KEY = '@lib_auth_token';
@@ -61,8 +63,13 @@ export const loadTenantId = () => AsyncStorage.getItem(TENANT_ID_KEY);
 // ─── Auth API ─────────────────────────────────────────────────────────────────
 export const authApi = {
   login: (data) => api.post('/auth/login', data),
-  register: (data) => api.post('/auth/signup', data),
+  register: (data) => api.post('/auth/signup', data, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  }),
   getMe: () => api.get('/users/me'),
+  updateMe: (data) => api.patch('/users/update-me', data, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  }),
 };
 
 // ─── Resource API ─────────────────────────────────────────────────────────────
