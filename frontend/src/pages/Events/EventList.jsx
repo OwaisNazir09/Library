@@ -113,18 +113,22 @@ const EventList = () => {
   }
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
+    <div className="space-y-5 pb-8 animate-in fade-in duration-500">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-black text-slate-900 tracking-tight">Events Calendar</h1>
-          <p className="text-slate-500 font-medium">Coordinate, manage and view all upcoming library activities.</p>
+          <div className="flex items-center gap-2 text-[12px] font-medium text-slate-500 uppercase tracking-widest mb-1">
+            <span>Library</span>
+            <ChevronRight size={12} />
+            <span className="text-[#044343]">Events</span>
+          </div>
+          <h1>Events Calendar</h1>
         </div>
         <button
           onClick={() => setIsModalOpen(true)}
-          className="bg-[#044343] text-white px-6 py-3 rounded-2xl font-bold text-sm flex items-center gap-2 shadow-lg shadow-teal-900/10 active:scale-95 transition-all"
+          className="btn btn-primary btn-default"
         >
-          <Plus size={18} />
+          <Plus size={16} />
           Schedule Event
         </button>
       </div>
@@ -132,7 +136,7 @@ const EventList = () => {
       <div className="grid grid-cols-1 lg:grid-cols-10 gap-6">
         {/* Left: Calendar (7 Columns) */}
         <div className="lg:col-span-7 space-y-4">
-          <div className="bg-white border border-slate-100 rounded-[1.5rem] shadow-sm overflow-hidden">
+          <div className="glass-card p-0 overflow-hidden">
             {/* Calendar Controls */}
             <div className="p-6 border-b border-slate-50 flex items-center justify-between">
               <div className="flex items-center gap-4">
@@ -167,9 +171,9 @@ const EventList = () => {
             </div>
 
             {/* Weekdays */}
-            <div className="grid grid-cols-7 border-b border-slate-50">
+            <div className="grid grid-cols-7 border-b border-slate-100 bg-slate-50/50">
               {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-                <div key={day} className="py-4 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest border-r border-slate-50 last:border-r-0">
+                <div key={day} className="py-3 text-center text-[11px] font-semibold text-slate-500 uppercase tracking-wider border-r border-slate-100 last:border-r-0">
                   {day}
                 </div>
               ))}
@@ -237,21 +241,21 @@ const EventList = () => {
             </div>
 
             {selectedDayEvents.length === 0 ? (
-              <div className="text-center py-12">
-                <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-200">
-                  <CalendarDays size={32} />
+              <div className="text-center py-10">
+                <div className="w-14 h-14 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-3 text-slate-300">
+                  <CalendarDays size={24} />
                 </div>
-                <p className="text-xs font-black text-slate-400 uppercase tracking-widest">No activities</p>
+                <p className="text-[12px] font-medium text-slate-500">No activities scheduled</p>
               </div>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-3">
                 {selectedDayEvents.map((event, i) => (
                   <motion.div
                     initial={{ x: 20, opacity: 0 }}
                     animate={{ x: 0, opacity: 1 }}
                     transition={{ delay: i * 0.1 }}
                     key={event._id}
-                    className="bg-slate-50 rounded-2xl border border-slate-100 hover:bg-white hover:shadow-xl hover:shadow-teal-900/5 transition-all group/item overflow-hidden"
+                    className="bg-white rounded-xl border border-slate-100 shadow-sm hover:shadow-md transition-all group/item overflow-hidden"
                   >
                     {event.bannerImage && (
                       <div className="h-24 w-full relative">
@@ -278,23 +282,21 @@ const EventList = () => {
           </div>
 
           {/* Upcoming Section */}
-          <div>
-            <div className="flex items-center justify-between mb-6 px-4">
-              <h3 className="text-sm font-black text-slate-400 uppercase tracking-[0.2em]">Upcoming Highlights</h3>
-              <Plus size={14} className="text-[#044343] cursor-pointer" />
+          <div className="glass-card p-6">
+            <div className="flex items-center justify-between mb-5">
+              <h3 className="text-[13px] font-semibold text-slate-500 uppercase tracking-wider">Upcoming Highlights</h3>
             </div>
-            <div className="space-y-4">
+            <div className="space-y-5">
               {upcomingEvents.map((event, i) => (
-                <div key={event._id} className="flex gap-4 group cursor-pointer px-4">
-                  <div className="flex flex-col items-center flex-shrink-0">
-                    <span className="text-xs font-black text-slate-900">{format(parseISO(event.eventDate || event.date), 'dd')}</span>
-                    <span className="text-[10px] font-black text-slate-400 uppercase">{format(parseISO(event.eventDate || event.date), 'MMM')}</span>
-                    <div className="w-px h-full bg-slate-100 mt-2 group-last:hidden" />
+                <div key={event._id} className="flex gap-4 group cursor-pointer">
+                  <div className="flex flex-col items-center flex-shrink-0 min-w-[40px]">
+                    <span className="text-[14px] font-bold text-slate-900 leading-none mb-1">{format(parseISO(event.eventDate || event.date), 'dd')}</span>
+                    <span className="text-[10px] font-semibold text-slate-500 uppercase">{format(parseISO(event.eventDate || event.date), 'MMM')}</span>
                   </div>
-                  <div className="flex-1 pb-6">
-                    <h4 className="text-sm font-black text-slate-900 group-hover:text-[#044343] transition-colors line-clamp-1">{event.title}</h4>
-                    <p className="text-[10px] text-slate-400 font-bold mt-1 uppercase tracking-tight flex items-center gap-1.5">
-                      <MapPin size={10} /> {event.location}
+                  <div className="flex-1 border-b border-slate-100 pb-4 group-last:border-0 group-last:pb-0">
+                    <h4 className="text-[13px] font-medium text-slate-900 group-hover:text-[#044343] transition-colors line-clamp-1 mb-1">{event.title}</h4>
+                    <p className="text-[11px] text-slate-500 flex items-center gap-1.5">
+                      <MapPin size={12} /> {event.location}
                     </p>
                   </div>
                 </div>
@@ -305,74 +307,86 @@ const EventList = () => {
       </div>
 
       {/* Existing Create Event Modal */}
-      {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
-          <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="bg-white w-full max-w-lg rounded-[3rem] p-10 shadow-2xl relative">
-            <button onClick={() => setIsModalOpen(false)} className="absolute top-8 right-8 text-slate-400 hover:text-slate-600">
-              <X size={24} />
-            </button>
-            <h2 className="text-2xl font-black text-slate-900 mb-8">Schedule Event</h2>
-            <form onSubmit={handleSubmit(onAddEvent)} className="space-y-6">
-              <div className="space-y-1.5 mb-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Event Banner Image</label>
-                <div className="relative">
-                  <input
-                    type="file"
-                    accept="image/jpg,image/jpeg,image/png,image/webp"
-                    onChange={handleBannerChange}
-                    className="hidden"
-                    id="bannerImageInput"
-                  />
-                  <label htmlFor="bannerImageInput" className="cursor-pointer block">
-                    {bannerPreview ? (
-                      <div className="relative w-full h-32 rounded-2xl overflow-hidden border-2 border-[#044343]/20">
-                        <img src={bannerPreview} alt="Preview" className="w-full h-full object-cover" />
-                        <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
-                          <p className="text-white text-xs font-black">Click to Change</p>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="w-full h-32 rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50 flex flex-col items-center justify-center gap-2 hover:border-[#044343]/30 transition-colors">
-                        <ImagePlus size={28} className="text-slate-300" />
-                        <p className="text-[11px] font-black text-slate-400">Upload banner image</p>
-                      </div>
-                    )}
-                  </label>
+      {/* Existing Create Event Modal */}
+      <AnimatePresence>
+        {isModalOpen && (
+          <div className="modal-overlay">
+            <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="modal-content modal-md max-h-[90vh]">
+              <div className="modal-header">
+                <h2>Schedule Event</h2>
+                <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-slate-600 transition-colors">
+                  <X size={20} />
+                </button>
+              </div>
+              <form onSubmit={handleSubmit(onAddEvent)} className="flex flex-col overflow-hidden">
+                <div className="modal-body space-y-4">
+                  <div>
+                    <label className="input-label">Event Banner Image</label>
+                    <div className="relative">
+                      <input
+                        type="file"
+                        accept="image/jpg,image/jpeg,image/png,image/webp"
+                        onChange={handleBannerChange}
+                        className="hidden"
+                        id="bannerImageInput"
+                      />
+                      <label htmlFor="bannerImageInput" className="cursor-pointer block">
+                        {bannerPreview ? (
+                          <div className="relative w-full h-32 rounded-2xl overflow-hidden border-2 border-[#044343]/20">
+                            <img src={bannerPreview} alt="Preview" className="w-full h-full object-cover" />
+                            <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
+                              <p className="text-white text-xs font-black">Click to Change</p>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="w-full h-32 rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50 flex flex-col items-center justify-center gap-2 hover:border-[#044343]/30 transition-colors">
+                            <ImagePlus size={28} className="text-slate-300" />
+                            <p className="text-[11px] font-black text-slate-400">Upload banner image</p>
+                          </div>
+                        )}
+                      </label>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="input-label">Event Title</label>
+                    <input {...register('title')} required className="input-field" />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="input-label">Date</label>
+                      <input {...register('date')} type="date" required className="input-field" />
+                    </div>
+                    <div>
+                      <label className="input-label">Time</label>
+                      <input {...register('time')} type="time" className="input-field" />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="input-label">Location</label>
+                    <input {...register('location')} required className="input-field" />
+                  </div>
+                  <div>
+                    <label className="input-label">Max Participants</label>
+                    <input {...register('maxParticipants')} type="number" className="input-field" />
+                  </div>
                 </div>
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Event Title</label>
-                <input {...register('title')} required className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-3.5 px-6 outline-none focus:ring-2 focus:ring-[#044343]/5" />
-              </div>
-              <div className="grid grid-cols-2 gap-6">
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Date</label>
-                  <input {...register('date')} type="date" required className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-3.5 px-6 outline-none focus:ring-2 focus:ring-[#044343]/5" />
+                <div className="modal-footer">
+                  <button type="button" onClick={() => setIsModalOpen(false)} className="btn btn-secondary btn-default">
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isAdding}
+                    className="btn btn-primary btn-default min-w-[120px]"
+                  >
+                    {isAdding ? <Loader2 size={16} className="animate-spin" /> : 'Publish'}
+                  </button>
                 </div>
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Time</label>
-                  <input {...register('time')} type="time" className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-3.5 px-6 outline-none focus:ring-2 focus:ring-[#044343]/5" />
-                </div>
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Location</label>
-                <input {...register('location')} required className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-3.5 px-6 outline-none focus:ring-2 focus:ring-[#044343]/5" />
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Max Participants</label>
-                <input {...register('maxParticipants')} type="number" className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-3.5 px-6 outline-none focus:ring-2 focus:ring-[#044343]/5" />
-              </div>
-              <button 
-                type="submit" 
-                disabled={isAdding}
-                className="w-full bg-[#044343] text-white font-black py-4 rounded-2xl mt-4 shadow-xl shadow-teal-900/10 active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
-              >
-                {isAdding ? <Loader2 size={18} className="animate-spin" /> : 'Publish Event'}
-              </button>
-            </form>
-          </motion.div>
-        </div>
-      )}
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

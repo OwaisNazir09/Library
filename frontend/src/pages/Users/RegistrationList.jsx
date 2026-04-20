@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useGetUsersQuery, useDeleteUserMutation, useAddUserMutation, useUpdateUserMutation } from '../../store/api/usersApi';
+import { useGetUsersQuery, useDeleteUserMutation, useAddUserMutation, useUpdateUserMutation, useApproveUserMutation, useRejectUserMutation } from '../../store/api/usersApi';
 import { useGetPackagesQuery, useAssignPackageMutation } from '../../store/api/membershipApi';
 import {
   Search,
@@ -41,20 +41,32 @@ const RegistrationList = () => {
   const [currentPage, setCurrentPage] = React.useState(1);
   const [searchTerm, setSearchTerm] = React.useState('');
   const limit = 10;
+  const [activeTab, setActiveTab] = React.useState('approved'); // 'approved' or 'pending'
 
   const { data: usersData, isLoading: loading, error, refetch } = useGetUsersQuery({
     page: currentPage,
     limit,
     search: searchTerm,
-    role: 'member'
+    role: 'member',
+    ...(activeTab === 'pending' ? { status: 'pending' } : { 'status[ne]': 'pending' })
+  });
+
+  const { data: pendingStats } = useGetUsersQuery({
+    role: 'member',
+    status: 'pending',
+    limit: 1
   });
 
   const { data: packagesData } = useGetPackagesQuery({ limit: 1000 });
   const [addUserMutation, { isLoading: isAdding }] = useAddUserMutation();
   const [assignPackageMutation, { isLoading: isAssigning }] = useAssignPackageMutation();
+  const [approveUser, { isLoading: isApproving }] = useApproveUserMutation();
+  const [rejectUser, { isLoading: isRejecting }] = useRejectUserMutation();
+  const [updateUserMutation, { isLoading: isUpdating }] = useUpdateUserMutation();
 
   const items = usersData?.data?.users || [];
   const total = usersData?.total || usersData?.results || 0;
+  const pendingCount = pendingStats?.total || 0;
   const packages = packagesData?.data?.packages || packagesData?.data || [];
 
   const [isRegisterModalOpen, setIsRegisterModalOpen] = React.useState(false);
@@ -99,8 +111,13 @@ const RegistrationList = () => {
       if (profileFile) formData.append('profilePicture', profileFile);
       if (idPhotoFile) formData.append('idPhoto', idPhotoFile);
 
-      await addUserMutation(formData).unwrap();
-      toast.success('Student registered successfully!');
+      if (selectedUser) {
+        await updateUserMutation({ id: selectedUser._id, data: formData }).unwrap();
+        toast.success('Student updated successfully!');
+      } else {
+        await addUserMutation(formData).unwrap();
+        toast.success('Student registered successfully!');
+      }
       closeRegisterModal();
     } catch (err) {
       // Error is handled by global handler
@@ -132,7 +149,47 @@ const RegistrationList = () => {
     setIsAssignModalOpen(true);
   };
 
+  const openEditModal = (user) => {
+    setSelectedUser(user);
+    // Format data for form population
+    const userData = { ...user };
+    
+    // Extract ID if package is an object
+    if (user.package && typeof user.package === 'object') {
+      userData.package = user.package._id;
+    }
+    
+    if (user.dob) {
+      try {
+        userData.dob = format(parseISO(user.dob), 'yyyy-MM-dd');
+      } catch (e) {
+        userData.dob = '';
+      }
+    }
+    reset(userData);
+    setProfilePreview(user.profilePicture);
+    setIdPhotoPreview(user.idPhoto);
+    setIsRegisterModalOpen(true);
+  };
+
+  const handleApprove = async (id) => {
+    try {
+      await approveUser(id).unwrap();
+      toast.success('Registration approved!');
+    } catch (err) {}
+  };
+
+  const handleReject = async (id) => {
+    const reason = prompt('Enter rejection reason:');
+    if (!reason) return;
+    try {
+      await rejectUser({ id, rejectionReason: reason }).unwrap();
+      toast.error('Registration rejected.');
+    } catch (err) {}
+  };
+
   const getStatusInfo = (user) => {
+    if (user.status === 'pending') return { label: 'Pending Approval', color: 'bg-amber-100 text-amber-600' };
     if (!user.packageEndDate) return { label: 'No Package', color: 'bg-slate-100 text-slate-500' };
     const isExpired = !isAfter(parseISO(user.packageEndDate), new Date());
     if (isExpired) return { label: 'Expired', color: 'bg-rose-100 text-rose-600' };
@@ -256,18 +313,45 @@ const RegistrationList = () => {
           </td>
           <td className="px-8 py-5 text-right">
             <div className="flex items-center justify-end gap-2">
-              <button
-                onClick={() => openAssignModal(student)}
-                className="bg-white border border-slate-200 text-[#044343] px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-[#044343] hover:text-white transition-all shadow-sm"
-              >
-                Assign Package
-              </button>
-              <button 
-                onClick={() => { setSelectedProfile(student); setIsProfileModalOpen(true); }}
-                className="p-2 text-slate-300 hover:text-[#044343] hover:bg-slate-100 rounded-xl transition-all"
-              >
-                <MoreHorizontal size={18} />
-              </button>
+              {activeTab === 'pending' ? (
+                <>
+                  <button
+                    onClick={() => handleApprove(student._id)}
+                    className="btn btn-sm btn-primary bg-emerald-600 hover:bg-emerald-700"
+                  >
+                    <UserCheck size={14} />
+                    Approve
+                  </button>
+                  <button
+                    onClick={() => handleReject(student._id)}
+                    className="btn btn-sm btn-secondary text-rose-600 hover:bg-rose-50"
+                  >
+                    <X size={14} />
+                    Reject
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button
+                    onClick={() => openEditModal(student)}
+                    className="bg-white border border-slate-200 text-[#044343] px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-[#044343] hover:text-white transition-all shadow-sm"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => openAssignModal(student)}
+                    className="bg-white border border-slate-200 text-[#044343] px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-[#044343] hover:text-white transition-all shadow-sm"
+                  >
+                    Assign Package
+                  </button>
+                  <button 
+                    onClick={() => { setSelectedProfile(student); setIsProfileModalOpen(true); }}
+                    className="p-2 text-slate-300 hover:text-[#044343] hover:bg-slate-100 rounded-xl transition-all"
+                  >
+                    <MoreHorizontal size={18} />
+                  </button>
+                </>
+              )}
             </div>
           </td>
         </tr>
@@ -276,57 +360,79 @@ const RegistrationList = () => {
   };
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+    <div className="space-y-5 pb-8 animate-in fade-in duration-500">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-           <div className="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">
-            <span>Library Management</span>
-            <ChevronRight size={10} />
-            <span className="text-[#044343]">Student Console</span>
+           <div className="flex items-center gap-2 text-[12px] font-medium text-slate-500 uppercase tracking-widest mb-1">
+            <span>Members</span>
+            <ChevronRight size={12} />
+            <span className="text-[#044343]">Students</span>
           </div>
-          <h1 className="text-3xl font-black text-slate-900 tracking-tight">Student Registrations</h1>
-          <p className="text-slate-500 font-medium">Capture details, verify identities and track student lifecycles.</p>
+          <h1>Student Registrations</h1>
         </div>
         <div className="flex items-center gap-3">
           <div className="relative hidden md:block">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
             <input
               type="text"
               placeholder="Search by name, ID..."
               value={searchTerm}
               onChange={onSearchChange}
-              className="pl-12 pr-4 py-3 bg-white border border-slate-100 rounded-2xl w-64 shadow-sm focus:ring-2 focus:ring-[#044343]/5 outline-none font-bold text-xs"
+              className="input-field pl-9 w-64"
             />
           </div>
           <button
-            onClick={() => setIsRegisterModalOpen(true)}
-            className="bg-[#044343] text-white px-6 py-3 rounded-2xl font-bold text-sm flex items-center gap-2 shadow-xl shadow-teal-900/20 active:scale-95 transition-all"
+            onClick={() => { setSelectedUser(null); setIsRegisterModalOpen(true); reset({}); setProfilePreview(null); setIdPhotoPreview(null); }}
+            className="btn btn-primary btn-default"
           >
-            <UserPlus size={18} />
+            <UserPlus size={16} />
             Register Student
           </button>
         </div>
       </div>
 
-      <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden min-h-[500px]">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-slate-50/50">
-                <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Student Info</th>
-                <th className="px-6 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Contact</th>
-                <th className="px-6 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Assigned Table</th>
-                <th className="px-6 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Active Plan</th>
-                <th className="px-6 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Expiry Date</th>
-                <th className="px-6 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Status</th>
-                <th className="px-8 py-5 text-right text-[10px] font-black text-slate-400 uppercase tracking-widest">Actions</th>
-              </tr>
-            </thead>
+      {/* Tabs */}
+      <div className="flex items-center gap-6 border-b border-slate-100">
+        <button 
+          onClick={() => { setActiveTab('approved'); setCurrentPage(1); setSearchTerm(''); }}
+          className={`pb-3 text-sm font-bold transition-all relative ${activeTab === 'approved' ? 'text-[#044343]' : 'text-slate-400 hover:text-slate-600'}`}
+        >
+          Active Members
+          {activeTab === 'approved' && <motion.div layoutId="tab" className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#044343]" />}
+        </button>
+        <button 
+          onClick={() => { setActiveTab('pending'); setCurrentPage(1); setSearchTerm(''); }}
+          className={`pb-3 text-sm font-bold transition-all relative flex items-center gap-2 ${activeTab === 'pending' ? 'text-[#044343]' : 'text-slate-400 hover:text-slate-600'}`}
+        >
+          Pending Applications
+          {pendingCount > 0 && (
+            <span className="bg-amber-500 text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold">
+              {pendingCount}
+            </span>
+          )}
+          {activeTab === 'pending' && <motion.div layoutId="tab" className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#044343]" />}
+        </button>
+      </div>
+
+      <div className="compact-table-container">
+        <table className="compact-table">
+          <thead>
+            <tr>
+              <th>Student Info</th>
+              <th>Contact</th>
+              <th>Assigned Table</th>
+              <th>Active Plan</th>
+              <th>Expiry Date</th>
+              <th>Status</th>
+              <th className="text-right">Actions</th>
+            </tr>
+          </thead>
             <tbody className="divide-y divide-slate-50">
               {renderTableBody()}
             </tbody>
           </table>
-        </div>
+      </div>
+      <div className="mt-4"> 
         <Pagination 
           total={total}
           limit={limit}
@@ -338,23 +444,22 @@ const RegistrationList = () => {
       {/* Register Student Modal */}
       <AnimatePresence>
         {isRegisterModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm overflow-hidden">
+          <div className="modal-overlay">
             <motion.div 
-              initial={{ scale: 0.9, opacity: 0 }} 
+              initial={{ scale: 0.95, opacity: 0 }} 
               animate={{ scale: 1, opacity: 1 }} 
-              exit={{ scale: 0.9, opacity: 0 }} 
-              className="bg-white w-full max-w-4xl max-h-[90vh] rounded-[3rem] p-10 shadow-2xl relative overflow-y-auto custom-scrollbar"
+              exit={{ scale: 0.95, opacity: 0 }} 
+              className="modal-content modal-lg max-h-[90vh]"
             >
-              <button onClick={closeRegisterModal} className="absolute top-8 right-8 text-slate-400 hover:text-slate-900 bg-slate-50 p-2 rounded-xl">
-                <X size={24} />
+              <div className="modal-header">
+              <h2>{selectedUser ? 'Edit Student Details' : 'Register New Student'}</h2>
+              <button onClick={closeRegisterModal} className="text-slate-400 hover:text-slate-600 transition-colors">
+                <X size={20} />
               </button>
-              
-              <div className="mb-10">
-                <h2 className="text-3xl font-black text-slate-900">Onboard New Student</h2>
-                <p className="text-slate-500 font-medium mt-1">Capture comprehensive profile data for institutional records.</p>
-              </div>
+            </div>
 
-              <form onSubmit={handleSubmit(onRegisterStudent)} className="space-y-12">
+              <form onSubmit={handleSubmit(onRegisterStudent)} className="flex flex-col overflow-hidden">
+                <div className="modal-body space-y-8">
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
                   
                   {/* Left Column: Photos */}
@@ -513,18 +618,18 @@ const RegistrationList = () => {
 
                   </div>
                 </div>
+                </div>
 
-                <div className="flex gap-4 pt-6">
-                  <button type="button" onClick={closeRegisterModal} className="flex-1 bg-white border border-slate-200 text-slate-400 font-black py-5 rounded-3xl transition-all uppercase tracking-widest text-sm">
-                    Discard Entry
+                <div className="modal-footer">
+                  <button type="button" onClick={closeRegisterModal} className="btn btn-secondary btn-default">
+                    Cancel
                   </button>
                   <button 
                     type="submit" 
-                    disabled={isAdding}
-                    className="flex-[2] bg-[#044343] text-white font-black py-5 rounded-3xl shadow-xl shadow-teal-900/10 active:scale-95 transition-all text-sm uppercase tracking-widest flex items-center justify-center gap-3 disabled:opacity-70 disabled:cursor-not-allowed"
+                    disabled={isAdding || isUpdating}
+                    className="btn btn-primary btn-default min-w-[120px]"
                   >
-                    {isAdding ? <Loader2 size={20} className="animate-spin" /> : 'Execute Member Registration'}
-                    {!isAdding && <ArrowRight size={20} />}
+                    {isAdding || isUpdating ? <Loader2 size={16} className="animate-spin" /> : selectedUser ? 'Save Changes' : 'Register Student'}
                   </button>
                 </div>
               </form>
@@ -535,19 +640,22 @@ const RegistrationList = () => {
 
       <AnimatePresence>
         {isAssignModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
-            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="bg-white w-full max-w-md rounded-[3rem] p-10 shadow-2xl relative">
-              <button onClick={() => setIsAssignModalOpen(false)} className="absolute top-8 right-8 text-slate-400 hover:text-slate-900">
-                <X size={24} />
-              </button>
-
-              <div className="text-center mb-8">
-                <div className="w-16 h-16 bg-teal-50 rounded-3xl flex items-center justify-center text-[#044343] mx-auto mb-4">
-                  <CreditCard size={32} />
-                </div>
-                <h2 className="text-xl font-black text-slate-900 tracking-tight">Assign Package</h2>
-                <p className="text-sm font-medium text-slate-500">To: {selectedUser?.fullName}</p>
+          <div className="modal-overlay">
+            <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="modal-content modal-md">
+              <div className="modal-header">
+                <h2>Assign Package</h2>
+                <button onClick={() => setIsAssignModalOpen(false)} className="text-slate-400 hover:text-slate-600 transition-colors">
+                  <X size={20} />
+                </button>
               </div>
+
+              <div className="modal-body space-y-6">
+                <div className="text-center mb-4">
+                  <div className="w-12 h-12 bg-teal-50 rounded-lg flex items-center justify-center text-[#044343] mx-auto mb-3">
+                    <CreditCard size={24} />
+                  </div>
+                  <p className="text-[14px] text-slate-600">Assigning to: <span className="font-medium text-slate-900">{selectedUser?.fullName}</span></p>
+                </div>
 
               <form onSubmit={handleAssignSubmit(onAssignPackage)} className="space-y-6">
                 <div className="space-y-1.5">
@@ -560,21 +668,24 @@ const RegistrationList = () => {
                   </select>
                 </div>
 
-                <div className="bg-amber-50 p-4 rounded-2xl border border-amber-100 flex items-start gap-4">
-                  <AlertTriangle size={20} className="text-amber-500 shrink-0 mt-1" />
-                  <p className="text-[10px] font-bold text-amber-900 uppercase tracking-tight leading-relaxed">
-                    UPDATING PACKAGE WILL OVERWRITE EXISTING MEMBERSHIP DATA AND RECALCULATE EXPIRY FROM TODAY.
+                <div className="bg-amber-50 p-3 rounded-lg border border-amber-100 flex items-start gap-3">
+                  <AlertTriangle size={16} className="text-amber-500 shrink-0 mt-0.5" />
+                  <p className="text-[12px] text-amber-900 leading-relaxed">
+                    Updating package will overwrite existing membership data and recalculate expiry from today.
                   </p>
                 </div>
 
-                <button 
-                  type="submit" 
-                  disabled={isAssigning}
-                  className="w-full bg-[#044343] text-white font-black py-4 rounded-2xl shadow-xl shadow-teal-900/10 active:scale-95 transition-all uppercase tracking-widest text-xs flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
-                >
-                  {isAssigning ? <Loader2 size={18} className="animate-spin" /> : 'Confirm Package Activation'}
-                </button>
+                <div className="flex justify-end pt-2">
+                  <button 
+                    type="submit" 
+                    disabled={isAssigning}
+                    className="btn btn-primary btn-default w-full"
+                  >
+                    {isAssigning ? <Loader2 size={16} className="animate-spin" /> : 'Confirm Assignment'}
+                  </button>
+                </div>
               </form>
+              </div>
             </motion.div>
           </div>
         )}
@@ -582,21 +693,25 @@ const RegistrationList = () => {
       {/* Profile Details Modal */}
       <AnimatePresence>
         {isProfileModalOpen && selectedProfile && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
-            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="bg-white w-full max-w-4xl max-h-[90vh] rounded-[3rem] p-10 shadow-2xl relative overflow-y-auto custom-scrollbar">
-              <button onClick={() => setIsProfileModalOpen(false)} className="absolute top-8 right-8 text-slate-400 hover:text-slate-900 bg-slate-50 p-2 rounded-xl">
-                <X size={24} />
-              </button>
+          <div className="modal-overlay">
+            <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="modal-content modal-lg max-h-[90vh]">
+              <div className="modal-header">
+                <h2>Student Profile</h2>
+                <button onClick={() => setIsProfileModalOpen(false)} className="text-slate-400 hover:text-slate-600 transition-colors">
+                  <X size={20} />
+                </button>
+              </div>
               
-              <div className="flex flex-col md:flex-row gap-10">
+              <div className="modal-body">
+              <div className="flex flex-col md:flex-row gap-8">
                 {/* Left: Quick Info */}
-                <div className="md:w-1/3 space-y-8">
+                <div className="md:w-1/3 space-y-6">
                   <div className="text-center">
-                    <div className="w-40 h-40 rounded-[3rem] mx-auto bg-[#044343] p-1 border-4 border-white shadow-xl overflow-hidden">
-                       <img src={selectedProfile.profilePicture || `https://i.pravatar.cc/150?u=${selectedProfile._id}`} className="w-full h-full object-cover rounded-[2.8rem]" alt={selectedProfile.fullName} />
+                    <div className="w-24 h-24 rounded-full mx-auto bg-[#044343] p-1 border-4 border-white shadow-sm overflow-hidden">
+                       <img src={selectedProfile.profilePicture || `https://i.pravatar.cc/150?u=${selectedProfile._id}`} className="w-full h-full object-cover rounded-full" alt={selectedProfile.fullName} />
                     </div>
-                    <h2 className="text-2xl font-black text-slate-900 mt-6 tracking-tight line-clamp-1">{selectedProfile.fullName}</h2>
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Status: {getStatusInfo(selectedProfile).label}</p>
+                    <h2 className="text-[18px] font-semibold text-slate-900 mt-4 tracking-tight line-clamp-1">{selectedProfile.fullName}</h2>
+                    <p className="text-[12px] text-slate-500 mt-1">Status: {getStatusInfo(selectedProfile).label}</p>
                   </div>
 
                   <div className="bg-slate-50 rounded-3xl p-6 border border-slate-100 space-y-4">
@@ -718,6 +833,7 @@ const RegistrationList = () => {
                       </div>
                    </div>
                 </div>
+              </div>
               </div>
             </motion.div>
           </div>

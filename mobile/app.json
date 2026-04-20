@@ -24,10 +24,14 @@
       "bundleIdentifier": "libaray.management",
       "supportsTablet": true
     },
-    "plugins": [
-    ],
+    "plugins": [],
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "d0945b4f-b580-4168-8431-b3408252ea20"
+      }
     }
   }
 }

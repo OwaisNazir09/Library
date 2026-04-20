@@ -17,7 +17,8 @@ import {
   X,
   Book,
   User as UserIcon,
-  Loader2
+  Loader2,
+  ChevronRight
 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import LoadingSkeleton from '../../components/common/LoadingSkeleton';
@@ -42,7 +43,11 @@ const BorrowingHistory = () => {
   const { data: booksData } = useGetBooksQuery({ limit: 1000 });
   const { data: usersData } = useGetUsersQuery({ limit: 1000 });
 
-  const items = borrowingsData?.data?.borrowings || [];
+  const items = [...(borrowingsData?.data?.borrowings || [])].sort((a, b) => {
+    const dateA = new Date(a.borrowedDate || a.createdAt || 0);
+    const dateB = new Date(b.borrowedDate || b.createdAt || 0);
+    return dateB - dateA;
+  });
   const total = borrowingsData?.total || borrowingsData?.results || 0;
   const books = booksData?.data?.books || booksData?.data || [];
   const users = usersData?.data?.users || usersData?.data || [];
@@ -194,9 +199,9 @@ const BorrowingHistory = () => {
               <button
                 onClick={() => handleReturn(record.id || record._id)}
                 disabled={isReturning}
-                className="px-4 py-2 bg-[#044343] text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-[#033636] transition-all shadow-md shadow-teal-900/10 active:scale-95 flex items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+                className="btn btn-sm btn-secondary w-full"
               >
-                {isReturning ? <Loader2 size={12} className="animate-spin" /> : 'Return Book'}
+                {isReturning ? <Loader2 size={12} className="animate-spin mx-auto" /> : 'Return Book'}
               </button>
             ) : (
               <button className="p-2 text-slate-300 hover:text-slate-600 rounded-lg transition-colors">
@@ -210,55 +215,58 @@ const BorrowingHistory = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+    <div className="space-y-5 pb-8 animate-in fade-in duration-500">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-black text-slate-900 tracking-tight">Library Borrowings</h1>
-          <p className="text-slate-500 font-medium italic">Advanced circulation tracking & fine management system.</p>
+           <div className="flex items-center gap-2 text-[12px] font-medium text-slate-500 uppercase tracking-widest mb-1">
+            <span>Library</span>
+            <ChevronRight size={12} />
+            <span className="text-[#044343]">Circulation</span>
+          </div>
+          <h1>Borrowing History</h1>
         </div>
         <div className="flex items-center gap-3">
           <div className="relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
             <input
               type="text"
               placeholder="Search by member or book..."
               value={searchTerm}
               onChange={onSearchChange}
-              className="pl-12 pr-4 py-3 bg-white border border-slate-100 rounded-2xl w-80 shadow-sm focus:ring-2 focus:ring-[#044343]/5 outline-none font-medium text-sm transition-all"
+              className="input-field pl-9 w-64"
             />
           </div>
           <button
             onClick={() => setIsIssueModalOpen(true)}
-            className="flex items-center justify-center gap-2 px-6 py-3 bg-[#044343] text-white rounded-2xl font-bold text-sm shadow-xl shadow-teal-900/10 active:scale-95 transition-all"
+            className="btn btn-primary btn-default"
           >
-            <Plus size={18} />
-            Issue New Assets
+            <Plus size={16} />
+            Issue Book
           </button>
         </div>
       </div>
 
-      <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden min-h-[400px]">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left">
-            <thead className="bg-slate-50/50 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-50">
-              <tr>
-                <th className="px-8 py-5">Member Name</th>
-                <th className="px-6 py-5">Book Assets</th>
-                <th className="px-6 py-5 text-center">Borrow Date</th>
-                <th className="px-6 py-5 text-center">Due Date</th>
-                <th className="px-6 py-5 text-center">Return Date</th>
-                <th className="px-6 py-5 text-center">Late Days</th>
-                <th className="px-6 py-5 text-center">Fine (₹)</th>
-                <th className="px-6 py-5">Status</th>
-                <th className="px-8 py-5 text-right">Operation</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-50">
-              {renderTableBody()}
-            </tbody>
-          </table>
-        </div>
-        
+      <div className="compact-table-container">
+        <table className="compact-table">
+          <thead>
+            <tr>
+              <th>Member Name</th>
+              <th>Book Asset</th>
+              <th className="text-center">Borrow Date</th>
+              <th className="text-center">Due Date</th>
+              <th className="text-center">Return Date</th>
+              <th className="text-center">Late Days</th>
+              <th className="text-center">Fine (₹)</th>
+              <th>Status</th>
+              <th className="text-right">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {renderTableBody()}
+          </tbody>
+        </table>
+      </div>
+      <div className="mt-4">
         <Pagination 
           total={total}
           limit={limit}
@@ -270,50 +278,45 @@ const BorrowingHistory = () => {
       {/* Issue Book Modal */}
       <AnimatePresence>
         {isIssueModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm shadow-[inset_0_0_100px_rgba(0,0,0,0.1)]">
+          <div className="modal-overlay">
             <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
+              initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-white w-full max-w-2xl rounded-[3rem] p-10 shadow-2xl relative overflow-y-auto max-h-[90vh] custom-scrollbar"
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="modal-content modal-lg max-h-[90vh]"
             >
-              <button
-                onClick={() => setIsIssueModalOpen(false)}
-                className="absolute top-8 right-8 text-slate-400 hover:text-slate-900 transition-colors bg-slate-50 p-2 rounded-xl"
-              >
-                <X size={24} />
-              </button>
-
-              <div className="mb-10">
-                <h2 className="text-3xl font-black text-slate-900">Borrow Book Asset</h2>
-                <p className="text-slate-500 font-medium mt-1">Configure issuance parameters, return dates, and fine rules.</p>
+              <div className="modal-header">
+                <h2>Borrow Book Asset</h2>
+                <button
+                  onClick={() => setIsIssueModalOpen(false)}
+                  className="text-slate-400 hover:text-slate-600 transition-colors"
+                >
+                  <X size={20} />
+                </button>
               </div>
 
-              <form onSubmit={handleSubmit(onIssueSubmit)} className="space-y-10">
+              <form onSubmit={handleSubmit(onIssueSubmit)} className="flex flex-col overflow-hidden">
+                <div className="modal-body space-y-6">
                 {/* Section 1: Member & Asset */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-8 bg-slate-50/50 rounded-[2rem] border border-slate-100">
-                  <div className="space-y-1.5 md:col-span-2">
-                    <label className="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">
-                      <UserIcon size={14} className="text-[#044343]" /> Select Member (Dropdown)
-                    </label>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="input-label">Select Member</label>
                     <select
                       {...register('userId', { required: true })}
-                      className="w-full bg-white border border-slate-200 rounded-2xl py-3.5 px-6 outline-none focus:ring-2 focus:ring-[#044343]/5 font-bold text-sm h-[55px]"
+                      className="input-field"
                     >
-                      <option value="">Search or choose member...</option>
+                      <option value="">Choose member...</option>
                       {users?.map(u => (
                         <option key={u._id || u.id} value={u._id || u.id}>{u.fullName || u.name} ({u.email})</option>
                       ))}
                     </select>
                   </div>
 
-                  <div className="space-y-1.5 md:col-span-2">
-                    <label className="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">
-                      <Book size={14} className="text-[#044343]" /> Select Book Asset (Availability Checked)
-                    </label>
+                  <div>
+                    <label className="input-label">Select Book Asset</label>
                     <select
                       {...register('bookId', { required: true })}
-                      className="w-full bg-white border border-slate-200 rounded-2xl py-3.5 px-6 outline-none focus:ring-2 focus:ring-[#044343]/5 font-bold text-sm h-[55px]"
+                      className="input-field"
                     >
                       <option value="">Choose available book...</option>
                       {books?.map(b => (
@@ -322,7 +325,7 @@ const BorrowingHistory = () => {
                           value={b._id || b.id}
                           disabled={b.availableCopies <= 0}
                         >
-                          {b.title} {b.availableCopies <= 0 ? '— (NO AVAILABILITY ❌)' : `— (In Stock: ${b.availableCopies})`}
+                          {b.title} {b.availableCopies <= 0 ? '(No Copies)' : `(Available: ${b.availableCopies})`}
                         </option>
                       ))}
                     </select>
@@ -330,74 +333,60 @@ const BorrowingHistory = () => {
                 </div>
 
                 {/* Section 2: Dates & Fine Settings */}
-                <div className="p-8 bg-teal-50/30 rounded-[2rem] border border-teal-100/50 space-y-8">
-                   <div className="flex items-center gap-2 mb-2">
-                       <span className="w-1.5 h-6 bg-teal-600 rounded-full"></span>
-                       <h3 className="text-xs font-black text-teal-800 uppercase tracking-widest">Timeframe & Fine Rules</h3>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div className="space-y-1.5">
-                        <label className="flex items-center gap-2 text-[10px] font-black text-teal-700 uppercase tracking-widest ml-1">
-                          <Calendar size={14} /> Borrow Date
-                        </label>
+                <div className="border-t border-slate-100 pt-4 mt-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="input-label">Borrow Date</label>
                         <input 
                           {...register('borrowedDate', { required: true })} 
                           type="date" 
-                          className="w-full bg-white border border-teal-100 rounded-2xl py-3.5 px-6 font-bold text-teal-900 outline-none h-[55px]" 
+                          className="input-field" 
                         />
                       </div>
 
-                      <div className="space-y-1.5">
-                        <label className="flex items-center gap-2 text-[10px] font-black text-rose-700 uppercase tracking-widest ml-1">
-                          <Calendar size={14} /> Borrow Until (Due Date)
-                        </label>
+                      <div>
+                        <label className="input-label">Due Date</label>
                         <input 
                           {...register('dueDate', { required: true })} 
                           type="date" 
-                          className="w-full bg-white border border-rose-100 rounded-2xl py-3.5 px-6 font-bold text-rose-900 outline-none h-[55px]" 
+                          className="input-field" 
                         />
                       </div>
 
-                      <div className="md:col-span-2 flex flex-wrap gap-2">
-                         <button type="button" onClick={() => setDays(7)} className="px-4 py-2 bg-white border border-slate-200 rounded-xl text-[10px] font-black uppercase text-slate-500 hover:border-[#044343] hover:text-[#044343] transition-all">7 Days</button>
-                         <button type="button" onClick={() => setDays(14)} className="px-4 py-2 bg-white border border-slate-200 rounded-xl text-[10px] font-black uppercase text-slate-500 hover:border-[#044343] hover:text-[#044343] transition-all">14 Days</button>
-                         <button type="button" onClick={() => setDays(30)} className="px-4 py-2 bg-white border border-slate-200 rounded-xl text-[10px] font-black uppercase text-slate-500 hover:border-[#044343] hover:text-[#044343] transition-all">30 Days</button>
+                      <div className="sm:col-span-2 flex gap-2">
+                         <button type="button" onClick={() => setDays(7)} className="btn btn-sm btn-secondary">7 Days</button>
+                         <button type="button" onClick={() => setDays(14)} className="btn btn-sm btn-secondary">14 Days</button>
+                         <button type="button" onClick={() => setDays(30)} className="btn btn-sm btn-secondary">30 Days</button>
                       </div>
 
-                      <div className="md:col-span-2 space-y-1.5">
-                        <label className="flex items-center gap-2 text-[10px] font-black text-teal-700 uppercase tracking-widest ml-1">
-                          <IndianRupee size={14} /> Fine Per Day (₹)
-                        </label>
-                        <div className="relative">
-                           <span className="absolute left-6 top-1/2 -translate-y-1/2 font-black text-teal-600">₹</span>
-                           <input 
-                            {...register('finePerDay', { required: true })} 
-                            type="number" 
-                            className="w-full bg-white border border-teal-100 rounded-2xl py-3.5 pl-10 pr-6 font-bold text-teal-900 outline-none h-[55px]" 
-                            placeholder="5"
-                           />
-                        </div>
-                        <p className="text-[9px] text-teal-600 font-bold ml-1 uppercase tracking-widest">Applied automatically if returned after due date.</p>
+                      <div className="sm:col-span-2">
+                        <label className="input-label">Fine Per Day (₹)</label>
+                        <input 
+                          {...register('finePerDay', { required: true })} 
+                          type="number" 
+                          className="input-field" 
+                          placeholder="5"
+                        />
+                        <p className="text-[11px] text-slate-500 mt-1">Applied automatically if returned after due date.</p>
                       </div>
                     </div>
                 </div>
+                </div>
 
-                <div className="pt-4 flex gap-4">
+                <div className="modal-footer">
                   <button
                     type="button"
                     onClick={() => setIsIssueModalOpen(false)}
-                    className="flex-1 bg-white border border-slate-200 text-slate-400 font-black py-5 rounded-3xl transition-all uppercase tracking-widest text-sm"
+                    className="btn btn-secondary btn-default"
                   >
-                    Discard Changes
+                    Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={isIssuing}
-                    className="flex-[2] bg-[#044343] text-white font-black py-5 rounded-3xl shadow-xl shadow-teal-900/20 active:scale-95 transition-all text-sm uppercase tracking-widest flex items-center justify-center gap-3 disabled:opacity-70 disabled:cursor-not-allowed"
+                    className="btn btn-primary btn-default min-w-[120px]"
                   >
-                    {isIssuing ? <Loader2 size={20} className="animate-spin" /> : 'Confirm Issuance Logic'}
-                    {!isIssuing && <ArrowUpRight size={20} />}
+                    {isIssuing ? <Loader2 size={16} className="animate-spin" /> : 'Confirm Issue'}
                   </button>
                 </div>
               </form>

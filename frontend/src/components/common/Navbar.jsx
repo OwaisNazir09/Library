@@ -24,7 +24,7 @@ const Navbar = ({ onMenuClick }) => {
   const isDashboard = location.pathname.endsWith('dashboard');
 
   return (
-    <header className="h-16 md:h-20 bg-white px-4 md:px-10 flex items-center justify-between sticky top-0 z-30 border-b border-slate-100 shadow-sm shadow-slate-200/10">
+    <header className="h-14 md:h-16 bg-white px-4 md:px-5 flex items-center justify-between sticky top-0 z-30 border-b border-slate-200">
       <div className="flex items-center gap-4">
         <button 
           onClick={onMenuClick}
@@ -40,7 +40,7 @@ const Navbar = ({ onMenuClick }) => {
           <input 
             type="text" 
             placeholder="Search documents, books, or members..." 
-            className="w-full pl-12 pr-6 py-2.5 bg-slate-50/50 border border-slate-100 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-[#044343]/5 outline-none transition-all"
+            className="input-field pl-10 bg-slate-50 border-transparent focus:bg-white w-full max-w-md"
           />
         </div>
       </div>

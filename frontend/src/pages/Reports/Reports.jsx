@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Book, Users, Repeat, DollarSign, TrendingUp, BarChart2 } from 'lucide-react';
+import { Book, Users, Repeat, IndianRupeeIcon, TrendingUp, BarChart2 } from 'lucide-react';
 import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { getReportsSummary, getMonthlyAnalytics } from '../../services/reportService';
 
@@ -11,7 +11,7 @@ const Reports = () => {
     activeStudents: 0,
     revenue: 0
   });
-  
+
   const [chartData, setChartData] = useState([]);
   const [popularBooks, setPopularBooks] = useState([]);
   const [isLive, setIsLive] = useState(false);
@@ -21,7 +21,7 @@ const Reports = () => {
       try {
         const summaryRes = await getReportsSummary();
         const analyticalRes = await getMonthlyAnalytics();
-        
+
         if (summaryRes?.data) {
           setStats(summaryRes.data);
           setIsLive(true);
@@ -35,7 +35,7 @@ const Reports = () => {
         setIsLive(false);
       }
     };
-    
+
     fetchData();
   }, []);
 
@@ -51,13 +51,13 @@ const Reports = () => {
           { label: 'Total Books', value: stats.totalBooks || 0, icon: Book, color: 'text-indigo-600', bg: 'bg-indigo-50' },
           { label: 'Issued Books', value: stats.issuedBooks || 0, icon: Repeat, color: 'text-amber-600', bg: 'bg-amber-50' },
           { label: 'Active Students', value: stats.activeStudents || 0, icon: Users, color: 'text-teal-600', bg: 'bg-teal-50' },
-          { label: 'Total Revenue', value: `$${stats.revenue || 0}`, icon: DollarSign, color: 'text-rose-600', bg: 'bg-rose-50' },
+          { label: 'Total Revenue', value: `$${stats.revenue || 0}`, icon: IndianRupeeIcon, color: 'text-rose-600', bg: 'bg-rose-50' },
         ].map((stat, i) => (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.1 }}
-            key={stat.label} 
+            key={stat.label}
             className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm flex items-center gap-5"
           >
             <div className={`w-14 h-14 rounded-2xl ${stat.bg} ${stat.color} flex items-center justify-center`}>
@@ -84,14 +84,14 @@ const Reports = () => {
               <AreaChart data={chartData}>
                 <defs>
                   <linearGradient id="colorBooks" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#044343" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="#044343" stopOpacity={0}/>
+                    <stop offset="5%" stopColor="#044343" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="#044343" stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
                 <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748b', fontWeight: 600 }} dy={10} />
                 <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748b', fontWeight: 600 }} dx={-10} />
-                <Tooltip 
+                <Tooltip
                   contentStyle={{ borderRadius: '1rem', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
                   itemStyle={{ color: '#044343', fontWeight: 900 }}
                 />
@@ -109,19 +109,19 @@ const Reports = () => {
             </div>
           </div>
           <div className="flex-1 min-h-[250px]">
-             {popularBooks.length > 0 ? (
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={popularBooks} layout="vertical" margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="#f1f5f9" />
-                    <XAxis type="number" hide />
-                    <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#475569', fontWeight: 700 }} width={120} />
-                    <Tooltip cursor={{fill: 'transparent'}} contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
-                    <Bar dataKey="value" fill="#044343" radius={[0, 4, 4, 0]} barSize={20} />
-                  </BarChart>
-                </ResponsiveContainer>
-             ) : (
-                <div className="h-full flex items-center justify-center text-slate-400 text-xs font-bold">No books borrowed yet.</div>
-             )}
+            {popularBooks.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={popularBooks} layout="vertical" margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="#f1f5f9" />
+                  <XAxis type="number" hide />
+                  <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#475569', fontWeight: 700 }} width={120} />
+                  <Tooltip cursor={{ fill: 'transparent' }} contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
+                  <Bar dataKey="value" fill="#044343" radius={[0, 4, 4, 0]} barSize={20} />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-full flex items-center justify-center text-slate-400 text-xs font-bold">No books borrowed yet.</div>
+            )}
           </div>
         </div>
       </div>

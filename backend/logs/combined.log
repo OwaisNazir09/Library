@@ -550,3 +550,55 @@
 {"level":"info","message":"Master Database connected successfully","service":"library-service","timestamp":"2026-04-19 11:35:15"}
 {"level":"info","message":"Server running on port 3245","service":"library-service","timestamp":"2026-04-19 11:59:10"}
 {"level":"info","message":"Master Database connected successfully","service":"library-service","timestamp":"2026-04-19 11:59:17"}
+{"level":"info","message":"SIGTERM RECEIVED. Shutting down gracefully","service":"library-service","timestamp":"2026-04-19 12:51:11"}
+{"level":"info","message":"Server running on port 3245","service":"library-service","timestamp":"2026-04-20 09:28:37"}
+{"level":"info","message":"Master Database connected successfully","service":"library-service","timestamp":"2026-04-20 09:28:41"}
+{"level":"info","message":"Server running on port 3245","service":"library-service","timestamp":"2026-04-20 10:14:16"}
+{"level":"info","message":"Master Database connected successfully","service":"library-service","timestamp":"2026-04-20 10:14:23"}
+{"level":"info","message":"Server running on port 3245","service":"library-service","timestamp":"2026-04-20 10:24:33"}
+{"level":"info","message":"Master Database connected successfully","service":"library-service","timestamp":"2026-04-20 10:24:34"}
+{"level":"info","message":"Server running on port 3245","service":"library-service","timestamp":"2026-04-20 10:25:49"}
+{"level":"info","message":"Master Database connected successfully","service":"library-service","timestamp":"2026-04-20 10:25:50"}
+{"level":"info","message":"Server running on port 3245","service":"library-service","timestamp":"2026-04-20 10:25:57"}
+{"level":"info","message":"Master Database connected successfully","service":"library-service","timestamp":"2026-04-20 10:25:57"}
+{"level":"info","message":"Server running on port 3245","service":"library-service","timestamp":"2026-04-20 10:26:03"}
+{"level":"info","message":"Server running on port 3245","service":"library-service","timestamp":"2026-04-20 10:26:13"}
+{"level":"info","message":"Master Database connected successfully","service":"library-service","timestamp":"2026-04-20 10:26:21"}
+{"level":"info","message":"Server running on port 3245","service":"library-service","timestamp":"2026-04-20 10:27:22"}
+{"level":"info","message":"Master Database connected successfully","service":"library-service","timestamp":"2026-04-20 10:27:24"}
+{"level":"info","message":"Server running on port 3245","service":"library-service","timestamp":"2026-04-20 10:28:39"}
+{"level":"info","message":"Master Database connected successfully","service":"library-service","timestamp":"2026-04-20 10:28:41"}
+{"level":"info","message":"Server running on port 3245","service":"library-service","timestamp":"2026-04-20 10:28:46"}
+{"level":"info","message":"Master Database connected successfully","service":"library-service","timestamp":"2026-04-20 10:28:47"}
+{"level":"info","message":"Server running on port 3245","service":"library-service","timestamp":"2026-04-20 10:32:58"}
+{"level":"info","message":"Master Database connected successfully","service":"library-service","timestamp":"2026-04-20 10:32:59"}
+{"level":"info","message":"Server running on port 3245","service":"library-service","timestamp":"2026-04-20 10:34:45"}
+{"level":"info","message":"Master Database connected successfully","service":"library-service","timestamp":"2026-04-20 10:34:46"}
+{"level":"info","message":"Server running on port 3245","service":"library-service","timestamp":"2026-04-20 10:41:07"}
+{"level":"info","message":"Master Database connected successfully","service":"library-service","timestamp":"2026-04-20 10:41:16"}
+{"level":"info","message":"Server running on port 3245","service":"library-service","timestamp":"2026-04-20 10:41:28"}
+{"level":"info","message":"Master Database connected successfully","service":"library-service","timestamp":"2026-04-20 10:41:29"}
+{"level":"info","message":"Server running on port 3245","service":"library-service","timestamp":"2026-04-20 11:12:30"}
+{"level":"info","message":"Master Database connected successfully","service":"library-service","timestamp":"2026-04-20 11:12:42"}
+{"level":"info","message":"Server running on port 3245","service":"library-service","timestamp":"2026-04-20 11:14:23"}
+{"level":"info","message":"Master Database connected successfully","service":"library-service","timestamp":"2026-04-20 11:14:42"}
+{"level":"info","message":"Server running on port 3245","service":"library-service","timestamp":"2026-04-20 11:18:49"}
+{"level":"info","message":"Master Database connected successfully","service":"library-service","timestamp":"2026-04-20 11:18:53"}
+{"level":"info","message":"Server running on port 3245","service":"library-service","timestamp":"2026-04-20 11:19:05"}
+{"level":"info","message":"Master Database connected successfully","service":"library-service","timestamp":"2026-04-20 11:19:24"}
+{"level":"info","message":"Server running on port 3245","service":"library-service","timestamp":"2026-04-20 11:19:30"}
+{"level":"info","message":"Master Database connected successfully","service":"library-service","timestamp":"2026-04-20 11:19:42"}
+{"level":"info","message":"Server running on port 3245","service":"library-service","timestamp":"2026-04-20 11:19:50"}
+{"level":"info","message":"Master Database connected successfully","service":"library-service","timestamp":"2026-04-20 11:19:51"}
+{"level":"info","message":"Server running on port 3245","service":"library-service","timestamp":"2026-04-20 11:20:01"}
+{"level":"info","message":"Master Database connected successfully","service":"library-service","timestamp":"2026-04-20 11:20:02"}
+{"level":"info","message":"Server running on port 3245","service":"library-service","timestamp":"2026-04-20 11:20:12"}
+{"level":"info","message":"Master Database connected successfully","service":"library-service","timestamp":"2026-04-20 11:20:35"}
+{"level":"info","message":"Server running on port 3245","service":"library-service","timestamp":"2026-04-20 11:20:57"}
+{"level":"info","message":"Master Database connected successfully","service":"library-service","timestamp":"2026-04-20 11:20:57"}
+{"level":"info","message":"Server running on port 3245","service":"library-service","timestamp":"2026-04-20 11:21:31"}
+{"level":"info","message":"Server running on port 3245","service":"library-service","timestamp":"2026-04-20 11:21:35"}
+{"level":"info","message":"Server running on port 3245","service":"library-service","timestamp":"2026-04-20 11:21:39"}
+{"level":"info","message":"Master Database connected successfully","service":"library-service","timestamp":"2026-04-20 11:21:44"}
+{"level":"info","message":"Server running on port 3245","service":"library-service","timestamp":"2026-04-20 11:24:17"}
+{"level":"info","message":"Master Database connected successfully","service":"library-service","timestamp":"2026-04-20 11:24:44"}

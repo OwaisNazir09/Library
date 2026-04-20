@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Clock, Send, AlertTriangle, User, BookOpen } from 'lucide-react';
+import { Clock, Send, AlertTriangle, User, BookOpen, ChevronRight } from 'lucide-react';
 import { format, differenceInDays } from 'date-fns';
 import { getOverdueIssues } from '../../services/issueService';
 import { toast } from 'react-hot-toast';
@@ -33,28 +33,31 @@ const Reminders = () => {
   if (loading) return <LoadingSkeleton type="table" rows={5} />;
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+    <div className="space-y-5 pb-8 animate-in fade-in duration-500">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-black text-slate-900 tracking-tight">Overdue Reminders</h1>
-          <p className="text-slate-500 font-medium">Students who have not returned books on time.</p>
+           <div className="flex items-center gap-2 text-[12px] font-medium text-slate-500 uppercase tracking-widest mb-1">
+            <span>Library</span>
+            <ChevronRight size={12} />
+            <span className="text-[#044343]">Reminders</span>
+          </div>
+          <h1>Overdue Reminders</h1>
         </div>
       </div>
 
-      <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left">
-            <thead className="bg-slate-50/50 text-[10px] font-black text-slate-400 uppercase tracking-widest">
-              <tr>
-                <th className="px-8 py-5">Student Name</th>
-                <th className="px-6 py-5">Book Name</th>
-                <th className="px-6 py-5">Due Date</th>
-                <th className="px-6 py-5">Days Late</th>
-                <th className="px-8 py-5 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-50">
-              {overdueList.map((item) => {
+      <div className="compact-table-container">
+        <table className="compact-table">
+          <thead>
+            <tr>
+              <th>Student Name</th>
+              <th>Book Name</th>
+              <th>Due Date</th>
+              <th>Days Late</th>
+              <th className="text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {overdueList.map((item) => {
                 const daysLate = differenceInDays(new Date(), new Date(item.dueDate));
                 
                 return (
@@ -82,16 +85,16 @@ const Reminders = () => {
                         {daysLate} Days
                       </span>
                     </td>
-                    <td className="px-8 py-5 text-right">
-                      <button 
-                        onClick={() => handleSendReminder(item.user?.fullName)}
-                        className="bg-white border text-xs border-slate-200 text-slate-700 px-4 py-2 rounded-xl font-bold hover:bg-slate-50 transition-all shadow-sm flex items-center justify-center gap-2 ml-auto active:scale-95"
-                      >
-                        <Send size={14} />
-                        Send Reminder
-                      </button>
-                    </td>
-                  </tr>
+                  <td className="text-right">
+                    <button 
+                      onClick={() => handleSendReminder(item.user?.fullName)}
+                      className="btn btn-sm btn-secondary ml-auto"
+                    >
+                      <Send size={14} />
+                      Send Reminder
+                    </button>
+                  </td>
+                </tr>
                 );
               })}
               
@@ -106,9 +109,8 @@ const Reminders = () => {
                   </td>
                 </tr>
               )}
-            </tbody>
-          </table>
-        </div>
+          </tbody>
+        </table>
       </div>
     </div>
   );

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, useInView, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import {
-  BookOpen, Users, RotateCcw, Package, DollarSign, BarChart2,
+  BookOpen, Users, RotateCcw, Package, IndianRupeeIcon, BarChart2,
   Check, ArrowRight, Star, Twitter, Linkedin, Github, Menu, X,
   ChevronRight, Zap, Shield, Globe, Library
 } from 'lucide-react';
@@ -210,7 +210,7 @@ const features = [
   { icon: Users, title: 'Student Registration', desc: 'Register students with complete profiles, subscription plans, and membership history.', color: 'bg-teal-50 text-teal-600' },
   { icon: RotateCcw, title: 'Borrow & Return', desc: 'Seamless book checkout and return flow with automated due dates and instant alerts.', color: 'bg-amber-50 text-amber-600' },
   { icon: Package, title: 'Package Management', desc: 'Create flexible subscription plans — monthly, quarterly — and assign them to students.', color: 'bg-purple-50 text-purple-600' },
-  { icon: DollarSign, title: 'Fines & Fees', desc: 'Auto-calculate late return fines, track payment status, and generate financial ledgers.', color: 'bg-rose-50 text-rose-600' },
+  { icon: IndianRupeeIcon, title: 'Fines & Fees', desc: 'Auto-calculate late return fines, track payment status, and generate financial ledgers.', color: 'bg-rose-50 text-rose-600' },
   { icon: BarChart2, title: 'Reports & Analytics', desc: 'Beautiful charts and summaries to understand your library usage and revenue at a glance.', color: 'bg-emerald-50 text-emerald-600' },
 ];
 

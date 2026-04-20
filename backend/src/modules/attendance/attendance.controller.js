@@ -68,6 +68,29 @@ export const markAttendance = async (req, res, next) => {
       throw error;
     }
 
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    let activeAttendance = await AttendanceModel.findOne({
+      userId,
+      tenantId: req.tenantId,
+      checkIn: { $gte: today },
+      checkOut: { $exists: false }
+    });
+
+    if (activeAttendance) {
+      activeAttendance.checkOut = new Date();
+      activeAttendance.method = 'manual';
+      await activeAttendance.save();
+
+      const populated = await activeAttendance.populate('userId', 'fullName email');
+      return res.status(200).json({
+        status: 'success',
+        message: 'Manual check-out successful',
+        data: { attendance: populated }
+      });
+    }
+
     const record = await AttendanceModel.create({
       tenantId: req.tenantId,
       userId,
@@ -81,7 +104,7 @@ export const markAttendance = async (req, res, next) => {
 
     res.status(201).json({
       status: 'success',
-      message: 'Attendance marked successfully',
+      message: 'Manual check-in successful',
       data: { attendance: populated }
     });
   } catch (err) {

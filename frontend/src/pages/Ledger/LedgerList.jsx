@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { motion } from 'framer-motion';
-import { Search, IndianRupee, BookMarked, User } from 'lucide-react';
+import { Search, IndianRupee, BookMarked, User, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { fetchLedgers, fetchLedgerStats } from '../../store/slices/ledgerSlice';
 import LoadingSkeleton from '../../components/common/LoadingSkeleton';
@@ -38,21 +38,25 @@ const LedgerList = () => {
   ];
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+    <div className="space-y-5 pb-8 animate-in fade-in duration-500">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-black text-slate-900 tracking-tight">Fee Ledger</h1>
-          <p className="text-slate-500 font-medium italic">Manage student accounts, fees, and payments.</p>
+           <div className="flex items-center gap-2 text-[12px] font-medium text-slate-500 uppercase tracking-widest mb-1">
+            <span>Finance</span>
+            <ChevronRight size={12} />
+            <span className="text-[#044343]">Ledger</span>
+          </div>
+          <h1>Fee Ledger</h1>
         </div>
         <div className="flex items-center gap-3">
           <div className="relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
             <input
               type="text"
               placeholder="Search by student name..."
               value={searchTerm}
               onChange={onSearchChange}
-              className="pl-12 pr-4 py-3 bg-white border border-slate-100 rounded-2xl w-80 shadow-sm focus:ring-2 focus:ring-[#044343]/5 outline-none font-medium text-sm transition-all"
+              className="input-field pl-9 w-64"
             />
           </div>
         </div>
@@ -72,21 +76,20 @@ const LedgerList = () => {
         ))}
       </div>
 
-      <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden min-h-[400px]">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left">
-            <thead className="bg-slate-50/50 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-50">
-              <tr>
-                <th className="px-8 py-5">Student / ID</th>
-                <th className="px-6 py-5 text-center">Ledger ID</th>
-                <th className="px-6 py-5 text-center">Total Fee</th>
-                <th className="px-6 py-5 text-center">Total Paid</th>
-                <th className="px-6 py-5 text-center">Balance</th>
-                <th className="px-6 py-5 text-center">Status</th>
-                <th className="px-8 py-5 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-50">
+      <div className="compact-table-container">
+        <table className="compact-table">
+          <thead>
+            <tr>
+              <th>Student / ID</th>
+              <th className="text-center">Ledger ID</th>
+              <th className="text-center">Total Fee</th>
+              <th className="text-center">Total Paid</th>
+              <th className="text-center">Balance</th>
+              <th className="text-center">Status</th>
+              <th className="text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
               {loading && ledgers.length === 0 ? (
                 <tr>
                    <td colSpan="7" className="p-8">
@@ -131,7 +134,7 @@ const LedgerList = () => {
                   <td className="px-8 py-5 text-right">
                     <button 
                       onClick={() => navigate(`/app/ledger/${item.studentId._id}`)}
-                      className="bg-[#044343] text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-[#033636] transition-all"
+                      className="btn btn-sm btn-primary"
                     >
                       View Ledger
                     </button>
@@ -151,17 +154,18 @@ const LedgerList = () => {
               )}
             </tbody>
           </table>
-        </div>
-        
-        {totalLedgers > 0 && (
+      </div>
+      
+      {totalLedgers > 0 && (
+        <div className="mt-4">
           <Pagination 
             total={totalLedgers}
             limit={limit}
             currentPage={currentPage}
             onPageChange={(page) => setCurrentPage(page)}
           />
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 };

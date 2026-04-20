@@ -7,8 +7,11 @@ export default {
   theme: {
     extend: {
       colors: {
-        primary: "#4f46e5",
-        secondary: "#6366f1",
+        primary: "#044343",
+        secondary: "#10B981",
+      },
+      fontFamily: {
+        sans: ['"Google Sans"', '"Noto Sans"', 'Inter', 'system-ui', 'sans-serif'],
       },
       borderRadius: {
         '3xl': '1.5rem',

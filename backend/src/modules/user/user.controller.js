@@ -9,7 +9,30 @@ export const getAllUsers = async (req, res, next) => {
     const { User } = getModels(req.db);
 
     const filter = req.tenantId ? { tenantId: req.tenantId } : {};
-    const features = new ApiFeatures(User.find(filter).populate('package').populate('assignedTable'), req.query)
+    const totalFilter = { ...filter };
+    if (req.query.role) totalFilter.role = req.query.role;
+    if (req.query.status) {
+      if (typeof req.query.status === 'object') {
+        const statusFilter = {};
+        Object.entries(req.query.status).forEach(([op, val]) => {
+          const mongoOp = ['ne', 'gte', 'gt', 'lte', 'lt'].includes(op) ? `$${op}` : op;
+          statusFilter[mongoOp] = val;
+        });
+        totalFilter.status = statusFilter;
+      } else {
+        totalFilter.status = req.query.status;
+      }
+    }
+
+    if (req.query.search) {
+      totalFilter.$or = ['fullName', 'email'].map(field => ({
+        [field]: { $regex: req.query.search, $options: 'i' }
+      }));
+    }
+
+    const total = await User.countDocuments(totalFilter);
+
+    const features = new ApiFeatures(User.find(totalFilter).populate('package').populate('assignedTable'), req.query)
       .filter()
       .search(['fullName', 'email'])
       .sort({ createdAt: 1 })
@@ -26,8 +49,6 @@ export const getAllUsers = async (req, res, next) => {
       }
       return user;
     });
-
-    const total = await User.countDocuments(filter);
 
     res.status(200).json({
       status: 'success',
@@ -189,102 +210,45 @@ export const createUser = async (req, res, next) => {
     });
 
     // --- Auto Create Student Account (Ledger) ---
-    const {
-      ensureStudentAccount,
-      recordTransaction
-    } = await import('../ledger/finance.controller.js');
-    const { Account } = getModels(req.db);
+    const { ensureStudentAccount, getSystemAccount, recordTransaction, seedChartOfAccounts } = await import('../ledger/finance.controller.js');
+
+    // Seed default COA if first registration
+    await seedChartOfAccounts(req.db, req.tenantId);
 
     const studentAccount = await ensureStudentAccount(req.db, req.tenantId, newUser._id, newUser.fullName);
 
-    // Helper to get or create income accounts
-    const getIncomeAcc = async (name, subType = 'Operating Income') => {
-      let acc = await Account.findOne({ tenantId: req.tenantId, name });
-      if (!acc) {
-        acc = await Account.create({
-          tenantId: req.tenantId,
-          name,
-          type: 'Income',
-          subType,
-          isSystem: true
-        });
-      }
-      return acc;
-    };
-
-    // Helper to get or create liability accounts
-    const getLiabilityAcc = async (name, subType = 'Deposit') => {
-      let acc = await Account.findOne({ tenantId: req.tenantId, name });
-      if (!acc) {
-        acc = await Account.create({
-          tenantId: req.tenantId,
-          name,
-          type: 'Liabilities',
-          subType,
-          isSystem: true
-        });
-      }
-      return acc;
-    };
+    let membershipCharged = false;
 
     const regFee = Number(req.body.registrationFee) || 0;
     if (regFee > 0) {
-      const regIncomeAcc = await getIncomeAcc('Registration Fees');
-      await recordTransaction(req.db, req.tenantId, {
-        debitAccountId: studentAccount._id,
-        creditAccountId: regIncomeAcc._id,
-        amount: regFee,
-        type: 'fee_charge',
-        description: 'Initial Registration Fee',
-        userId: req.user?._id
-      });
+      const acc = await getSystemAccount(req.db, req.tenantId, 'Registration Fees', 'Income', 'Operating Income');
+      await recordTransaction(req.db, req.tenantId, { debitAccountId: studentAccount._id, creditAccountId: acc._id, amount: regFee, type: 'fee_charge', description: 'Initial Registration Fee', userId: req.user?._id, studentId: newUser._id });
     }
 
     const secDeposit = Number(req.body.securityDeposit) || 0;
     if (secDeposit > 0) {
-      const secLiabilityAcc = await getLiabilityAcc('Security Deposits');
-      await recordTransaction(req.db, req.tenantId, {
-        debitAccountId: studentAccount._id,
-        creditAccountId: secLiabilityAcc._id,
-        amount: secDeposit,
-        type: 'fee_charge',
-        description: 'Refundable Security Deposit',
-        userId: req.user?._id
-      });
+      const acc = await getSystemAccount(req.db, req.tenantId, 'Security Deposits', 'Liabilities', 'Deposit');
+      await recordTransaction(req.db, req.tenantId, { debitAccountId: studentAccount._id, creditAccountId: acc._id, amount: secDeposit, type: 'fee_charge', description: 'Refundable Security Deposit', userId: req.user?._id, studentId: newUser._id });
     }
 
-    // Auto-add Membership Fee from package
     const membershipFee = pkg ? Number(pkg.price) : 0;
     if (membershipFee > 0) {
-      const memIncomeAcc = await getIncomeAcc('Membership Income');
-      await recordTransaction(req.db, req.tenantId, {
-        debitAccountId: studentAccount._id,
-        creditAccountId: memIncomeAcc._id,
-        amount: membershipFee,
-        type: 'fee_charge',
-        description: `Membership Fee (${pkg.name})`,
-        userId: req.user?._id
-      });
+      const acc = await getSystemAccount(req.db, req.tenantId, 'Membership Income', 'Income', 'Operating Income');
+      await recordTransaction(req.db, req.tenantId, { debitAccountId: studentAccount._id, creditAccountId: acc._id, amount: membershipFee, type: 'fee_charge', description: `Membership Fee (${pkg.name})`, userId: req.user?._id, studentId: newUser._id });
+      membershipCharged = true;
     }
 
-    // Auto-add Study Desk Fee if exists
     const deskFee = Number(req.body.studyDeskFee) || 0;
     if (deskFee > 0) {
-      const deskIncomeAcc = await getIncomeAcc('Study Desk Income');
-      await recordTransaction(req.db, req.tenantId, {
-        debitAccountId: studentAccount._id,
-        creditAccountId: deskIncomeAcc._id,
-        amount: deskFee,
-        type: 'fee_charge',
-        description: 'Study Desk Fee',
-        userId: req.user?._id
-      });
+      const acc = await getSystemAccount(req.db, req.tenantId, 'Study Desk Income', 'Income', 'Service Income');
+      await recordTransaction(req.db, req.tenantId, { debitAccountId: studentAccount._id, creditAccountId: acc._id, amount: deskFee, type: 'fee_charge', description: 'Study Desk Fee', userId: req.user?._id, studentId: newUser._id });
     }
 
-    res.status(201).json({
-      status: 'success',
-      data: { user: newUser, account: studentAccount }
-    });
+    if (membershipCharged) {
+      await newUser.updateOne({ membershipCharged: true });
+    }
+
+    res.status(201).json({ status: 'success', data: { user: newUser, account: studentAccount } });
 
   } catch (err) {
     next(err);
@@ -322,79 +286,39 @@ export const approveRegistration = async (req, res, next) => {
     await user.save();
 
     // --- Auto Create Student Account (Ledger) ---
-    const { ensureStudentAccount, recordTransaction } = await import('../ledger/finance.controller.js');
+    const { ensureStudentAccount, getSystemAccount, recordTransaction, seedChartOfAccounts } = await import('../ledger/finance.controller.js');
+    await seedChartOfAccounts(req.db, req.tenantId);
     const studentAccount = await ensureStudentAccount(req.db, req.tenantId, user._id, user.fullName);
 
-    const getIncomeAcc = async (name, subType = 'Operating Income') => {
-      let acc = await Account.findOne({ tenantId: req.tenantId, name });
-      if (!acc) {
-        acc = await Account.create({ tenantId: req.tenantId, name, type: 'Income', subType, isSystem: true });
-      }
-      return acc;
-    };
+    // Guard: only charge membership if not already charged at registration
+    const freshUser = await User.findById(user._id).select('membershipCharged');
+    const alreadyCharged = freshUser?.membershipCharged || false;
 
-    const getLiabilityAcc = async (name, subType = 'Deposit') => {
-      let acc = await Account.findOne({ tenantId: req.tenantId, name });
-      if (!acc) {
-        acc = await Account.create({ tenantId: req.tenantId, name, type: 'Liabilities', subType, isSystem: true });
-      }
-      return acc;
-    };
-
-    // Auto-add Membership Fee from package
     const membershipFee = user.package ? Number(user.package.price) : 0;
-    if (membershipFee > 0) {
-      const memIncomeAcc = await getIncomeAcc('Membership Income');
-      await recordTransaction(req.db, req.tenantId, {
-        debitAccountId: studentAccount._id,
-        creditAccountId: memIncomeAcc._id,
-        amount: membershipFee,
-        type: 'fee_charge',
-        description: `Membership Fee (${user.package.name})`,
-        userId: req.user?._id
-      });
+    if (membershipFee > 0 && !alreadyCharged) {
+      const acc = await getSystemAccount(req.db, req.tenantId, 'Membership Income', 'Income', 'Operating Income');
+      await recordTransaction(req.db, req.tenantId, { debitAccountId: studentAccount._id, creditAccountId: acc._id, amount: membershipFee, type: 'fee_charge', description: `Membership Fee (${user.package.name})`, userId: req.user?._id, studentId: user._id });
+      await User.findByIdAndUpdate(user._id, { membershipCharged: true });
     }
 
-    // Process selected services mapped fees 
-    if (user.selectedServices && user.selectedServices.includes('Study Desk')) {
-      const deskFee = req.body.studyDeskFee ? Number(req.body.studyDeskFee) : (req.body.servicesFee ? Number(req.body.servicesFee) : 0);
+    if (user.selectedServices?.includes('Study Desk')) {
+      const deskFee = Number(req.body.studyDeskFee || req.body.servicesFee) || 0;
       if (deskFee > 0) {
-        const deskIncomeAcc = await getIncomeAcc('Study Desk Income');
-        await recordTransaction(req.db, req.tenantId, {
-          debitAccountId: studentAccount._id,
-          creditAccountId: deskIncomeAcc._id,
-          amount: deskFee,
-          type: 'fee_charge',
-          description: 'Study Desk Fee',
-          userId: req.user?._id
-        });
+        const acc = await getSystemAccount(req.db, req.tenantId, 'Study Desk Income', 'Income', 'Service Income');
+        await recordTransaction(req.db, req.tenantId, { debitAccountId: studentAccount._id, creditAccountId: acc._id, amount: deskFee, type: 'fee_charge', description: 'Study Desk Fee', userId: req.user?._id, studentId: user._id });
       }
     }
 
     const regFee = Number(req.body.registrationFee) || 0;
     if (regFee > 0) {
-      const regIncomeAcc = await getIncomeAcc('Registration Fees');
-      await recordTransaction(req.db, req.tenantId, {
-        debitAccountId: studentAccount._id,
-        creditAccountId: regIncomeAcc._id,
-        amount: regFee,
-        type: 'fee_charge',
-        description: 'Initial Registration Fee',
-        userId: req.user?._id
-      });
+      const acc = await getSystemAccount(req.db, req.tenantId, 'Registration Fees', 'Income', 'Operating Income');
+      await recordTransaction(req.db, req.tenantId, { debitAccountId: studentAccount._id, creditAccountId: acc._id, amount: regFee, type: 'fee_charge', description: 'Initial Registration Fee', userId: req.user?._id, studentId: user._id });
     }
 
     const secDeposit = Number(req.body.securityDeposit) || 0;
     if (secDeposit > 0) {
-      const secLiabilityAcc = await getLiabilityAcc('Security Deposits');
-      await recordTransaction(req.db, req.tenantId, {
-        debitAccountId: studentAccount._id,
-        creditAccountId: secLiabilityAcc._id,
-        amount: secDeposit,
-        type: 'fee_charge',
-        description: 'Refundable Security Deposit',
-        userId: req.user?._id
-      });
+      const acc = await getSystemAccount(req.db, req.tenantId, 'Security Deposits', 'Liabilities', 'Deposit');
+      await recordTransaction(req.db, req.tenantId, { debitAccountId: studentAccount._id, creditAccountId: acc._id, amount: secDeposit, type: 'fee_charge', description: 'Refundable Security Deposit', userId: req.user?._id, studentId: user._id });
     }
 
     res.status(200).json({
@@ -433,6 +357,66 @@ export const rejectRegistration = async (req, res, next) => {
     res.status(200).json({
       status: 'success',
       message: 'Registration rejected.',
+      data: { user }
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const assignPackage = async (req, res, next) => {
+  try {
+    const { User, Account } = getModels(req.db);
+    const { packageId } = req.body;
+
+    const user = await User.findOne({ _id: req.params.id, tenantId: req.tenantId });
+    if (!user) {
+      const error = new Error('No user found with that ID');
+      error.statusCode = 404;
+      throw error;
+    }
+
+    const pkg = await Package.findById(packageId);
+    if (!pkg) {
+      const error = new Error('No package found with that ID');
+      error.statusCode = 404;
+      throw error;
+    }
+
+    user.package = packageId;
+    user.packageStartDate = new Date();
+    user.packageEndDate = addDays(new Date(), pkg.duration);
+    user.subscriptionStatus = 'active';
+    await user.save();
+
+    // --- Create Ledger Transaction ---
+    const { ensureStudentAccount, recordTransaction } = await import('../ledger/finance.controller.js');
+    const studentAccount = await ensureStudentAccount(req.db, req.tenantId, user._id, user.fullName);
+
+    const getIncomeAcc = async (name) => {
+      let acc = await Account.findOne({ tenantId: req.tenantId, name });
+      if (!acc) {
+        acc = await Account.create({ tenantId: req.tenantId, name, type: 'Income', subType: 'Operating Income', isSystem: true });
+      }
+      return acc;
+    };
+
+    const membershipFee = Number(pkg.price) || 0;
+    if (membershipFee > 0) {
+      const memIncomeAcc = await getIncomeAcc('Membership Income');
+      await recordTransaction(req.db, req.tenantId, {
+        debitAccountId: studentAccount._id,
+        creditAccountId: memIncomeAcc._id,
+        amount: membershipFee,
+        type: 'fee_charge',
+        description: `Membership Fee (${pkg.name})`,
+        userId: req.user?._id
+      });
+    }
+
+    res.status(200).json({
+      status: 'success',
+      message: 'Package assigned and ledger updated.',
       data: { user }
     });
   } catch (err) {

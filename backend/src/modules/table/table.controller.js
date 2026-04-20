@@ -4,7 +4,7 @@ import ApiFeatures from '../../utils/apiFeatures.js';
 export const getAllTables = async (req, res, next) => {
   try {
     const { Table } = getModels(req.db);
-    
+
     const total = await Table.countDocuments({ tenantId: req.tenantId });
     const features = new ApiFeatures(Table.find({ tenantId: req.tenantId }).populate('assignedTo', 'fullName email'), req.query)
       .filter()
@@ -13,7 +13,7 @@ export const getAllTables = async (req, res, next) => {
       .paginate();
 
     const tables = await features.query;
-    
+
     res.status(200).json({
       status: 'success',
       total,
@@ -62,6 +62,41 @@ export const assignTable = async (req, res, next) => {
     table.status = 'Assigned';
 
     await table.save();
+
+    const { User } = getModels(req.db);
+    const user = await User.findById(userId);
+    if (user) {
+      const { ensureStudentAccount, getSystemAccount, recordTransaction } = await import('../ledger/finance.controller.js');
+      const studentAccount = await ensureStudentAccount(req.db, req.tenantId, user._id, user.fullName);
+
+      const tableFee = Number(fee) || 0;
+      if (tableFee > 0) {
+        const incomeAcc = await getSystemAccount(req.db, req.tenantId, 'Study Desk Income', 'Income', 'Service Income');
+        await recordTransaction(req.db, req.tenantId, {
+          debitAccountId: studentAccount._id,
+          creditAccountId: incomeAcc._id,
+          amount: tableFee,
+          type: 'fee_charge',
+          description: `Table Rental Fee (Table ${table.tableNumber})`,
+          userId: req.user?._id,
+          studentId: user._id
+        });
+      }
+
+      const securityDeposit = Number(deposit) || 0;
+      if (securityDeposit > 0) {
+        const liabilityAcc = await getSystemAccount(req.db, req.tenantId, 'Security Deposits', 'Liabilities', 'Deposit');
+        await recordTransaction(req.db, req.tenantId, {
+          debitAccountId: studentAccount._id,
+          creditAccountId: liabilityAcc._id,
+          amount: securityDeposit,
+          type: 'fee_charge',
+          description: `Security Deposit (Table ${table.tableNumber})`,
+          userId: req.user?._id,
+          studentId: user._id
+        });
+      }
+    }
 
     res.status(200).json({ status: 'success', data: { table } });
   } catch (err) { next(err); }

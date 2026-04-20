@@ -23,6 +23,7 @@ import Reports from './pages/Reports/Reports';
 import Reminders from './pages/Reminders/Reminders';
 import Fines from './pages/Fines/Fines';
 import DigitalLibrary from './pages/DigitalLibrary/DigitalLibrary';
+import ResourceDetail from './pages/DigitalLibrary/ResourceDetail';
 import LandingPage from './pages/Landing/LandingPage';
 import FinanceDashboard from './pages/Finance/FinanceDashboard';
 import StudentAccounts from './pages/Finance/StudentAccounts';
@@ -81,6 +82,7 @@ const App = () => {
           <Route path="notifications/send" element={<SendNotification />} />
           <Route path="tables" element={<Tables />} />
           <Route path="digital-library" element={<DigitalLibrary />} />
+          <Route path="digital-library/:resourceId" element={<ResourceDetail />} />
           <Route path="settings" element={<Settings />} />
         </Route>
       </Route>

@@ -1,15 +1,15 @@
 import React from 'react';
 import { useGetTablesQuery, useAddTableMutation, useUpdateTableMutation, useDeleteTableMutation, useAssignTableMutation, useUnassignTableMutation } from '../../store/api/studyDeskApi';
 import { useGetUsersQuery } from '../../store/api/usersApi';
-import { 
-  Search, 
-  Filter, 
-  Plus, 
-  Coffee, 
-  User, 
-  Clock, 
-  CheckCircle2, 
-  AlertCircle, 
+import {
+  Search,
+  Filter,
+  Plus,
+  Coffee,
+  User,
+  Clock,
+  CheckCircle2,
+  AlertCircle,
   MoreHorizontal,
   X,
   Calendar,
@@ -20,7 +20,8 @@ import {
   Building2,
   Trash2,
   ExternalLink,
-  Loader2
+  Loader2,
+  ChevronRight
 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'react-hot-toast';
@@ -43,19 +44,19 @@ const Tables = () => {
   });
 
   const { data: usersData } = useGetUsersQuery({ limit: 1000, role: 'member' });
-  
+
   const [addTableMutation, { isLoading: isAdding }] = useAddTableMutation();
   const [assignTableMutation, { isLoading: isAssigning }] = useAssignTableMutation();
   const [unassignTableMutation, { isLoading: isUnassigning }] = useUnassignTableMutation();
 
   const items = tablesData?.data?.tables || tablesData?.data || [];
   const total = tablesData?.total || tablesData?.results || items.length;
-  const users = usersData?.data || [];
+  const users = usersData?.data?.users || usersData?.data || [];
 
   const [isAddModalOpen, setIsAddModalOpen] = React.useState(false);
   const [isAssignModalOpen, setIsAssignModalOpen] = React.useState(false);
   const [selectedTable, setSelectedTable] = React.useState(null);
-  
+
   const { register, handleSubmit, reset } = useForm();
   const { register: regAssign, handleSubmit: handleAssignSubmit, reset: resetAssign } = useForm();
 
@@ -66,7 +67,6 @@ const Tables = () => {
       setIsAddModalOpen(false);
       reset();
     } catch (err) {
-      // Handled globally
     }
   };
 
@@ -112,147 +112,151 @@ const Tables = () => {
     return items.map((table) => (
       <tr key={table._id} className="hover:bg-slate-50/50 transition-colors group">
         <td className="px-8 py-5">
-           <div className="flex items-center gap-4">
-              <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-[#044343] group-hover:text-white transition-all">
-                <Coffee size={20} />
+          <div className="flex items-center gap-4">
+            <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-[#044343] group-hover:text-white transition-all">
+              <Coffee size={20} />
+            </div>
+            <div>
+              <p className="text-sm font-black text-slate-900 leading-tight">Table {table.tableNumber}</p>
+              <p className="text-[10px] text-slate-400 font-bold mt-0.5 uppercase tracking-widest">{table.tableName || table.section}</p>
+            </div>
+          </div>
+        </td>
+        <td className="px-6 py-5">
+          <div className="flex items-center gap-2">
+            <MapPin size={12} className="text-slate-400" />
+            <span className="text-xs font-bold text-slate-600">{table.section} / Floor {table.floor || 'G'}</span>
+          </div>
+        </td>
+        <td className="px-6 py-5">
+          <div className="flex items-center gap-2">
+            <Key size={12} className="text-teal-600" />
+            <span className="text-xs font-black text-slate-900">{table.keyNumber || 'N/A'}</span>
+          </div>
+        </td>
+        <td className="px-6 py-5">
+          {table.assignedTo ? (
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600">
+                <User size={14} />
               </div>
-              <div>
-                <p className="text-sm font-black text-slate-900 leading-tight">Table {table.tableNumber}</p>
-                <p className="text-[10px] text-slate-400 font-bold mt-0.5 uppercase tracking-widest">{table.tableName || table.section}</p>
+              <div className="min-w-0">
+                <p className="text-xs font-black text-slate-900 truncate">{table.assignedTo.fullName}</p>
+                <p className="text-[9px] text-slate-400 font-bold truncate uppercase">{table.assignedTo.email}</p>
               </div>
-           </div>
+            </div>
+          ) : <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest italic">Unassigned</span>}
         </td>
         <td className="px-6 py-5">
-           <div className="flex items-center gap-2">
-             <MapPin size={12} className="text-slate-400" />
-             <span className="text-xs font-bold text-slate-600">{table.section} / Floor {table.floor || 'G'}</span>
-           </div>
+          {getStatusBadge(table.status)}
         </td>
         <td className="px-6 py-5">
-           <div className="flex items-center gap-2">
-             <Key size={12} className="text-teal-600" />
-             <span className="text-xs font-black text-slate-900">{table.keyNumber || 'N/A'}</span>
-           </div>
-        </td>
-        <td className="px-6 py-5">
-           {table.assignedTo ? (
-             <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600">
-                  <User size={14} />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-xs font-black text-slate-900 truncate">{table.assignedTo.fullName}</p>
-                  <p className="text-[9px] text-slate-400 font-bold truncate uppercase">{table.assignedTo.email}</p>
-                </div>
-             </div>
-           ) : <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest italic">Unassigned</span>}
-        </td>
-        <td className="px-6 py-5">
-           {getStatusBadge(table.status)}
-        </td>
-        <td className="px-6 py-5">
-           {table.validUntil ? (
-             <div className="flex flex-col">
-                <span className="text-xs font-black text-slate-900">{format(new Date(table.validUntil), 'MMM dd, yyyy')}</span>
-                <span className="text-[9px] text-slate-400 font-bold uppercase tracking-tight">
-                  {differenceInDays(new Date(table.validUntil), new Date())} Days left
-                </span>
-             </div>
-           ) : '-'}
+          {table.validUntil ? (
+            <div className="flex flex-col">
+              <span className="text-xs font-black text-slate-900">{format(new Date(table.validUntil), 'MMM dd, yyyy')}</span>
+              <span className="text-[9px] text-slate-400 font-bold uppercase tracking-tight">
+                {differenceInDays(new Date(table.validUntil), new Date())} Days left
+              </span>
+            </div>
+          ) : '-'}
         </td>
         <td className="px-8 py-5 text-right">
-           <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-              {table.status === 'Available' ? (
-                <button 
-                  onClick={() => { setSelectedTable(table); setIsAssignModalOpen(true); }}
-                  disabled={isAssigning}
-                  className="px-4 py-2 bg-[#044343] text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-[#033636] transition-all shadow-md active:scale-95 disabled:opacity-70"
-                >
-                  {isAssigning ? <Loader2 size={12} className="animate-spin" /> : 'Assign Desk'}
-                </button>
-              ) : (
-                <button 
-                  onClick={() => handleUnassign(table._id)}
-                  disabled={isUnassigning}
-                  className="px-4 py-2 bg-rose-50 text-rose-600 border border-rose-100 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-rose-100 transition-all active:scale-95 disabled:opacity-70"
-                >
-                  {isUnassigning ? <Loader2 size={12} className="animate-spin" /> : 'Unassign'}
-                </button>
-              )}
-           </div>
+          <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+            {table.status === 'Available' ? (
+              <button
+                onClick={() => { setSelectedTable(table); setIsAssignModalOpen(true); }}
+                disabled={isAssigning}
+                className="btn btn-sm btn-primary"
+              >
+                {isAssigning ? <Loader2 size={12} className="animate-spin" /> : 'Assign'}
+              </button>
+            ) : (
+              <button
+                onClick={() => handleUnassign(table._id)}
+                disabled={isUnassigning}
+                className="btn btn-sm btn-secondary text-rose-600 border-rose-200 hover:bg-rose-50"
+              >
+                {isUnassigning ? <Loader2 size={12} className="animate-spin" /> : 'Unassign'}
+              </button>
+            )}
+          </div>
         </td>
       </tr>
     ));
   };
 
   return (
-    <div className="space-y-8 pb-10">
+    <div className="space-y-5 pb-8 animate-in fade-in duration-500">
       {/* Header & Stats */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-black text-slate-900 tracking-tight">Study Desk Management</h1>
-          <p className="text-slate-500 font-medium italic">Assign private desks, track keys, lockers and student study zones.</p>
+          <div className="flex items-center gap-2 text-[12px] font-medium text-slate-500 uppercase tracking-widest mb-1">
+            <span>Library</span>
+            <ChevronRight size={12} />
+            <span className="text-[#044343]">Facilities</span>
+          </div>
+          <h1>Study Desk Management</h1>
         </div>
         <div className="flex items-center gap-3">
           <div className="relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-            <input 
-              type="text" 
-              placeholder="Filter table or student..." 
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+            <input
+              type="text"
+              placeholder="Filter table or student..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-12 pr-4 py-3.5 bg-white border border-slate-100 rounded-2xl w-72 shadow-sm focus:ring-2 focus:ring-[#044343]/5 outline-none font-bold text-xs"
+              className="input-field pl-9 w-64"
             />
           </div>
-          <button 
+          <button
             onClick={() => setIsAddModalOpen(true)}
-            className="flex items-center justify-center gap-2 px-6 py-3.5 bg-[#044343] text-white rounded-2xl font-black text-xs shadow-xl shadow-teal-900/10 active:scale-95 transition-all uppercase tracking-widest"
+            className="btn btn-primary btn-default"
           >
-            <Plus size={18} />
+            <Plus size={16} />
             Add New Desk
           </button>
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-         {[
-           { label: 'Available', count: items.filter(t => t.status === 'Available').length, color: 'emerald' },
-           { label: 'Assigned', count: items.filter(t => t.status === 'Assigned').length, color: 'blue' },
-           { label: 'Maintenance', count: items.filter(t => t.status === 'Maintenance').length, color: 'amber' },
-           { label: 'Expired', count: items.filter(t => t.status === 'Expired').length, color: 'rose' }
-         ].map(stat => (
-           <div key={stat.label} className="bg-white p-6 rounded-[2rem] border border-slate-100 flex items-center justify-between group hover:shadow-xl hover:shadow-slate-200/50 transition-all">
-              <div>
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{stat.label} Desks</p>
-                <p className="text-3xl font-black text-slate-900 tracking-tight">{stat.count}</p>
-              </div>
-              <div className={`w-12 h-12 rounded-2xl bg-${stat.color}-50 text-${stat.color}-600 flex items-center justify-center group-hover:scale-110 transition-transform`}>
-                 <ShieldCheck size={24} />
-              </div>
-           </div>
-         ))}
+        {[
+          { label: 'Available', count: items.filter(t => t.status === 'Available').length, color: 'emerald' },
+          { label: 'Assigned', count: items.filter(t => t.status === 'Assigned').length, color: 'blue' },
+          { label: 'Maintenance', count: items.filter(t => t.status === 'Maintenance').length, color: 'amber' },
+          { label: 'Expired', count: items.filter(t => t.status === 'Expired').length, color: 'rose' }
+        ].map(stat => (
+          <div key={stat.label} className="bg-white p-6 rounded-[2rem] border border-slate-100 flex items-center justify-between group hover:shadow-xl hover:shadow-slate-200/50 transition-all">
+            <div>
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{stat.label} Desks</p>
+              <p className="text-3xl font-black text-slate-900 tracking-tight">{stat.count}</p>
+            </div>
+            <div className={`w-12 h-12 rounded-2xl bg-${stat.color}-50 text-${stat.color}-600 flex items-center justify-center group-hover:scale-110 transition-transform`}>
+              <ShieldCheck size={24} />
+            </div>
+          </div>
+        ))}
       </div>
 
-      <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden min-h-[500px]">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left">
-            <thead className="bg-slate-50/50 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-50">
-              <tr>
-                <th className="px-8 py-5">Table Assets</th>
-                <th className="px-6 py-5">Location/Zone</th>
-                <th className="px-6 py-5">Key Code</th>
-                <th className="px-6 py-5">Active Resident</th>
-                <th className="px-6 py-5">Badge</th>
-                <th className="px-6 py-5">Valid Until</th>
-                <th className="px-8 py-5 text-right">Admin Control</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-50">
-              {renderTableBody()}
-            </tbody>
-          </table>
-        </div>
-        <Pagination 
+      <div className="compact-table-container">
+        <table className="compact-table">
+          <thead>
+            <tr>
+              <th>Table Assets</th>
+              <th>Location/Zone</th>
+              <th>Key Code</th>
+              <th>Active Resident</th>
+              <th>Badge</th>
+              <th>Valid Until</th>
+              <th className="text-right">Admin Control</th>
+            </tr>
+          </thead>
+          <tbody>
+            {renderTableBody()}
+          </tbody>
+        </table>
+      </div>
+      <div className="mt-4">
+        <Pagination
           total={total}
           limit={limit}
           currentPage={currentPage}
@@ -263,67 +267,70 @@ const Tables = () => {
       {/* Add Table Modal */}
       <AnimatePresence>
         {isAddModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
-            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="bg-white w-full max-w-2xl rounded-[3rem] p-10 shadow-2xl relative overflow-y-auto max-h-[90vh]">
-               <button onClick={() => setIsAddModalOpen(false)} className="absolute top-8 right-8 text-slate-400 hover:text-slate-900 bg-slate-50 p-2 rounded-xl">
-                 <X size={24} />
-               </button>
-               <div className="mb-10">
-                 <h2 className="text-3xl font-black text-slate-900">Define Study Desk</h2>
-                 <p className="text-slate-500 font-bold mt-1">Configure physical parameters, zone and key details.</p>
-               </div>
-               
-               <form onSubmit={handleSubmit(onAddTable)} className="space-y-8">
-                 <div className="grid grid-cols-2 gap-6 bg-slate-50 p-8 rounded-[2rem] border border-slate-100">
-                    <div className="space-y-1.5 col-span-2 md:col-span-1">
-                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Table Number *</label>
-                      <input {...register('tableNumber', { required: true })} className="w-full bg-white border border-slate-200 rounded-2xl py-3.5 px-6 outline-none font-bold text-sm h-[55px]" placeholder="e.g. T-101" />
+          <div className="modal-overlay">
+            <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="modal-content modal-md max-h-[90vh]">
+              <div className="modal-header">
+                <h2>Define Study Desk</h2>
+                <button onClick={() => setIsAddModalOpen(false)} className="text-slate-400 hover:text-slate-600 transition-colors">
+                  <X size={20} />
+                </button>
+              </div>
+
+              <form onSubmit={handleSubmit(onAddTable)} className="flex flex-col overflow-hidden">
+                <div className="modal-body space-y-6">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="col-span-2 md:col-span-1">
+                      <label className="input-label">Table Number *</label>
+                      <input {...register('tableNumber', { required: true })} className="input-field" placeholder="e.g. T-101" />
                     </div>
-                    <div className="space-y-1.5 col-span-2 md:col-span-1">
-                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Table Name</label>
-                      <input {...register('tableName')} className="w-full bg-white border border-slate-200 rounded-2xl py-3.5 px-6 outline-none font-bold text-sm h-[55px]" placeholder="e.g. Corner Desk" />
+                    <div className="col-span-2 md:col-span-1">
+                      <label className="input-label">Table Name</label>
+                      <input {...register('tableName')} className="input-field" placeholder="e.g. Corner Desk" />
                     </div>
-                    <div className="space-y-1.5">
-                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Section / Zone</label>
-                      <select {...register('section')} className="w-full bg-white border border-slate-200 rounded-2xl py-3.5 px-6 outline-none font-bold text-sm h-[55px] appearance-none">
+                    <div>
+                      <label className="input-label">Section / Zone</label>
+                      <select {...register('section')} className="input-field">
                         <option value="General">General Hall</option>
                         <option value="Reading Hall">Reading Hall</option>
                         <option value="Private Room">Private Room</option>
                         <option value="Silent Zone">Silent Zone</option>
                       </select>
                     </div>
-                    <div className="space-y-1.5">
-                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Floor Number</label>
-                      <input {...register('floor')} className="w-full bg-white border border-slate-200 rounded-2xl py-3.5 px-6 outline-none font-bold text-sm h-[55px]" placeholder="e.g. 1st Floor" />
+                    <div>
+                      <label className="input-label">Floor Number</label>
+                      <input {...register('floor')} className="input-field" placeholder="e.g. 1st Floor" />
                     </div>
-                 </div>
+                  </div>
 
-                 <div className="grid grid-cols-2 gap-6 p-8 bg-teal-50/30 rounded-[2rem] border border-teal-100/50">
-                    <div className="space-y-1.5">
-                      <label className="text-[10px] font-black text-teal-700 uppercase tracking-widest ml-1">Key Code / Number</label>
-                      <div className="relative">
-                        <Key className="absolute left-6 top-1/2 -translate-y-1/2 text-teal-400" size={18} />
-                        <input {...register('keyNumber')} className="w-full bg-white border border-teal-100 rounded-2xl py-3.5 pl-14 pr-6 outline-none font-bold text-sm h-[55px] text-teal-900" placeholder="K-99" />
-                      </div>
+                  <div className="grid grid-cols-2 gap-4 border-t border-slate-100 pt-4 mt-2">
+                    <div>
+                      <label className="input-label">Key Code / Number</label>
+                      <input {...register('keyNumber')} className="input-field" placeholder="K-99" />
                     </div>
-                    <div className="space-y-1.5">
-                      <label className="text-[10px] font-black text-teal-700 uppercase tracking-widest ml-1">Locker Number</label>
-                      <input {...register('lockerNumber')} className="w-full bg-white border border-teal-100 rounded-2xl py-3.5 px-6 outline-none font-bold text-sm h-[55px] text-teal-900" placeholder="L-50" />
+                    <div>
+                      <label className="input-label">Locker Number</label>
+                      <input {...register('lockerNumber')} className="input-field" placeholder="L-50" />
                     </div>
-                    <div className="col-span-2 flex items-center gap-4 bg-white p-4 rounded-2xl border border-teal-100">
-                       <input type="checkbox" {...register('hasStorage')} id="storage" className="w-5 h-5 accent-[#044343]" />
-                       <label htmlFor="storage" className="text-xs font-black text-slate-900 uppercase tracking-widest cursor-pointer">Has Integrated Storage / Drawers</label>
+                    <div className="col-span-2 flex items-center gap-3">
+                      <input type="checkbox" {...register('hasStorage')} id="storage" className="w-4 h-4 accent-[#044343]" />
+                      <label htmlFor="storage" className="text-[12px] font-medium text-slate-700 cursor-pointer">Has Integrated Storage / Drawers</label>
                     </div>
-                 </div>
+                  </div>
+                </div>
 
-                  <button 
-                    type="submit" 
-                    disabled={isAdding}
-                    className="w-full bg-[#044343] text-white font-black py-5 rounded-3xl shadow-xl shadow-teal-900/20 active:scale-95 transition-all uppercase tracking-widest text-sm flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
-                  >
-                    {isAdding ? <Loader2 size={18} className="animate-spin" /> : 'Confirm Desk Addition'}
+                <div className="modal-footer">
+                  <button type="button" onClick={() => setIsAddModalOpen(false)} className="btn btn-secondary btn-default">
+                    Cancel
                   </button>
-               </form>
+                  <button
+                    type="submit"
+                    disabled={isAdding}
+                    className="btn btn-primary btn-default min-w-[120px]"
+                  >
+                    {isAdding ? <Loader2 size={16} className="animate-spin" /> : 'Add Desk'}
+                  </button>
+                </div>
+              </form>
             </motion.div>
           </div>
         )}
@@ -332,52 +339,58 @@ const Tables = () => {
       {/* Assign Table Modal */}
       <AnimatePresence>
         {isAssignModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
-            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="bg-white w-full max-w-xl rounded-[3rem] p-10 shadow-2xl relative">
-               <button onClick={() => setIsAssignModalOpen(false)} className="absolute top-8 right-8 text-slate-400 hover:text-slate-900">
-                 <X size={24} />
-               </button>
-               <div className="text-center mb-8">
-                 <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-[1.5rem] flex items-center justify-center mx-auto mb-4">
-                    <User size={32} />
-                 </div>
-                 <h2 className="text-2xl font-black text-slate-900">Assign Table {selectedTable?.tableNumber}</h2>
-                 <p className="text-slate-400 font-bold text-sm italic">Grant study privileges to a registered member.</p>
-               </div>
+          <div className="modal-overlay">
+            <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="modal-content modal-sm">
+              <div className="modal-header">
+                <h2>Assign Table {selectedTable?.tableNumber}</h2>
+                <button onClick={() => setIsAssignModalOpen(false)} className="text-slate-400 hover:text-slate-600 transition-colors">
+                  <X size={20} />
+                </button>
+              </div>
 
-               <form onSubmit={handleAssignSubmit(onAssignSubmit)} className="space-y-6">
-                 <div className="space-y-1.5">
-                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Select Member (Registered Only)</label>
-                   <select {...regAssign('userId', { required: true })} className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-4 px-6 outline-none font-bold text-xs h-[55px] appearance-none">
-                     <option value="">Choose a student...</option>
-                     {users.map(u => (
-                       <option key={u._id} value={u._id}>{u.fullName} ({u.phone})</option>
-                     ))}
-                   </select>
-                 </div>
+              <form onSubmit={handleAssignSubmit(onAssignSubmit)} className="flex flex-col overflow-hidden">
+                <div className="modal-body space-y-4">
+                  <div>
+                    <label className="input-label">Select Member</label>
+                    <select {...regAssign('userId', { required: true })} className="input-field">
+                      <option value="">Choose a student...</option>
+                      {users.map(u => (
+                        <option key={u._id} value={u._id}>{u.fullName} ({u.phone})</option>
+                      ))}
+                    </select>
+                  </div>
 
-                 <div className="grid grid-cols-2 gap-6">
-                    <div className="space-y-1.5">
-                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Valid Until</label>
-                      <input type="date" {...regAssign('validUntil', { required: true })} className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-3.5 px-6 font-bold text-xs h-[55px]" />
-                    </div>
-                    <div className="space-y-1.5">
-                       <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Monthly Fee (₹)</label>
-                       <div className="relative">
-                         <span className="absolute left-6 top-1/2 -translate-y-1/2 font-black text-slate-400">₹</span>
-                         <input type="number" {...regAssign('fee')} className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-3.5 pl-12 pr-6 font-bold text-xs h-[55px]" placeholder="500" />
-                       </div>
-                    </div>
-                 </div>
+                  <div>
+                    <label className="input-label">Valid Until</label>
+                    <input type="date" {...regAssign('validUntil', { required: true })} className="input-field" />
+                  </div>
+                  <div>
+                    <label className="input-label">Monthly Fee (₹)</label>
+                    <input type="number" {...regAssign('fee')} className="input-field" placeholder="500" />
+                  </div>
+                  <div>
+                    <label className="input-label">Security Deposit (₹)</label>
+                    <input type="number" {...regAssign('deposit')} className="input-field" placeholder="0" />
+                  </div>
+                  <div className="col-span-1">
+                    <label className="input-label">Admin Notes</label>
+                    <input {...regAssign('notes')} className="input-field" placeholder="Any special requests..." />
+                  </div>
+                </div>
 
-                  <button 
-                    type="submit" 
-                    disabled={isAssigning}
-                    className="w-full bg-[#044343] text-white font-black py-5 rounded-2xl shadow-xl shadow-teal-900/10 active:scale-95 transition-all uppercase tracking-widest text-sm flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
-                  >
-                    {isAssigning ? <Loader2 size={18} className="animate-spin" /> : 'Execute Desk Assignment'}
+                <div className="modal-footer">
+                  <button type="button" onClick={() => setIsAssignModalOpen(false)} className="btn btn-secondary btn-default">
+                    Cancel
                   </button>
-               </form>
+                  <button
+                    type="submit"
+                    disabled={isAssigning}
+                    className="btn btn-primary btn-default min-w-[120px]"
+                  >
+                    {isAssigning ? <Loader2 size={16} className="animate-spin" /> : 'Assign'}
+                  </button>
+                </div>
+              </form>
             </motion.div>
           </div>
         )}

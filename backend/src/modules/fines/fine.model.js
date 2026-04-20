@@ -26,10 +26,15 @@ const fineSchema = new mongoose.Schema({
     enum: ['paid', 'unpaid'],
     default: 'unpaid'
   },
+  paidAt:  { type: Date, default: null },
+  paidVia: { type: mongoose.Schema.Types.ObjectId, ref: 'Account', default: null },
   createdAt: {
     type: Date,
     default: Date.now
   }
 });
+
+fineSchema.index({ tenantId: 1, student: 1 });
+fineSchema.index({ tenantId: 1, status: 1 });
 
 export default fineSchema;

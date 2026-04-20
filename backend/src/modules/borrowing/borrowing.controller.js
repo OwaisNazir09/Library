@@ -39,7 +39,7 @@ export const borrowBook = async (req, res, next) => {
 
 export const returnBook = async (req, res, next) => {
   try {
-    const { Book, Borrowing, Fine, User } = getModels(req.db);
+    const { Book, Borrowing, Fine, User, Account } = getModels(req.db);
     const borrowingId = req.params.id;
 
     const borrowing = await Borrowing.findOne({ _id: borrowingId, tenantId: req.tenantId });
@@ -54,15 +54,14 @@ export const returnBook = async (req, res, next) => {
     borrowing.returnedDate = returnedDate;
 
     if (returnedDate > borrowing.dueDate) {
-      const diffTime = Math.abs(returnedDate - borrowing.dueDate);
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      const diffDays = Math.ceil(Math.abs(returnedDate - borrowing.dueDate) / (1000 * 60 * 60 * 24));
 
       if (diffDays > 0) {
         const amount = diffDays * (borrowing.finePerDay || 10);
         borrowing.fineAmount = amount;
         borrowing.lateDays = diffDays;
 
-        await Fine.create({
+        const fine = await Fine.create({
           tenantId: req.tenantId,
           student: borrowing.user,
           issue: borrowing._id,
@@ -71,22 +70,38 @@ export const returnBook = async (req, res, next) => {
         });
 
         await User.findByIdAndUpdate(borrowing.user, { $inc: { totalFines: amount } });
+
+        try {
+          const { ensureStudentAccount, getSystemAccount, recordTransaction } = await import('../ledger/finance.controller.js');
+          const borrowedUser = await User.findById(borrowing.user).select('fullName');
+          const [studentAccount, fineIncomeAccount] = await Promise.all([
+            ensureStudentAccount(req.db, req.tenantId, borrowing.user, borrowedUser?.fullName || 'Member'),
+            getSystemAccount(req.db, req.tenantId, 'Fine Income', 'Income', 'Fine Income'),
+          ]);
+          await recordTransaction(req.db, req.tenantId, {
+            debitAccountId: studentAccount._id,
+            creditAccountId: fineIncomeAccount._id,
+            amount, type: 'fine',
+            description: `Late Return Fine — ${diffDays} day(s) overdue`,
+            reference: `FINE-${fine._id}`,
+            userId: req.user?._id,
+            studentId: borrowing.user,
+          });
+        } catch (ledgerErr) {
+          console.error('[Ledger] Fine ledger entry failed:', ledgerErr.message);
+        }
       }
     }
-    await borrowing.save();
 
+    await borrowing.save();
     await Book.findOneAndUpdate({ _id: borrowing.book, tenantId: req.tenantId }, { $inc: { availableCopies: 1 } });
 
-    res.status(200).json({
-      status: 'success',
-      data: {
-        borrowing
-      }
-    });
+    res.status(200).json({ status: 'success', data: { borrowing } });
   } catch (err) {
     next(err);
   }
 };
+
 
 export const getUserBorrowings = async (req, res, next) => {
   try {

@@ -76,11 +76,13 @@ const AttendanceList = () => {
     record.userId?.email?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleManualCheckIn = async () => {
+  const isStudentCheckedIn = selectedStudent && attendanceRecords.some(r => r.userId?._id === selectedStudent._id && !r.checkOut);
+
+  const handleManualEntry = async () => {
     if (!selectedStudent) return;
     try {
       await markAttendance({ userId: selectedStudent._id }).unwrap();
-      toast.success(`Check-in recorded for ${selectedStudent.fullName}`);
+      toast.success(isStudentCheckedIn ? `Check-out recorded for ${selectedStudent.fullName}` : `Check-in recorded for ${selectedStudent.fullName}`);
       setIsModalOpen(false);
       setSelectedStudent(null);
       setUserSearchText('');
@@ -90,43 +92,42 @@ const AttendanceList = () => {
   };
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+    <div className="space-y-5 pb-8 animate-in fade-in duration-500">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">
-            <span>Library Management</span>
-            <ChevronRight size={10} />
+          <div className="flex items-center gap-2 text-[12px] font-medium text-slate-500 uppercase tracking-widest mb-1">
+            <span>Library</span>
+            <ChevronRight size={12} />
             <span className="text-[#044343]">Attendance Logs</span>
           </div>
-          <h1 className="text-3xl font-black text-slate-900 tracking-tight">Attendance Tracking</h1>
-          <p className="text-slate-500 font-medium">Monitor student check-ins and library usage patterns.</p>
+          <h1>Attendance Tracking</h1>
         </div>
         
-        <div className="flex items-center gap-3">
-          <div className="relative group">
-            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-hover:text-[#044343] transition-colors">
-              <Calendar size={18} />
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+          <div className="relative group flex-1 sm:flex-none">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+              <Calendar size={16} />
             </div>
             <input
               type="date"
               value={selectedDate}
               onChange={(e) => setSelectedDate(e.target.value)}
-              className="pl-12 pr-6 py-3.5 bg-white border border-slate-200 rounded-2xl shadow-sm focus:ring-4 focus:ring-[#044343]/5 focus:border-[#044343] outline-none font-black text-xs transition-all cursor-pointer"
+              className="input-field pl-10 w-full"
             />
           </div>
           <button
             onClick={() => setShowQRModal(true)}
-            className="bg-amber-500 text-white px-6 py-3.5 rounded-2xl font-black text-sm flex items-center gap-2 shadow-xl shadow-amber-900/20 active:scale-95 transition-all text-sm uppercase tracking-widest px-8"
+            className="btn btn-secondary btn-default bg-amber-50 text-amber-600 border-amber-200 hover:bg-amber-100 whitespace-nowrap flex-1 sm:flex-none"
           >
-            <QrIcon size={18} />
+            <QrIcon size={16} />
             Show Entry QR
           </button>
           <button
             onClick={() => setIsModalOpen(true)}
-            className="bg-[#044343] text-white px-8 py-3.5 rounded-2xl font-black text-sm flex items-center gap-2 shadow-xl shadow-teal-900/20 active:scale-95 transition-all text-sm uppercase tracking-widest"
+            className="btn btn-primary btn-default whitespace-nowrap flex-1 sm:flex-none"
           >
-            <UserPlus size={18} />
-            Manual Check-in
+            <UserPlus size={16} />
+            Manual Log
           </button>
         </div>
       </div>
@@ -164,31 +165,26 @@ const AttendanceList = () => {
 
       <AnimatePresence>
         {isModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
-            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="bg-white w-full max-w-md rounded-[2.5rem] p-10 shadow-2xl relative">
-              <button onClick={() => setIsModalOpen(false)} className="absolute top-8 right-8 text-slate-400 hover:text-slate-900 bg-slate-50 p-2 rounded-xl">
-                <X size={20} />
-              </button>
-
-              <div className="text-center mb-8">
-                <div className="w-16 h-16 bg-teal-50 rounded-2xl flex items-center justify-center text-[#044343] mx-auto mb-4">
-                  <CheckCircle size={32} />
-                </div>
-                <h2 className="text-2xl font-black text-slate-900 tracking-tight">Manual Check-in</h2>
-                <p className="text-sm font-medium text-slate-500 mt-1">Search and record student arrival.</p>
+          <div className="modal-overlay">
+            <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="modal-content modal-sm">
+              <div className="modal-header">
+                <h2>Manual Entry (In/Out)</h2>
+                <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-slate-600 transition-colors">
+                  <X size={20} />
+                </button>
               </div>
 
-              <div className="space-y-6">
+              <div className="modal-body space-y-6">
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Search Student</label>
+                  <label className="input-label">Search Student</label>
                   <div className="relative">
-                    <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                    <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
                     <input
                       type="text"
                       placeholder="Name or email..."
                       value={userSearchText}
                       onChange={(e) => setUserSearchText(e.target.value)}
-                      className="w-full pl-12 pr-4 py-4 bg-slate-50 border-none rounded-2xl outline-none font-bold text-sm focus:ring-2 focus:ring-[#044343]/10"
+                      className="input-field pl-9"
                     />
                   </div>
                   
@@ -228,12 +224,17 @@ const AttendanceList = () => {
                   </div>
                 )}
 
+              </div>
+              <div className="modal-footer">
+                <button type="button" onClick={() => setIsModalOpen(false)} className="btn btn-secondary btn-default">
+                  Cancel
+                </button>
                 <button
-                  onClick={handleManualCheckIn}
+                  onClick={handleManualEntry}
                   disabled={!selectedStudent || isMarking}
-                  className="w-full bg-[#044343] text-white font-black py-4 rounded-2xl shadow-xl shadow-teal-900/10 active:scale-95 transition-all text-sm uppercase tracking-widest flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className={`btn btn-primary btn-default min-w-[120px] ${isStudentCheckedIn ? '!bg-amber-600 hover:!bg-amber-700' : ''}`}
                 >
-                  {isMarking ? <Loader2 size={18} className="animate-spin" /> : 'Confirm Presence'}
+                  {isMarking ? <Loader2 size={16} className="animate-spin" /> : isStudentCheckedIn ? 'Check-out' : 'Check-in'}
                 </button>
               </div>
             </motion.div>
@@ -243,19 +244,18 @@ const AttendanceList = () => {
 
       <AnimatePresence>
         {showQRModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md">
-            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="bg-white w-full max-w-sm rounded-[3rem] p-12 shadow-2xl relative text-center">
-               <button onClick={() => setShowQRModal(false)} className="absolute top-8 right-8 text-slate-400 hover:text-slate-900 bg-slate-50 p-2 rounded-xl">
-                <X size={20} />
-              </button>
+          <div className="modal-overlay">
+            <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="modal-content modal-sm">
+               <div className="modal-header">
+                 <h2>Entry QR Code</h2>
+                 <button onClick={() => setShowQRModal(false)} className="text-slate-400 hover:text-slate-600 transition-colors">
+                   <X size={20} />
+                 </button>
+               </div>
+               
+               <div className="modal-body flex flex-col items-center pb-8">
 
-              <div className="mb-8">
-                <div className="w-20 h-20 bg-amber-50 rounded-[2rem] flex items-center justify-center text-amber-600 mx-auto mb-6">
-                  <QrIcon size={40} />
-                </div>
-                <h2 className="text-3xl font-black text-slate-900 tracking-tight">Entry QR Code</h2>
-                <p className="text-sm font-medium text-slate-500 mt-2 px-4">Students can scan this code using the mobile app to mark their attendance.</p>
-              </div>
+                 <p className="text-[13px] text-slate-500 mb-6 text-center">Students can scan this code using the mobile app to mark their attendance.</p>
 
               <div className="bg-white p-8 rounded-[2.5rem] border-4 border-slate-50 shadow-inner inline-block mx-auto mb-8">
                 <QRCode 
@@ -266,14 +266,6 @@ const AttendanceList = () => {
                 />
               </div>
 
-              <div className="space-y-4">
-                <div className="flex items-center justify-center gap-2 text-emerald-600 font-bold text-xs uppercase tracking-widest bg-emerald-50 py-3 rounded-2xl border border-emerald-100">
-                  <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
-                  Live Attendance Active
-                </div>
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-relaxed">
-                  Scanning works for both <br/> check-in and check-out
-                </p>
               </div>
             </motion.div>
           </div>
@@ -370,19 +362,19 @@ const AttendanceList = () => {
               </div>
            </div>
         ) : (
-          <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
+          <div className="compact-table-container">
+          <table className="compact-table">
             <thead>
-              <tr className="bg-slate-50/50">
-                <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-left">Student</th>
-                <th className="px-6 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-left">Check-in</th>
-                <th className="px-6 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-left">Check-out</th>
-                <th className="px-6 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-left">Duration</th>
-                <th className="px-6 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-left text-left">Method</th>
-                <th className="px-8 py-5 text-right text-[10px] font-black text-slate-400 uppercase tracking-widest">Status</th>
+              <tr>
+                <th>Student</th>
+                <th>Check-in</th>
+                <th>Check-out</th>
+                <th>Duration</th>
+                <th>Method</th>
+                <th className="text-right">Status</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-50">
+            <tbody>
               {isLoading ? (
                 <tr>
                   <td colSpan="6" className="p-8">

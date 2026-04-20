@@ -2,13 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Plus, X, RefreshCcw, TrendingUp, TrendingDown, 
-  ArrowRight, Landmark, Wallet, AlertCircle
+  ArrowRight, Landmark, Wallet, AlertCircle, Loader2,
+  Tag, Calendar, FileText
 } from 'lucide-react';
 import { 
   useGetAccountsQuery, 
   useAddTransactionMutation,
   useAddTransferMutation,
-  useAddJournalEntryMutation
+  useAddJournalEntryMutation,
+  useAddExpenseMutation
 } from '../../store/api/financeApi';
 import { toast } from 'react-hot-toast';
 
@@ -23,17 +25,28 @@ const UniversalTransactionModal = ({ isOpen, onClose, initialType = 'journal' })
     amount: '',
     description: '',
     reference: '',
+    category: '',
     date: new Date().toISOString().split('T')[0]
   });
 
   useEffect(() => {
     setType(initialType);
-    setFormData(prev => ({ ...prev, debitAccountId: '', creditAccountId: '', amount: '', description: '' }));
+    setFormData(prev => ({ 
+      ...prev, 
+      debitAccountId: '', 
+      creditAccountId: '', 
+      amount: '', 
+      description: '', 
+      category: initialType === 'expense' ? 'Operating Expense' : '' 
+    }));
   }, [initialType, isOpen]);
 
-  const [addTransaction, { isLoading: isSubmitting }] = useAddTransactionMutation();
-  const [addTransfer] = useAddTransferMutation();
-  const [addJournal] = useAddJournalEntryMutation();
+  const [addTransaction, { isLoading: isTrxSubmitting }] = useAddTransactionMutation();
+  const [addTransfer, { isLoading: isTransferSubmitting }] = useAddTransferMutation();
+  const [addJournal, { isLoading: isJournalSubmitting }] = useAddJournalEntryMutation();
+  const [addExpense, { isLoading: isExpenseSubmitting }] = useAddExpenseMutation();
+
+  const isSubmitting = isTrxSubmitting || isTransferSubmitting || isJournalSubmitting || isExpenseSubmitting;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -45,7 +58,6 @@ const UniversalTransactionModal = ({ isOpen, onClose, initialType = 'journal' })
       const payload = {
         ...formData,
         amount: Number(formData.amount),
-        type: type === 'journal' ? 'journal' : type
       };
 
       if (type === 'transfer') {
@@ -59,8 +71,18 @@ const UniversalTransactionModal = ({ isOpen, onClose, initialType = 'journal' })
         }).unwrap();
       } else if (type === 'journal') {
         await addJournal(payload).unwrap();
+      } else if (type === 'expense') {
+        await addExpense({
+          amount: payload.amount,
+          expenseAccountId: payload.debitAccountId,
+          cashAccountId: payload.creditAccountId,
+          description: payload.description,
+          notes: payload.reference,
+          category: payload.category,
+          date: payload.date
+        }).unwrap();
       } else {
-        await addTransaction(payload).unwrap();
+        await addTransaction({ ...payload, type: 'income' }).unwrap();
       }
 
       toast.success(`${type.charAt(0).toUpperCase() + type.slice(1)} recorded successfully`);
@@ -86,6 +108,11 @@ const UniversalTransactionModal = ({ isOpen, onClose, initialType = 'journal' })
     return true; // journal
   });
 
+  const categories = [
+    'Operating Expense', 'Direct Expense', 'Rent', 'Salary', 
+    'Electricity', 'Maintenance', 'Internet', 'Marketing', 'Other'
+  ];
+
   return (
     <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md">
       <motion.div
@@ -106,7 +133,7 @@ const UniversalTransactionModal = ({ isOpen, onClose, initialType = 'journal' })
             </div>
             <div>
               <h2 className="text-xl md:text-2xl font-black text-slate-900 tracking-tight capitalize">{type} Entry</h2>
-              <p className="text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest mt-0.5">Professional Recording</p>
+              <p className="text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest mt-0.5">Double Entry Ledger</p>
             </div>
           </div>
           <button 
@@ -119,16 +146,15 @@ const UniversalTransactionModal = ({ isOpen, onClose, initialType = 'journal' })
 
         <form onSubmit={handleSubmit} className="p-6 md:p-10 space-y-4 md:space-y-6 max-h-[70vh] overflow-y-auto custom-scrollbar">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8 relative">
-            {/* Connection line between accounts */}
             <div className="absolute top-[48px] left-1/2 -translate-x-1/2 w-8 h-8 rounded-full bg-white border border-slate-100 shadow-sm flex items-center justify-center z-10 hidden md:flex">
               <ArrowRight size={14} className="text-slate-300" />
             </div>
 
             <div className="space-y-1.5 md:space-y-2">
               <label className="text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">
-                {type === 'expense' ? 'Expense (Debit)' : 
-                 type === 'income' ? 'Asset (Debit)' : 
-                 type === 'transfer' ? 'To (Debit)' : 'Debit Account'}
+                {type === 'expense' ? 'Expense Account (DR)' : 
+                 type === 'income' ? 'Cash/Bank Account (DR)' : 
+                 type === 'transfer' ? 'Destination (DR)' : 'Debit Account'}
               </label>
               <select
                 required
@@ -145,9 +171,9 @@ const UniversalTransactionModal = ({ isOpen, onClose, initialType = 'journal' })
 
             <div className="space-y-1.5 md:space-y-2">
               <label className="text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 md:text-right block">
-                {type === 'expense' ? 'Asset (Credit)' : 
-                 type === 'income' ? 'Income (Credit)' : 
-                 type === 'transfer' ? 'From (Credit)' : 'Credit Account'}
+                {type === 'expense' ? 'Source Asset (CR)' : 
+                 type === 'income' ? 'Income Account (CR)' : 
+                 type === 'transfer' ? 'Source Asset (CR)' : 'Credit Account'}
               </label>
               <select
                 required
@@ -163,14 +189,14 @@ const UniversalTransactionModal = ({ isOpen, onClose, initialType = 'journal' })
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
             <div className="space-y-1.5 md:space-y-2">
               <label className="text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Amount</label>
               <div className="relative">
                 <span className="absolute left-4 md:left-5 top-1/2 -translate-y-1/2 text-slate-300 font-bold">₹</span>
                 <input
                   required
-                  type="number"
+                  type="number" min="1" step="0.01"
                   placeholder="0.00"
                   className="w-full h-12 md:h-14 pl-9 md:pl-10 pr-4 md:pr-5 rounded-xl md:rounded-2xl bg-slate-50 border border-slate-100 text-xs md:text-sm font-bold focus:outline-none focus:border-[#044343] transition-all"
                   value={formData.amount}
@@ -179,13 +205,33 @@ const UniversalTransactionModal = ({ isOpen, onClose, initialType = 'journal' })
               </div>
             </div>
 
-            <div className="md:col-span-2 space-y-1.5 md:space-y-2">
-              <label className="text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Description</label>
+            <div className="space-y-1.5 md:space-y-2">
+              <label className="text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">
+                {type === 'expense' ? 'Expense Category' : 'Transaction Category'}
+              </label>
+              <div className="relative">
+                <Tag className="absolute left-4 md:left-5 top-1/2 -translate-y-1/2 text-slate-300" size={16} />
+                <select
+                  className="w-full h-12 md:h-14 pl-11 md:pl-12 pr-4 md:pr-5 rounded-xl md:rounded-2xl bg-slate-50 border border-slate-100 text-xs md:text-sm font-bold focus:outline-none focus:border-[#044343] transition-all appearance-none"
+                  value={formData.category}
+                  onChange={e => setFormData({ ...formData, category: e.target.value })}
+                >
+                  <option value="">General</option>
+                  {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-1.5 md:space-y-2">
+            <label className="text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Description</label>
+            <div className="relative">
+              <FileText className="absolute left-4 md:left-5 top-1/2 -translate-y-1/2 text-slate-300" size={16} />
               <input
                 required
                 type="text"
-                placeholder="Transaction details..."
-                className="w-full h-12 md:h-14 px-4 md:px-5 rounded-xl md:rounded-2xl bg-slate-50 border border-slate-100 text-xs md:text-sm font-bold focus:outline-none focus:border-[#044343] transition-all"
+                placeholder="What is this transaction for?"
+                className="w-full h-12 md:h-14 pl-11 md:pl-12 px-4 md:px-5 rounded-xl md:rounded-2xl bg-slate-50 border border-slate-100 text-xs md:text-sm font-bold focus:outline-none focus:border-[#044343] transition-all"
                 value={formData.description}
                 onChange={e => setFormData({ ...formData, description: e.target.value })}
               />
@@ -194,10 +240,10 @@ const UniversalTransactionModal = ({ isOpen, onClose, initialType = 'journal' })
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
             <div className="space-y-1.5 md:space-y-2">
-              <label className="text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Reference / Voucher #</label>
+              <label className="text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Ref / Invoice #</label>
               <input
                 type="text"
-                placeholder="Optional"
+                placeholder="External reference"
                 className="w-full h-11 md:h-12 px-4 md:px-5 rounded-xl bg-slate-50 border border-slate-100 text-xs md:text-sm font-bold focus:outline-none focus:border-[#044343] transition-all"
                 value={formData.reference}
                 onChange={e => setFormData({ ...formData, reference: e.target.value })}
@@ -205,13 +251,16 @@ const UniversalTransactionModal = ({ isOpen, onClose, initialType = 'journal' })
             </div>
 
             <div className="space-y-1.5 md:space-y-2">
-              <label className="text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Date</label>
-              <input
-                type="date"
-                className="w-full h-11 md:h-12 px-4 md:px-5 rounded-xl bg-slate-50 border border-slate-100 text-xs md:text-sm font-bold focus:outline-none focus:border-[#044343] transition-all"
-                value={formData.date}
-                onChange={e => setFormData({ ...formData, date: e.target.value })}
-              />
+              <label className="text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Effective Date</label>
+              <div className="relative">
+                <Calendar className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none" size={16} />
+                <input
+                  type="date"
+                  className="w-full h-11 md:h-12 px-4 md:px-5 rounded-xl bg-slate-50 border border-slate-100 text-xs md:text-sm font-bold focus:outline-none focus:border-[#044343] transition-all"
+                  value={formData.date}
+                  onChange={e => setFormData({ ...formData, date: e.target.value })}
+                />
+              </div>
             </div>
           </div>
 
@@ -221,14 +270,15 @@ const UniversalTransactionModal = ({ isOpen, onClose, initialType = 'journal' })
               onClick={onClose}
               className="w-full md:flex-1 h-12 md:h-14 rounded-xl md:rounded-2xl text-slate-400 font-black text-[10px] md:text-xs uppercase tracking-widest hover:bg-slate-50 transition-colors"
             >
-              Discard
+              Cancel
             </button>
             <button
               disabled={isSubmitting}
               type="submit"
-              className="w-full md:flex-[2] h-12 md:h-14 bg-[#044343] text-white rounded-xl md:rounded-[1.5rem] font-black text-[10px] md:text-xs uppercase tracking-widest hover:bg-[#033636] transition-all shadow-xl shadow-teal-900/10 disabled:opacity-50"
+              className="w-full md:flex-[2] h-12 md:h-14 bg-[#044343] text-white rounded-xl md:rounded-[1.5rem] font-black text-[10px] md:text-xs uppercase tracking-widest hover:bg-[#033636] transition-all shadow-xl shadow-teal-900/10 disabled:opacity-50 flex items-center justify-center gap-3"
             >
-              {isSubmitting ? 'Recording...' : `Accept ${type} Entry`}
+              {isSubmitting ? <Loader2 size={18} className="animate-spin" /> : <Plus size={18} />}
+              {isSubmitting ? 'Recording...' : `Commit ${type} Entry`}
             </button>
           </div>
         </form>

@@ -1,5 +1,5 @@
 import express from 'express';
-import { getAllUsers, getUser, updateUser, deleteUser, getMe, createUser, approveRegistration, rejectRegistration } from './user.controller.js';
+import { getAllUsers, getUser, updateUser, deleteUser, getMe, createUser, approveRegistration, rejectRegistration, assignPackage } from './user.controller.js';
 import { protect, restrictTo } from '../../middleware/auth.js';
 import { createUploader } from '../../middleware/upload.middleware.js';
 
@@ -29,5 +29,6 @@ router.route('/:id')
 
 router.patch('/:id/approve', approveRegistration);
 router.patch('/:id/reject', rejectRegistration);
+router.post('/:id/assign-package', assignPackage);
 
 export default router;

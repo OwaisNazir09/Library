@@ -9,7 +9,7 @@ import {
   BarChart2,
   Clock,
   PlusCircle,
-  DollarSign,
+  IndianRupeeIcon,
   Settings,
   HelpCircle,
   LogOut,
@@ -49,7 +49,7 @@ const groups = [
       { name: 'Finance Dashboard', icon: LayoutGrid, path: '/app/finance' },
       { name: 'Chart of Accounts', icon: Library, path: '/app/finance/accounts' },
       { name: 'Student Ledgers', icon: Users, path: '/app/finance/student-accounts' },
-      { name: 'Transactions', icon: DollarSign, path: '/app/finance/transactions' },
+      { name: 'Transactions', icon: IndianRupeeIcon, path: '/app/finance/transactions' },
       { name: 'Receipts', icon: Receipt, path: '/app/finance/receipts' },
       { name: 'Financial Reports', icon: BarChart2, path: '/app/finance/reports' },
     ]
@@ -76,45 +76,44 @@ const Sidebar = ({ isOpen, onClose }) => {
   };
 
   const sidebarContent = (
-    <div className="w-72 bg-white h-full flex flex-col border-r border-slate-100">
+    <div className="w-64 bg-slate-50 h-full flex flex-col border-r border-slate-200">
       {/* Branding */}
       <div className="p-8 flex items-center justify-between">
         <div className="flex items-center gap-3 group cursor-pointer">
-          <div className="w-10 h-10 bg-[#044343] rounded-xl flex items-center justify-center shadow-lg shadow-teal-900/20 group-hover:scale-110 transition-transform">
-            <BookOpen className="text-white" size={22} />
+          <div className="w-8 h-8 bg-[#044343] rounded-lg flex items-center justify-center shadow-sm">
+            <BookOpen className="text-white" size={16} />
           </div>
-          <span className="text-2xl font-black text-black tracking-tighter">Bookary</span>
+          <span className="text-xl font-bold text-slate-900 tracking-tight">Bookary</span>
         </div>
         <button onClick={onClose} className="lg:hidden p-2 text-slate-400 hover:text-black transition-colors">
           <X size={24} />
         </button>
       </div>
 
-      {/* Navigation Groups */}
-      <nav className="flex-1 px-4 overflow-y-auto space-y-7 py-4 custom-scrollbar">
+      <nav className="flex-1 px-3 overflow-y-auto space-y-6 py-4 custom-scrollbar">
         {groups.map((group) => (
           <div key={group.label}>
-            <p className="px-5 text-[10px] font-black text-slate-800 uppercase tracking-[0.2em] mb-4">
+            <p className="px-3 text-[11px] font-semibold text-slate-500 mb-2">
               {group.label}
             </p>
-            <div className="space-y-1">
+            <div className="space-y-0.5">
               {group.items.map((item) => (
                 <NavLink
                   key={item.name}
                   to={item.path}
                   onClick={() => window.innerWidth < 1024 && onClose()}
                   className={({ isActive }) => `
-                    flex items-center gap-3 px-5 py-3.5 rounded-2xl transition-all duration-200 group
+                    flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 group
                     ${isActive
-                      ? 'bg-[#044343] text-white shadow-xl shadow-teal-900/20'
-                      : 'text-slate-900 hover:text-[#044343] hover:bg-slate-50'}
+                      ? 'bg-[#044343] text-white shadow-sm'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50'}
                   `}
                 >
-                  <item.icon size={20} className={`
-                    transition-transform duration-300 group-hover:scale-110
-                    ${location.pathname === item.path ? 'text-white' : 'text-slate-400 group-hover:text-[#044343]'}
+                  <item.icon size={18} className={`
+                    transition-colors duration-200
+                    ${location.pathname === item.path ? 'text-white' : 'text-slate-400 group-hover:text-slate-600'}
                   `} />
-                  <span className="text-sm font-bold tracking-tight">{item.name}</span>
+                  <span className="text-[13px] font-medium tracking-tight">{item.name}</span>
                 </NavLink>
               ))}
             </div>
@@ -136,13 +135,13 @@ const Sidebar = ({ isOpen, onClose }) => {
       </div> */}
 
       {/* Logout Action */}
-      <div className="p-6 border-t border-slate-50">
+      <div className="p-4 border-t border-slate-200">
         <button
           onClick={handleLogout}
-          className="flex items-center gap-4 text-slate-900 font-bold hover:text-rose-600 transition-colors group w-full px-4 py-3 rounded-2xl hover:bg-rose-50"
+          className="flex items-center gap-3 text-slate-600 font-medium hover:text-rose-600 transition-colors group w-full px-3 py-2 rounded-lg hover:bg-rose-50"
         >
-          <LogOut size={20} className="text-slate-400 group-hover:text-rose-600 transition-colors" />
-          <span className="text-sm">Log Out System</span>
+          <LogOut size={18} className="text-slate-400 group-hover:text-rose-600 transition-colors" />
+          <span className="text-[13px]">Log Out</span>
         </button>
       </div>
     </div>
@@ -150,7 +149,7 @@ const Sidebar = ({ isOpen, onClose }) => {
 
   return (
     <>
-      <aside className="hidden lg:flex w-72 bg-white h-screen flex-col border-r border-slate-100 sticky top-0 shrink-0">
+      <aside className="hidden lg:flex w-64 bg-slate-50 h-screen flex-col border-r border-slate-200 sticky top-0 shrink-0">
         {sidebarContent}
       </aside>
 
@@ -169,7 +168,7 @@ const Sidebar = ({ isOpen, onClose }) => {
               animate={{ x: 0 }}
               exit={{ x: '-100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="fixed inset-y-0 left-0 w-72 bg-white z-50 lg:hidden shadow-2xl"
+              className="fixed inset-y-0 left-0 w-64 bg-white z-50 lg:hidden shadow-2xl"
             >
               {sidebarContent}
             </motion.aside>

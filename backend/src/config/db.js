@@ -11,9 +11,9 @@ export const connectMainDB = async () => {
       useNewUrlParser: true,
       useUnifiedTopology: true,
     });
-    console.log('✅ Main Database connected');
+    console.log(' Main Database connected');
   } catch (error) {
-    console.error('❌ Main Database error:', error);
+    console.error(' Main Database error:', error);
     process.exit(1);
   }
 };

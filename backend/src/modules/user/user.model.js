@@ -114,6 +114,7 @@ const userSchema = new mongoose.Schema({
   },
   // --------------------------------
   notes: String,
+  membershipCharged: { type: Boolean, default: false }, // Prevents double-billing on approve
   createdAt: {
     type: Date,
     default: Date.now

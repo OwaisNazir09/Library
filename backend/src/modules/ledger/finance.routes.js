@@ -1,40 +1,48 @@
 import express from 'express';
-import * as financeController from './finance.controller.js';
+import * as fc from './finance.controller.js';
 import { protect, restrictTo } from '../../middleware/auth.js';
 
 const router = express.Router();
 
 router.use(protect);
-// --- Student/Member Personal Access ---
-router.get('/me/ledger', financeController.getMyLedger);
+
+// Student self-access
+router.get('/me/ledger', fc.getMyLedger);
 
 router.use(restrictTo('librarian', 'admin', 'super_admin'));
 
-// --- Dashboard & Summary ---
-router.get('/stats', financeController.getFinanceStats);
+// Dashboard
+router.get('/stats', fc.getFinanceStats);
 
-// --- Account Management ---
-router.get('/accounts', financeController.getAccounts);
-router.post('/accounts', financeController.addAccount);
-router.get('/accounts/:id/ledger', financeController.getAccountLedger);
+router.get('/accounts', fc.getAccounts);
+router.post('/accounts', fc.addAccount);
+router.post('/accounts/seed', fc.seedAccounts);
+router.get('/accounts/:id/ledger', fc.getAccountLedger);
 
-// --- Financial Entry Entry (Double Entry) ---
-router.post('/transactions', financeController.addTransaction);
-router.post('/transactions/journal', financeController.addJournalEntry);
-router.post('/transactions/transfer', financeController.addTransfer);
+router.post('/transactions', fc.addTransaction);
+router.post('/transactions/journal', fc.addJournalEntry);
+router.post('/transactions/transfer', fc.addTransfer);
+router.get('/transactions', fc.getTransactions);
 
-// --- Student Specific Unified Entries ---
-router.post('/accounts/:studentId/payment', financeController.addPayment);
-router.post('/accounts/:studentId/charge', financeController.addCharge);
+// Student-Specific Finance
+router.post('/accounts/:studentId/payment', fc.addPayment);
+router.post('/accounts/:studentId/charge', fc.addCharge);
+router.post('/accounts/:studentId/refund', fc.issueRefund);
 
-// --- Statement & History ---
-router.get('/transactions', financeController.getTransactions);
-router.get('/receipts', financeController.getReceipts);
-router.get('/receipts/:id', financeController.getReceipt);
+// Expenses
+router.post('/expenses', fc.addExpense);
 
-// --- Professional Reports ---
-router.get('/reports/trial-balance', financeController.getTrialBalance);
-router.get('/reports/profit-loss', financeController.getProfitAndLoss);
-router.get('/reports/balance-sheet', financeController.getBalanceSheet);
+// Receipts
+router.get('/receipts', fc.getReceipts);
+router.get('/receipts/:id', fc.getReceipt);
+
+// Reports
+router.get('/reports/trial-balance', fc.getTrialBalance);
+router.get('/reports/profit-loss', fc.getProfitAndLoss);
+router.get('/reports/balance-sheet', fc.getBalanceSheet);
+
+// Internal Accounts (backward compat)
+router.get('/internal-accounts', fc.getInternalAccounts);
+router.post('/internal-accounts', fc.addInternalAccount);
 
 export default router;
