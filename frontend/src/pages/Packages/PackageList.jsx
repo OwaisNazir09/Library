@@ -1,18 +1,9 @@
 import React from 'react';
 import { useGetPackagesQuery, useAddPackageMutation, useDeletePackageMutation, useUpdatePackageMutation } from '../../store/api/membershipApi';
-import {
-  Package,
-  Plus,
-  Trash2,
-  Edit,
-  CheckCircle2,
-  X,
-  IndianRupeeIcon,
-  Clock,
-  BookOpen,
-  AlertCircle,
-  Loader2,
-  ChevronRight
+import { 
+  Package, Plus, Trash2, Edit, CheckCircle2, X, 
+  IndianRupeeIcon, Clock, BookOpen, AlertCircle, 
+  Loader2, ChevronRight 
 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'react-hot-toast';
@@ -36,15 +27,13 @@ const PackageList = () => {
     try {
       if (editingPackage) {
         await updatePackageMutation({ id: editingPackage._id, data }).unwrap();
-        toast.success('Package updated successfully');
+        toast.success('Package updated');
       } else {
         await addPackage(data).unwrap();
-        toast.success('Package created successfully');
+        toast.success('Package created');
       }
       handleCloseModal();
-    } catch (err) {
-      // Handled globally
-    }
+    } catch (err) {}
   };
 
   const handleEdit = (pkg) => {
@@ -58,13 +47,11 @@ const PackageList = () => {
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm('Are you sure you want to delete this package?')) {
+    if (window.confirm('Delete this package?')) {
       try {
         await deletePackageMutation(id).unwrap();
-        toast.success('Package deleted');
-      } catch (err) {
-        // Handled globally
-      }
+        toast.success('Package removed');
+      } catch (err) {}
     }
   };
 
@@ -74,155 +61,99 @@ const PackageList = () => {
     reset();
   };
 
-  if (loading && items.length === 0) return <LoadingSkeleton type="card" rows={3} />;
-  if (error) return <ErrorState message={error.data?.message || 'Error loading packages'} onRetry={refetch} />;
+  if (loading && items.length === 0) return <LoadingSkeleton type="table" rows={5} />;
+  if (error) return <ErrorState message="Error loading packages" onRetry={refetch} />;
 
   return (
-    <div className="space-y-5 pb-8 animate-in fade-in duration-500">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div className="space-y-5">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 text-[12px] font-medium text-slate-500 uppercase tracking-widest mb-1">
-            <span>Members</span>
-            <ChevronRight size={12} />
-            <span className="text-[#044343]">Packages</span>
-          </div>
-          <h1>Subscription Packages</h1>
+          <h1 className="text-xl font-bold text-slate-900">Subscription Plans</h1>
+          <p className="text-xs text-slate-400 font-medium mt-0.5">Manage library membership packages and pricing</p>
         </div>
-        <button
-          onClick={() => setIsModalOpen(true)}
-          className="btn btn-primary btn-default"
-        >
+        <button onClick={() => setIsModalOpen(true)} className="btn btn-primary btn-md">
           <Plus size={16} />
-          Create Package
+          Create New Plan
         </button>
       </div>
 
-      <div className="compact-table-container">
-        <table className="compact-table">
+      <div className="table-container">
+        <table className="table-main">
           <thead>
             <tr>
-              <th>Package Name</th>
-              <th>Price</th>
+              <th className="px-5">Plan Name</th>
+              <th>Pricing</th>
               <th>Duration</th>
-              <th>Max Books</th>
+              <th>Book Limit</th>
               <th>Description</th>
-              <th className="text-right">Actions</th>
+              <th className="text-right px-5">Actions</th>
             </tr>
           </thead>
           <tbody>
             {items.map((pkg) => (
               <tr key={pkg._id}>
-                <td>
+                <td className="px-5">
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-teal-50 rounded flex items-center justify-center text-[#044343]">
-                      <Package size={16} />
+                    <div className="w-7 h-7 bg-teal-50 rounded flex items-center justify-center text-[#044343] border border-teal-100">
+                      <Package size={14} />
                     </div>
-                    <span className="font-medium text-slate-900">{pkg.name}</span>
+                    <span className="text-[13px] font-bold text-slate-900">{pkg.name}</span>
                   </div>
                 </td>
-                <td className="font-medium text-slate-900">₹{pkg.price}</td>
-                <td className="text-slate-600">{pkg.duration} Days</td>
-                <td className="text-slate-600">{pkg.maxBooks} Books</td>
-                <td className="text-slate-500 text-[12px] max-w-[200px] truncate">{pkg.description || '-'}</td>
-                <td className="text-right">
+                <td><span className="font-bold text-slate-900">₹{pkg.price}</span></td>
+                <td className="text-[12px] font-medium text-slate-600">{pkg.duration} Days</td>
+                <td className="text-[12px] font-medium text-slate-600">{pkg.maxBooks} Books</td>
+                <td className="text-[11px] text-slate-400 truncate max-w-[250px]">{pkg.description || '-'}</td>
+                <td className="px-5 text-right">
                   <div className="flex items-center justify-end gap-1">
-                    <button onClick={() => handleEdit(pkg)} className="p-1.5 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded transition-colors" title="Edit">
-                      <Edit size={16} />
-                    </button>
-                    <button onClick={() => handleDelete(pkg._id)} className="p-1.5 text-rose-400 hover:text-rose-600 hover:bg-rose-50 rounded transition-colors" title="Delete">
-                      <Trash2 size={16} />
-                    </button>
+                    <button onClick={() => handleEdit(pkg)} className="btn btn-ghost btn-sm w-7 h-7 p-0"><Edit size={14} /></button>
+                    <button onClick={() => handleDelete(pkg._id)} className="btn btn-ghost btn-sm w-7 h-7 p-0 text-rose-400 hover:text-rose-600"><Trash2 size={14} /></button>
                   </div>
                 </td>
               </tr>
             ))}
+            {!items.length && <tr><td colSpan="6" className="p-10 text-center text-slate-400 text-xs italic">No plans created yet.</td></tr>}
           </tbody>
         </table>
-        {items.length === 0 && !loading && (
-          <div className="py-12 text-center text-slate-500">
-            No packages available.
-          </div>
-        )}
       </div>
 
-      {/* Package Modal */}
       <AnimatePresence>
         {isModalOpen && (
-          <div className="modal-overlay">
-            <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              className="modal-content modal-md"
-            >
-              <div className="modal-header">
-                <h2>{editingPackage ? 'Edit Package' : 'Create Package'}</h2>
-                <button onClick={handleCloseModal} className="text-slate-400 hover:text-slate-600 transition-colors">
-                  <X size={20} />
-                </button>
+          <div className="modal-wrapper">
+            <motion.div initial={{ scale: 0.98, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="modal-panel w-full max-w-md">
+              <div className="modal-h">
+                <h2 className="text-sm font-bold">{editingPackage ? 'Update Plan' : 'Define New Plan'}</h2>
+                <button onClick={handleCloseModal} className="text-slate-400 hover:text-slate-900"><X size={18} /></button>
               </div>
-
-              <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col overflow-hidden">
-                <div className="modal-body space-y-4">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <label className="input-label">Package Name</label>
-                      <input
-                        {...register('name', { required: true })}
-                        placeholder="e.g., Diamond Monthly"
-                        className="input-field"
-                      />
+              <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col">
+                <div className="modal-b space-y-4">
+                  <div className="space-y-1.5">
+                    <label className="label">Plan Name</label>
+                    <input {...register('name', { required: true })} placeholder="e.g. Platinum Plus" className="input" />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <label className="label">Price (INR)</label>
+                      <input {...register('price', { required: true })} type="number" className="input" />
                     </div>
-                    <div>
-                      <label className="input-label">Price ($)</label>
-                      <input
-                        {...register('price', { required: true })}
-                        type="number"
-                        placeholder="49.99"
-                        className="input-field"
-                      />
-                    </div>
-                    <div>
-                      <label className="input-label">Duration (Days)</label>
-                      <input
-                        {...register('duration', { required: true })}
-                        type="number"
-                        placeholder="30"
-                        className="input-field"
-                      />
-                    </div>
-                    <div>
-                      <label className="input-label">Max Books Allowed</label>
-                      <input
-                        {...register('maxBooks', { required: true })}
-                        type="number"
-                        placeholder="5"
-                        className="input-field"
-                      />
+                    <div className="space-y-1.5">
+                      <label className="label">Duration (Days)</label>
+                      <input {...register('duration', { required: true })} type="number" className="input" />
                     </div>
                   </div>
-
-                  <div>
-                    <label className="input-label">Description (Optional)</label>
-                    <textarea
-                      {...register('description')}
-                      rows={3}
-                      placeholder="Brief highlights..."
-                      className="input-field py-2 h-auto resize-none"
-                    />
+                  <div className="space-y-1.5">
+                    <label className="label">Max Books Allowed</label>
+                    <input {...register('maxBooks', { required: true })} type="number" className="input" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="label">Description</label>
+                    <textarea {...register('description')} rows={2} className="input h-auto py-2 resize-none" placeholder="Features..." />
                   </div>
                 </div>
-
-                <div className="modal-footer">
-                  <button type="button" onClick={handleCloseModal} className="btn btn-secondary btn-default">
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={isAdding || isUpdating}
-                    className="btn btn-primary btn-default min-w-[120px]"
-                  >
-                    {(isAdding || isUpdating) ? <Loader2 size={16} className="animate-spin" /> : (editingPackage ? 'Update' : 'Save Package')}
+                <div className="modal-f">
+                  <button type="button" onClick={handleCloseModal} className="btn btn-secondary btn-md px-6">Cancel</button>
+                  <button type="submit" disabled={isAdding || isUpdating} className="btn btn-primary btn-md px-8 min-w-[120px]">
+                    {isAdding || isUpdating ? <Loader2 size={16} className="animate-spin" /> : 'Save Plan'}
                   </button>
                 </div>
               </form>

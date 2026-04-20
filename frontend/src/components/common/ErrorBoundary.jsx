@@ -71,7 +71,7 @@ class ErrorBoundary extends React.Component {
 
             {/* Footer */}
             <div className="mt-10 text-xs text-slate-400 font-medium">
-              Bookary • Library Management System
+              Welib • Library Management System
             </div>
 
           </div>

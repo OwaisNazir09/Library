@@ -32,7 +32,26 @@ export const authApi = baseApi.injectEndpoints({
       query: () => '/auth/profile',
       providesTags: ['Auth'],
     }),
+    updatePassword: builder.mutation({
+      query: (data) => ({
+        url: '/auth/update-password',
+        method: 'PATCH',
+        body: data,
+      }),
+      async onQueryStarted(args, { dispatch, queryFulfilled }) {
+        try {
+          const { data } = await queryFulfilled;
+          localStorage.setItem('token', data.token);
+          dispatch(setCredentials({
+            user: data.data.user,
+            token: data.token,
+            role: data.role,
+            tenantId: data.tenantId,
+          }));
+        } catch (error) {}
+      }
+    }),
   }),
 });
 
-export const { useLoginMutation, useGetProfileQuery } = authApi;
+export const { useLoginMutation, useGetProfileQuery, useUpdatePasswordMutation } = authApi;

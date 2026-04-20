@@ -25,7 +25,6 @@ export const financeApi = baseApi.injectEndpoints({
       providesTags: (result, error, { id }) => [{ type: 'Finance', id }],
     }),
 
-    // Transactions
     getTransactions: builder.query({
       query: (params) => ({ url: '/finance/transactions', params }),
       providesTags: ['Finance'],

@@ -1,14 +1,7 @@
 import React from 'react';
 import { useGetUsersQuery } from '../../store/api/usersApi';
 import {
-  Users,
-  Search,
-  Filter,
-  Globe,
-  Shield,
-  Mail,
-  MoreVertical,
-  Loader2
+  Users, Search, Filter, Globe, Shield, Mail, MoreVertical, Loader2
 } from 'lucide-react';
 
 const UserManagementGlobal = () => {
@@ -16,107 +9,100 @@ const UserManagementGlobal = () => {
   const users = usersData?.data?.users || usersData?.data || [];
 
   return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="text-3xl font-black text-slate-900 tracking-tight">Global User Registry</h1>
-        <p className="text-slate-400 font-medium">Cross-tenant user monitoring and account management.</p>
-      </div>
-
-      <div className="bg-white rounded-[3rem] border border-slate-100 shadow-xl shadow-teal-900/5 overflow-hidden">
-        <div className="p-8 border-b border-slate-50 flex items-center justify-between">
-          <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-300" size={20} />
+    <div className="space-y-5">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-xl font-bold text-slate-900">Global User Registry</h1>
+          <p className="text-xs text-slate-400 font-medium mt-0.5">Cross-tenant user monitoring and platform administration</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="relative">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
             <input
               type="text"
-              placeholder="Search by name, email, or library..."
-              className="w-full pl-16 pr-6 py-4 bg-slate-50 border-none rounded-2xl text-sm font-bold outline-none focus:ring-2 focus:ring-[#044343]/5"
+              placeholder="Search across all tenants..."
+              className="w-64 bg-white border border-slate-200 rounded-lg h-[34px] pl-8 pr-3 text-[13px] outline-none focus:ring-2 focus:ring-teal-500/10 transition-all"
             />
           </div>
-          <button className="flex items-center gap-2 px-6 py-4 text-slate-400 font-bold hover:text-[#044343] transition-colors">
-            <Filter size={20} />
-            Advanced Filter
+          <button className="btn btn-secondary btn-md">
+            <Filter size={16} />
           </button>
         </div>
+      </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-left">
-            <thead className="bg-slate-50/50 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-50">
+      <div className="table-container">
+        <table className="table-main">
+          <thead>
+            <tr>
+              <th className="px-5">User Profile</th>
+              <th>Security Role</th>
+              <th>Home Node (Tenant)</th>
+              <th>Status</th>
+              <th className="px-5 text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {error ? (
               <tr>
-                <th className="px-10 py-6">User Profile</th>
-                <th className="px-6 py-6">Security Role</th>
-                <th className="px-6 py-6">Home Node</th>
-                <th className="px-6 py-6">Status</th>
-                <th className="px-10 py-6 text-right">Actions</th>
+                <td colSpan="5" className="py-20 text-center">
+                  <p className="text-slate-500 font-bold mb-4">{error.data?.message || 'Error loading platform users'}</p>
+                  <button onClick={() => refetch()} className="btn btn-primary btn-md">Retry</button>
+                </td>
               </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-50">
-              {error ? (
-                <tr>
-                  <td colSpan="5" className="py-20 text-center">
-                    <p className="text-slate-500 font-bold mb-4">{error.data?.message || 'Error loading platform users'}</p>
-                    <button onClick={() => refetch()} className="bg-[#044343] text-white px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest">Retry</button>
+            ) : loading ? (
+              <tr><td colSpan="5" className="p-8 text-center"><Loader2 className="animate-spin inline-block text-teal-600" size={24} /></td></tr>
+            ) : (
+              users.map((user) => (
+                <tr key={user._id}>
+                  <td className="px-5">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-teal-50 flex items-center justify-center font-bold text-[#044343] overflow-hidden border border-teal-100 text-[11px]">
+                        {user.profilePicture ? (
+                          <img src={user.profilePicture} alt="avatar" className="w-full h-full object-cover" />
+                        ) : (
+                          user.fullName?.charAt(0) || '?'
+                        )}
+                      </div>
+                      <div>
+                        <p className="text-[13px] font-bold text-slate-900 leading-none">{user.fullName}</p>
+                        <p className="text-[10px] text-slate-400 font-medium mt-1 lowercase truncate max-w-[150px]">{user.email}</p>
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    <span className={`badge lowercase flex items-center gap-1 w-fit ${user.role === 'super_admin' ? 'badge-neutral' :
+                        user.role === 'librarian' ? 'badge-info' : 'badge-neutral'
+                      }`}>
+                      <Shield size={10} />
+                      {user.role}
+                    </span>
+                  </td>
+                  <td>
+                     <div className="flex flex-col">
+                      <div className="flex items-center gap-1.5 text-[12px] font-bold text-slate-900">
+                        <Globe size={12} className="text-teal-600" />
+                        {user.tenantName || 'Platform'}
+                      </div>
+                      <span className="text-[10px] text-slate-400 font-medium mt-1 uppercase tracking-tighter">ID: {user.tenantId?.substring(18) || 'GLOBAL'}</span>
+                     </div>
+                  </td>
+                  <td>
+                    <div className="flex items-center gap-1.5">
+                      <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                      <span className="text-[10px] font-bold uppercase text-slate-400 tracking-wider">Active</span>
+                    </div>
+                  </td>
+                  <td className="px-5 text-right">
+                    <button className="btn btn-ghost btn-sm w-8 h-8 p-0">
+                      <MoreVertical size={16} />
+                    </button>
                   </td>
                 </tr>
-              ) : loading ? (
-                <tr>
-                  <td colSpan="5" className="py-20 text-center">
-                    <Loader2 className="animate-spin inline-block text-[#044343]" size={32} />
-                  </td>
-                </tr>
-              ) : (
-                users.map((user) => (
-                  <tr key={user._id} className="hover:bg-slate-50/50 transition-colors">
-                    <td className="px-10 py-8">
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-full bg-[#044343] flex items-center justify-center font-bold text-white overflow-hidden shadow-lg shadow-teal-900/10">
-                          {user.profilePicture ? (
-                            <img src={user.profilePicture} alt="avatar" className="w-full h-full object-cover" />
-                          ) : (
-                            user.fullName?.charAt(0) || '?'
-                          )}
-                        </div>
-                        <div>
-                          <p className="text-sm font-black text-slate-900">{user.fullName}</p>
-                          <p className="text-[10px] text-slate-400 font-bold mt-1 flex items-center gap-1">
-                            <Mail size={10} /> {user.email}
-                          </p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-8">
-                      <span className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${user.role === 'super_admin' ? 'bg-slate-900 text-white' :
-                          user.role === 'librarian' ? 'bg-teal-100 text-teal-700' : 'bg-blue-100 text-blue-700'
-                        }`}>
-                        <Shield size={12} />
-                        {user.role}
-                      </span>
-                    </td>
-                    <td className="px-6 py-8">
-                       <div className="flex flex-col">
-                        <div className="flex items-center gap-2 text-xs font-bold text-slate-900">
-                          <Globe size={14} className="text-teal-600" />
-                          {user.tenantName || 'Platform'}
-                        </div>
-                        <span className="text-[10px] text-slate-400 font-bold mt-1 uppercase tracking-tighter">ID: {user.tenantId?.substring(18) || 'GLOBAL'}</span>
-                       </div>
-                    </td>
-                    <td className="px-6 py-8">
-                      <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-lg shadow-emerald-500/50" />
-                        <span className="text-[10px] font-black uppercase text-slate-400">Active</span>
-                      </div>
-                    </td>
-                    <td className="px-10 py-8 text-right">
-                      <button className="p-3 text-slate-300 hover:text-slate-600 rounded-xl transition-colors">
-                        <MoreVertical size={20} />
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+              ))
+            )}
+            {!loading && !users.length && <tr><td colSpan="5" className="p-20 text-center text-slate-400 italic text-xs">No users registered on the platform.</td></tr>}
+          </tbody>
+        </table>
       </div>
     </div>
   );

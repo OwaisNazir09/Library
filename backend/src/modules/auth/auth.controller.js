@@ -116,3 +116,24 @@ export const login = async (req, res, next) => {
     next(err);
   }
 };
+
+export const updatePassword = async (req, res, next) => {
+  try {
+    const { currentPassword, password } = req.body;
+    const { User } = getModels(req.db);
+    const user = await User.findById(req.user.id).select('+password');
+
+    if (!user || !(await user.correctPassword(currentPassword, user.password))) {
+      const error = new Error('Your current password is wrong');
+      error.statusCode = 401;
+      throw error;
+    }
+
+    user.password = password;
+    await user.save();
+
+    createSendToken(user, 200, res);
+  } catch (err) {
+    next(err);
+  }
+};

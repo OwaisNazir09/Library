@@ -76,14 +76,14 @@ const Sidebar = ({ isOpen, onClose }) => {
   };
 
   const sidebarContent = (
-    <div className="w-64 bg-slate-50 h-full flex flex-col border-r border-slate-200">
+    <div className="w-64 bg-slate-50 h-full flex flex-col border-r border-slate-200 transition-colors duration-200 dark:bg-slate-900 dark:border-slate-800">
       {/* Branding */}
       <div className="p-8 flex items-center justify-between">
         <div className="flex items-center gap-3 group cursor-pointer">
-          <div className="w-8 h-8 bg-[#044343] rounded-lg flex items-center justify-center shadow-sm">
-            <BookOpen className="text-white" size={16} />
+          <div className="w-8 h-8 flex items-center justify-center">
+            <img src="/appicon.png" alt="Welib" className="w-full h-full object-contain" />
           </div>
-          <span className="text-xl font-bold text-slate-900 tracking-tight">Bookary</span>
+          <span className="text-xl font-bold text-slate-900 tracking-tight dark:text-slate-100">Welib</span>
         </div>
         <button onClick={onClose} className="lg:hidden p-2 text-slate-400 hover:text-black transition-colors">
           <X size={24} />
@@ -105,8 +105,8 @@ const Sidebar = ({ isOpen, onClose }) => {
                   className={({ isActive }) => `
                     flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 group
                     ${isActive
-                      ? 'bg-[#044343] text-white shadow-sm'
-                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50'}
+                      ? 'bg-[#044343] text-white shadow-sm dark:bg-teal-700'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-800/50'}
                   `}
                 >
                   <item.icon size={18} className={`
@@ -135,10 +135,10 @@ const Sidebar = ({ isOpen, onClose }) => {
       </div> */}
 
       {/* Logout Action */}
-      <div className="p-4 border-t border-slate-200">
+      <div className="p-4 border-t border-slate-200 dark:border-slate-800">
         <button
           onClick={handleLogout}
-          className="flex items-center gap-3 text-slate-600 font-medium hover:text-rose-600 transition-colors group w-full px-3 py-2 rounded-lg hover:bg-rose-50"
+          className="flex items-center gap-3 text-slate-600 font-medium hover:text-rose-600 transition-colors group w-full px-3 py-2 rounded-lg hover:bg-rose-50 dark:text-slate-400 dark:hover:text-rose-400 dark:hover:bg-rose-950/20"
         >
           <LogOut size={18} className="text-slate-400 group-hover:text-rose-600 transition-colors" />
           <span className="text-[13px]">Log Out</span>

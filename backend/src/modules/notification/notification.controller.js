@@ -8,56 +8,89 @@ import { sendMulticastNotification } from '../../services/firebase.service.js';
  */
 export const sendNotification = async (req, res) => {
   try {
-    const { title, body, target, libraryId, userId, data } = req.body;
-    const { User } = getModels(req.db);
+    const { title, body, target, libraryId, userId, data, type } = req.body;
+    const { User, Notification } = getModels(req.db);
 
     let query = { pushToken: { $exists: true, $ne: null } };
 
     // 1. Permission Check
     if (req.user.role !== 'super_admin') {
-      // Regular admin/librarian can only send to their own library
       query.tenantId = req.user.tenantId;
-      if (userId) {
-        query._id = userId;
-      }
+      if (userId) query._id = userId;
     } else {
-      // Super admin logic
       if (target === 'library' && libraryId) {
         query.tenantId = libraryId;
       } else if (target === 'single' && userId) {
         query._id = userId;
       }
-      // if target === 'all', query stays as is (everyone with pushToken)
     }
 
-    const users = await User.find(query).select('pushToken');
-    const tokens = users.map(u => u.pushToken);
+    const users = await User.find(query).select('pushToken tenantId');
+    const tokens = users.map(u => u.pushToken).filter(t => !!t);
 
-    if (tokens.length === 0) {
-      return res.status(400).json({
-        status: 'fail',
-        message: 'No users with registered push tokens found for this target'
+    // Save to Database
+    const notificationPromises = users.map(user => 
+      Notification.create({
+        tenantId: user.tenantId,
+        user: user._id,
+        title,
+        message: body,
+        type: type || 'info'
+      })
+    );
+    await Promise.all(notificationPromises);
+
+    let pushResponse = { successCount: 0, failureCount: 0 };
+    if (tokens.length > 0) {
+      pushResponse = await sendMulticastNotification(tokens, {
+        title,
+        body,
+        data: data || {}
       });
     }
-
-    const response = await sendMulticastNotification(tokens, {
-      title,
-      body,
-      data: data || {}
-    });
 
     res.status(200).json({
       status: 'success',
       data: {
-        successCount: response.successCount,
-        failureCount: response.failureCount
+        savedCount: users.length,
+        pushResponse
       }
     });
 
   } catch (error) {
-    res.status(500).json({
-      status: 'error',
-      message: error.message
+    res.status(500).json({ status: 'error', message: error.message });
+  }
+};
+
+export const getMyNotifications = async (req, res) => {
+  try {
+    const { Notification } = getModels(req.db);
+    const notifications = await Notification.find({ user: req.user._id })
+      .sort('-createdAt')
+      .limit(50);
+
+    res.status(200).json({
+      status: 'success',
+      data: { notifications }
     });
+  } catch (error) {
+    res.status(500).json({ status: 'error', message: error.message });
+  }
+};
+
+export const markNotificationsAsRead = async (req, res) => {
+  try {
+    const { Notification } = getModels(req.db);
+    await Notification.updateMany(
+      { user: req.user._id, isRead: false },
+      { isRead: true }
+    );
+
+    res.status(200).json({
+      status: 'success',
+      message: 'Notifications marked as read'
+    });
+  } catch (error) {
+    res.status(500).json({ status: 'error', message: error.message });
   }
 };

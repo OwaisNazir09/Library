@@ -17,9 +17,7 @@ const Reminders = () => {
         if (res?.data?.overdue) {
           setOverdueList(res.data.overdue);
         }
-      } catch (err) {
-        console.warn("API not available or failed.", err);
-      } finally {
+      } catch (err) {} finally {
         setLoading(false);
       }
     };
@@ -30,85 +28,64 @@ const Reminders = () => {
     toast.success(`Reminder sent to ${studentName}`);
   };
 
-  if (loading) return <LoadingSkeleton type="table" rows={5} />;
+  if (loading) return <LoadingSkeleton type="table" rows={10} />;
 
   return (
-    <div className="space-y-5 pb-8 animate-in fade-in duration-500">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-           <div className="flex items-center gap-2 text-[12px] font-medium text-slate-500 uppercase tracking-widest mb-1">
-            <span>Library</span>
-            <ChevronRight size={12} />
-            <span className="text-[#044343]">Reminders</span>
-          </div>
-          <h1>Overdue Reminders</h1>
-        </div>
+    <div className="space-y-5">
+      <div>
+        <h1 className="text-xl font-bold text-slate-900">Overdue Reminders</h1>
+        <p className="text-xs text-slate-400 font-medium mt-0.5">Notification queue for books beyond due date</p>
       </div>
 
-      <div className="compact-table-container">
-        <table className="compact-table">
+      <div className="table-container">
+        <table className="table-main">
           <thead>
             <tr>
-              <th>Student Name</th>
-              <th>Book Name</th>
+              <th className="px-5">Student</th>
+              <th>Book Title</th>
               <th>Due Date</th>
-              <th>Days Late</th>
-              <th className="text-right">Actions</th>
+              <th className="text-center">Days Overdue</th>
+              <th className="text-right px-5">Actions</th>
             </tr>
           </thead>
           <tbody>
             {overdueList.map((item) => {
-                const daysLate = differenceInDays(new Date(), new Date(item.dueDate));
-                
-                return (
-                  <tr key={item._id} className="hover:bg-rose-50/30 transition-colors group">
-                    <td className="px-8 py-5">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500">
-                          <User size={14} />
-                        </div>
-                        <span className="text-sm font-black text-slate-900">{item.user?.fullName || 'Unknown Student'}</span>
+              const daysLate = differenceInDays(new Date(), new Date(item.dueDate));
+              return (
+                <tr key={item._id}>
+                  <td className="px-5">
+                    <div className="flex items-center gap-3">
+                      <div className="w-7 h-7 rounded bg-slate-50 flex items-center justify-center text-slate-400 border border-slate-100 font-bold text-[10px]">
+                        {item.user?.fullName?.charAt(0)}
                       </div>
-                    </td>
-                    <td className="px-6 py-5">
-                      <div className="flex items-center gap-2">
-                        <BookOpen size={14} className="text-slate-400" />
-                        <span className="text-sm font-bold text-slate-600">{item.book?.title || 'Unknown Book'}</span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-5">
-                      <span className="text-sm font-bold text-slate-900">{format(new Date(item.dueDate), 'MMM dd, yyyy')}</span>
-                    </td>
-                    <td className="px-6 py-5">
-                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-rose-100 text-rose-600">
-                        <AlertTriangle size={10} />
-                        {daysLate} Days
-                      </span>
-                    </td>
-                  <td className="text-right">
-                    <button 
-                      onClick={() => handleSendReminder(item.user?.fullName)}
-                      className="btn btn-sm btn-secondary ml-auto"
-                    >
-                      <Send size={14} />
-                      Send Reminder
+                      <span className="text-[13px] font-bold text-slate-900">{item.user?.fullName || 'Unknown'}</span>
+                    </div>
+                  </td>
+                  <td>
+                    <div className="flex items-center gap-2">
+                      <BookOpen size={12} className="text-slate-300" />
+                      <span className="text-[13px] font-medium text-slate-600 truncate max-w-[200px]">{item.book?.title || 'Unknown'}</span>
+                    </div>
+                  </td>
+                  <td className="text-[12px] font-medium text-slate-500">
+                    {format(new Date(item.dueDate), 'dd MMM yyyy')}
+                  </td>
+                  <td className="text-center">
+                    <span className="badge badge-danger lowercase flex items-center gap-1">
+                      <AlertTriangle size={10} /> {daysLate} Days
+                    </span>
+                  </td>
+                  <td className="px-5 text-right">
+                    <button onClick={() => handleSendReminder(item.user?.fullName)} className="btn btn-secondary btn-sm px-4">
+                      <Send size={14} /> Send Reminder
                     </button>
                   </td>
                 </tr>
-                );
-              })}
-              
-              {overdueList.length === 0 && (
-                <tr>
-                  <td colSpan="5" className="px-8 py-12 text-center">
-                    <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-300">
-                      <Clock size={32} />
-                    </div>
-                    <p className="text-slate-900 font-bold mb-1">No Overdue Books</p>
-                    <p className="text-slate-500 text-sm">All issued books have been returned on time!</p>
-                  </td>
-                </tr>
-              )}
+              );
+            })}
+            {overdueList.length === 0 && (
+              <tr><td colSpan="5" className="p-20 text-center text-slate-400 text-xs italic">No overdue items in the queue.</td></tr>
+            )}
           </tbody>
         </table>
       </div>

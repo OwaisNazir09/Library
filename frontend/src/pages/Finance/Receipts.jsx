@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Receipt, Search, Download, Printer, User, Calendar, 
+import {
+  Receipt, Search, Download, Printer, User, Calendar,
   ArrowLeft, FileText, CheckCircle2, X, Share2, IndianRupee, BookOpen
 } from 'lucide-react';
 import { useGetReceiptsQuery, useGetReceiptQuery } from '../../store/api/financeApi';
@@ -66,7 +66,7 @@ const Receipts = () => {
                   <BookOpen size={24} />
                 </div>
                 <div>
-                  <h3 className="text-2xl font-black text-slate-900 tracking-tight">Bookary</h3>
+                  <h3 className="text-2xl font-black text-slate-900 tracking-tight">Welib</h3>
                   <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.2em]">Library Management</p>
                 </div>
               </div>
@@ -109,18 +109,18 @@ const Receipts = () => {
 
             {/* Footer Total */}
             <div className="flex flex-col items-end px-4 gap-2">
-               <div className="flex items-center gap-12">
-                  <span className="text-xs font-black text-orange-400 uppercase tracking-[0.2em]">Paid Amount</span>
-                  <span className="text-4xl font-black text-slate-900 tracking-tighter">{fmt(receipt.amount)}</span>
-               </div>
-               <div className="w-full h-px bg-slate-100 my-4" />
-               <p className="text-[10px] text-slate-400 font-bold max-w-xs text-right italic">
-                 Note: This is a computer generated receipt and does not require a physical signature.
-               </p>
+              <div className="flex items-center gap-12">
+                <span className="text-xs font-black text-orange-400 uppercase tracking-[0.2em]">Paid Amount</span>
+                <span className="text-4xl font-black text-slate-900 tracking-tighter">{fmt(receipt.amount)}</span>
+              </div>
+              <div className="w-full h-px bg-slate-100 my-4" />
+              <p className="text-[10px] text-slate-400 font-bold max-w-xs text-right italic">
+                Note: This is a computer generated receipt and does not require a physical signature.
+              </p>
             </div>
-            
+
             <div className="mt-12 pt-12 border-t border-dashed border-slate-200 text-center">
-              <p className="text-xs font-bold text-slate-400">Thank you for choosing Bookary Library Services.</p>
+              <p className="text-xs font-bold text-slate-400">Thank you for choosing Welib Library Services.</p>
             </div>
           </div>
         </motion.div>
@@ -136,25 +136,25 @@ const Receipts = () => {
           <p className="text-slate-500 font-medium mt-1">Transaction proof and financial documents</p>
         </div>
         <div className="flex items-center gap-3">
-           <div className="relative">
-             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-             <input
-               type="text"
-               placeholder="Search receipt number..."
-               className="pl-12 pr-4 py-3 bg-white border border-slate-100 rounded-2xl w-64 shadow-sm focus:ring-2 focus:ring-[#044343]/5 outline-none font-medium text-sm transition-all"
-             />
-           </div>
+          <div className="relative">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+            <input
+              type="text"
+              placeholder="Search receipt number..."
+              className="pl-12 pr-4 py-3 bg-white border border-slate-100 rounded-2xl w-64 shadow-sm focus:ring-2 focus:ring-[#044343]/5 outline-none font-medium text-sm transition-all"
+            />
+          </div>
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {loading && receipts.length === 0 ? (
           Array.from({ length: 8 }).map((_, i) => (
-             <div key={i} className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm h-48 animate-pulse">
-                <div className="w-12 h-12 bg-slate-100 rounded-2xl mb-4" />
-                <div className="h-4 bg-slate-100 rounded-full w-2/3 mb-2" />
-                <div className="h-3 bg-slate-50 rounded-full w-1/2" />
-             </div>
+            <div key={i} className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm h-48 animate-pulse">
+              <div className="w-12 h-12 bg-slate-100 rounded-2xl mb-4" />
+              <div className="h-4 bg-slate-100 rounded-full w-2/3 mb-2" />
+              <div className="h-3 bg-slate-50 rounded-full w-1/2" />
+            </div>
           ))
         ) : receipts.map((receipt) => (
           <motion.div
@@ -171,10 +171,10 @@ const Receipts = () => {
                 PAID
               </span>
             </div>
-            
+
             <h4 className="text-sm font-black text-slate-900 mb-1">{receipt.receiptNumber}</h4>
             <p className="text-xs font-bold text-slate-500 truncate mb-4">{receipt.studentId?.fullName || 'General'}</p>
-            
+
             <div className="flex items-end justify-between pt-4 border-t border-slate-50 mt-auto">
               <div>
                 <p className="text-[9px] font-black text-slate-300 uppercase tracking-widest">{format(new Date(receipt.date), 'dd MMM yyyy')}</p>
@@ -186,17 +186,17 @@ const Receipts = () => {
       </div>
 
       {!loading && receipts.length === 0 && (
-         <div className="bg-white p-20 rounded-[3rem] border border-slate-50 shadow-sm text-center">
-            <div className="w-20 h-20 bg-slate-50 rounded-[2rem] flex items-center justify-center mx-auto mb-6 text-slate-200">
-               <Receipt size={40} />
-            </div>
-            <h3 className="text-xl font-black text-slate-900">No Receipts Generated</h3>
-            <p className="text-slate-400 mt-2 font-medium">Any fee collection or fine payment will generate a receipt here.</p>
-         </div>
+        <div className="bg-white p-20 rounded-[3rem] border border-slate-50 shadow-sm text-center">
+          <div className="w-20 h-20 bg-slate-50 rounded-[2rem] flex items-center justify-center mx-auto mb-6 text-slate-200">
+            <Receipt size={40} />
+          </div>
+          <h3 className="text-xl font-black text-slate-900">No Receipts Generated</h3>
+          <p className="text-slate-400 mt-2 font-medium">Any fee collection or fine payment will generate a receipt here.</p>
+        </div>
       )}
 
       {totalReceipts > limit && (
-        <Pagination 
+        <Pagination
           total={totalReceipts}
           limit={limit}
           currentPage={currentPage}
@@ -206,13 +206,13 @@ const Receipts = () => {
 
       <AnimatePresence>
         {selectedReceiptId && (
-          <ReceiptModal 
-            receipt={currentReceipt} 
-            onClose={() => setSelectedReceiptId(null)} 
+          <ReceiptModal
+            receipt={currentReceipt}
+            onClose={() => setSelectedReceiptId(null)}
           />
         )}
       </AnimatePresence>
-      
+
       <style>{`
         @media print {
           body * { visibility: hidden; }

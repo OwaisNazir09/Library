@@ -114,54 +114,42 @@ const UniversalTransactionModal = ({ isOpen, onClose, initialType = 'journal' })
   ];
 
   return (
-    <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md">
+    <div className="modal-wrapper">
       <motion.div
-        initial={{ opacity: 0, scale: 0.95, y: 20 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        className="bg-white rounded-[3rem] shadow-2xl w-full max-w-2xl border border-slate-100 overflow-hidden"
+        initial={{ opacity: 0, scale: 0.98 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.98 }}
+        className="modal-panel w-full max-w-xl"
       >
-        <div className="px-6 md:px-10 py-6 md:py-8 border-b border-slate-50 bg-slate-50/50 flex items-center justify-between">
-          <div className="flex items-center gap-3 md:gap-4">
-            <div className={`w-10 h-10 md:w-12 md:h-12 rounded-xl md:rounded-2xl flex items-center justify-center ${
+        <div className="modal-h bg-slate-50/50">
+          <div className="flex items-center gap-2.5">
+            <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
               type === 'expense' ? 'bg-rose-50 text-rose-500' :
               type === 'income' ? 'bg-emerald-50 text-emerald-500' :
               type === 'transfer' ? 'bg-sky-50 text-sky-500' : 'bg-indigo-50 text-indigo-500'
             }`}>
-              {type === 'expense' ? <TrendingDown size={20} /> :
-               type === 'income' ? <TrendingUp size={20} /> :
-               type === 'transfer' ? <RefreshCcw size={20} /> : <ArrowRight size={20} />}
+              {type === 'expense' ? <TrendingDown size={16} /> :
+               type === 'income' ? <TrendingUp size={16} /> :
+               type === 'transfer' ? <RefreshCcw size={16} /> : <ArrowRight size={16} />}
             </div>
             <div>
-              <h2 className="text-xl md:text-2xl font-black text-slate-900 tracking-tight capitalize">{type} Entry</h2>
-              <p className="text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest mt-0.5">Double Entry Ledger</p>
+              <h2 className="text-sm font-bold text-slate-900 capitalize">{type} Entry</h2>
             </div>
           </div>
-          <button 
-            onClick={onClose}
-            className="w-10 h-10 md:w-12 md:h-12 rounded-xl md:rounded-2xl flex items-center justify-center text-slate-300 hover:bg-slate-100 transition-colors"
-          >
-            <X size={20} />
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-900 transition-colors">
+            <X size={18} />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 md:p-10 space-y-4 md:space-y-6 max-h-[70vh] overflow-y-auto custom-scrollbar">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8 relative">
-            <div className="absolute top-[48px] left-1/2 -translate-x-1/2 w-8 h-8 rounded-full bg-white border border-slate-100 shadow-sm flex items-center justify-center z-10 hidden md:flex">
-              <ArrowRight size={14} className="text-slate-300" />
-            </div>
-
-            <div className="space-y-1.5 md:space-y-2">
-              <label className="text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">
+        <form onSubmit={handleSubmit} className="modal-b space-y-4 max-h-[75vh] overflow-y-auto">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 relative">
+            <div className="space-y-1.5">
+              <label className="label">
                 {type === 'expense' ? 'Expense Account (DR)' : 
                  type === 'income' ? 'Cash/Bank Account (DR)' : 
                  type === 'transfer' ? 'Destination (DR)' : 'Debit Account'}
               </label>
-              <select
-                required
-                className="w-full h-12 md:h-14 px-4 md:px-5 rounded-xl md:rounded-2xl bg-slate-50 border border-slate-100 text-xs md:text-sm font-bold focus:outline-none focus:border-[#044343] transition-all"
-                value={formData.debitAccountId}
-                onChange={e => setFormData({ ...formData, debitAccountId: e.target.value })}
-              >
+              <select required className="input" value={formData.debitAccountId} onChange={e => setFormData({ ...formData, debitAccountId: e.target.value })}>
                 <option value="">Select Account</option>
                 {filteredDebitAccounts.map(acc => (
                   <option key={acc._id} value={acc._id}>{acc.name} (₹{acc.currentBalance.toLocaleString()})</option>
@@ -169,18 +157,13 @@ const UniversalTransactionModal = ({ isOpen, onClose, initialType = 'journal' })
               </select>
             </div>
 
-            <div className="space-y-1.5 md:space-y-2">
-              <label className="text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 md:text-right block">
+            <div className="space-y-1.5">
+              <label className="label">
                 {type === 'expense' ? 'Source Asset (CR)' : 
                  type === 'income' ? 'Income Account (CR)' : 
                  type === 'transfer' ? 'Source Asset (CR)' : 'Credit Account'}
               </label>
-              <select
-                required
-                className="w-full h-12 md:h-14 px-4 md:px-5 rounded-xl md:rounded-2xl bg-slate-50 border border-slate-100 text-xs md:text-sm font-bold focus:outline-none focus:border-[#044343] transition-all md:text-right"
-                value={formData.creditAccountId}
-                onChange={e => setFormData({ ...formData, creditAccountId: e.target.value })}
-              >
+              <select required className="input" value={formData.creditAccountId} onChange={e => setFormData({ ...formData, creditAccountId: e.target.value })}>
                 <option value="">Select Account</option>
                 {filteredCreditAccounts.map(acc => (
                   <option key={acc._id} value={acc._id}>{acc.name} (₹{acc.currentBalance.toLocaleString()})</option>
@@ -189,99 +172,45 @@ const UniversalTransactionModal = ({ isOpen, onClose, initialType = 'journal' })
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-            <div className="space-y-1.5 md:space-y-2">
-              <label className="text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Amount</label>
-              <div className="relative">
-                <span className="absolute left-4 md:left-5 top-1/2 -translate-y-1/2 text-slate-300 font-bold">₹</span>
-                <input
-                  required
-                  type="number" min="1" step="0.01"
-                  placeholder="0.00"
-                  className="w-full h-12 md:h-14 pl-9 md:pl-10 pr-4 md:pr-5 rounded-xl md:rounded-2xl bg-slate-50 border border-slate-100 text-xs md:text-sm font-bold focus:outline-none focus:border-[#044343] transition-all"
-                  value={formData.amount}
-                  onChange={e => setFormData({ ...formData, amount: e.target.value })}
-                />
-              </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <label className="label">Amount (INR)</label>
+              <input required type="number" min="1" step="0.01" className="input font-bold" value={formData.amount} onChange={e => setFormData({ ...formData, amount: e.target.value })} placeholder="0.00" />
             </div>
 
-            <div className="space-y-1.5 md:space-y-2">
-              <label className="text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">
-                {type === 'expense' ? 'Expense Category' : 'Transaction Category'}
-              </label>
-              <div className="relative">
-                <Tag className="absolute left-4 md:left-5 top-1/2 -translate-y-1/2 text-slate-300" size={16} />
-                <select
-                  className="w-full h-12 md:h-14 pl-11 md:pl-12 pr-4 md:pr-5 rounded-xl md:rounded-2xl bg-slate-50 border border-slate-100 text-xs md:text-sm font-bold focus:outline-none focus:border-[#044343] transition-all appearance-none"
-                  value={formData.category}
-                  onChange={e => setFormData({ ...formData, category: e.target.value })}
-                >
-                  <option value="">General</option>
-                  {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
-                </select>
-              </div>
+            <div className="space-y-1.5">
+              <label className="label">Category</label>
+              <select className="input" value={formData.category} onChange={e => setFormData({ ...formData, category: e.target.value })}>
+                <option value="">General</option>
+                {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+              </select>
             </div>
           </div>
 
-          <div className="space-y-1.5 md:space-y-2">
-            <label className="text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Description</label>
-            <div className="relative">
-              <FileText className="absolute left-4 md:left-5 top-1/2 -translate-y-1/2 text-slate-300" size={16} />
-              <input
-                required
-                type="text"
-                placeholder="What is this transaction for?"
-                className="w-full h-12 md:h-14 pl-11 md:pl-12 px-4 md:px-5 rounded-xl md:rounded-2xl bg-slate-50 border border-slate-100 text-xs md:text-sm font-bold focus:outline-none focus:border-[#044343] transition-all"
-                value={formData.description}
-                onChange={e => setFormData({ ...formData, description: e.target.value })}
-              />
-            </div>
+          <div className="space-y-1.5">
+            <label className="label">Description</label>
+            <input required type="text" className="input" value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} placeholder="What is this for?" />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-            <div className="space-y-1.5 md:space-y-2">
-              <label className="text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Ref / Invoice #</label>
-              <input
-                type="text"
-                placeholder="External reference"
-                className="w-full h-11 md:h-12 px-4 md:px-5 rounded-xl bg-slate-50 border border-slate-100 text-xs md:text-sm font-bold focus:outline-none focus:border-[#044343] transition-all"
-                value={formData.reference}
-                onChange={e => setFormData({ ...formData, reference: e.target.value })}
-              />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <label className="label">Ref / Invoice #</label>
+              <input type="text" className="input" value={formData.reference} onChange={e => setFormData({ ...formData, reference: e.target.value })} placeholder="Optional" />
             </div>
 
-            <div className="space-y-1.5 md:space-y-2">
-              <label className="text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Effective Date</label>
-              <div className="relative">
-                <Calendar className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none" size={16} />
-                <input
-                  type="date"
-                  className="w-full h-11 md:h-12 px-4 md:px-5 rounded-xl bg-slate-50 border border-slate-100 text-xs md:text-sm font-bold focus:outline-none focus:border-[#044343] transition-all"
-                  value={formData.date}
-                  onChange={e => setFormData({ ...formData, date: e.target.value })}
-                />
-              </div>
+            <div className="space-y-1.5">
+              <label className="label">Effective Date</label>
+              <input type="date" className="input" value={formData.date} onChange={e => setFormData({ ...formData, date: e.target.value })} />
             </div>
-          </div>
-
-          <div className="pt-4 md:pt-6 flex flex-col-reverse md:flex-row gap-3 md:gap-4">
-            <button
-              type="button"
-              onClick={onClose}
-              className="w-full md:flex-1 h-12 md:h-14 rounded-xl md:rounded-2xl text-slate-400 font-black text-[10px] md:text-xs uppercase tracking-widest hover:bg-slate-50 transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              disabled={isSubmitting}
-              type="submit"
-              className="w-full md:flex-[2] h-12 md:h-14 bg-[#044343] text-white rounded-xl md:rounded-[1.5rem] font-black text-[10px] md:text-xs uppercase tracking-widest hover:bg-[#033636] transition-all shadow-xl shadow-teal-900/10 disabled:opacity-50 flex items-center justify-center gap-3"
-            >
-              {isSubmitting ? <Loader2 size={18} className="animate-spin" /> : <Plus size={18} />}
-              {isSubmitting ? 'Recording...' : `Commit ${type} Entry`}
-            </button>
           </div>
         </form>
+        
+        <div className="modal-f">
+          <button type="button" onClick={onClose} className="btn btn-secondary btn-md font-semibold px-6">Cancel</button>
+          <button disabled={isSubmitting} type="submit" onClick={handleSubmit} className="btn btn-primary btn-md font-semibold px-6 min-w-[120px]">
+            {isSubmitting ? <Loader2 size={16} className="animate-spin" /> : 'Commit Entry'}
+          </button>
+        </div>
       </motion.div>
     </div>
   );

@@ -1,19 +1,12 @@
 import React from 'react';
 import { useGetTenantsQuery, useCreateTenantMutation, useDeleteTenantMutation } from '../../store/api/adminApi';
 import { 
-  Plus, 
-  Search, 
-  MoreHorizontal, 
-  Trash2, 
-  ExternalLink, 
-  Calendar,
-  Database,
-  Loader2,
-  X
+  Plus, Search, MoreHorizontal, Trash2, ExternalLink, Calendar,
+  Database, Loader2, X
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { useForm } from 'react-hook-form';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const TenantManagement = () => {
   const { data: tenantsData, isLoading: loading, error, refetch } = useGetTenantsQuery();
@@ -27,166 +20,127 @@ const TenantManagement = () => {
   const onAddTenant = async (data) => {
     try {
       await createTenantMutation(data).unwrap();
-      toast.success('Library created successfully!');
+      toast.success('Library node created');
       setIsModalOpen(false);
       reset();
-    } catch (err) {
-    }
+    } catch (err) {}
   };
 
   const onDelete = async (id) => {
-    if (window.confirm('WARNING: Deleting a library will remove all its data. Continue?')) {
+    if (window.confirm('Delete this library instance? This action is irreversible.')) {
       try {
         await deleteTenantMutation(id).unwrap();
-        toast.success('Library removed from platform');
-      } catch (err) {
-        // Handled globally
-      }
+        toast.success('Library node removed');
+      } catch (err) {}
     }
   };
 
   return (
-    <div className="space-y-8">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+    <div className="space-y-5">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-black text-slate-900 tracking-tight">Library Nodes</h1>
-          <p className="text-slate-400 font-medium">Manage library instances and platform isolation.</p>
+          <h1 className="text-xl font-bold text-slate-900">Library Nodes</h1>
+          <p className="text-xs text-slate-400 font-medium mt-0.5">Manage library instances and platform tenant isolation</p>
         </div>
-        <button
-          onClick={() => setIsModalOpen(true)}
-          className="bg-[#044343] text-white px-8 py-4 rounded-3xl font-black text-sm flex items-center gap-2 shadow-xl shadow-teal-900/10 active:scale-95 transition-all"
-        >
-          <Plus size={20} />
-          Provision New Node
+        <button onClick={() => setIsModalOpen(true)} className="btn btn-primary btn-md">
+          <Plus size={16} /> Provision New Node
         </button>
       </div>
 
-      <div className="bg-white rounded-[3rem] border border-slate-100 shadow-xl shadow-teal-900/5 overflow-hidden">
-        <div className="p-8 border-b border-slate-50 flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-300" size={20} />
-            <input
-              type="text"
-              placeholder="Filter nodes by ID, name, or database..."
-              className="w-full pl-16 pr-6 py-4 bg-slate-50 border-none rounded-2xl text-sm font-bold outline-none focus:ring-2 focus:ring-[#044343]/5"
-            />
-          </div>
-        </div>
-
-        <div className="overflow-x-auto">
-          <table className="w-full text-left">
-            <thead className="bg-slate-50/50 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-50">
-              <tr>
-                <th className="px-10 py-6">Library Identity</th>
-                <th className="px-6 py-6">Instance Info</th>
-                <th className="px-6 py-6">Domain</th>
-                <th className="px-6 py-6">Status</th>
-                <th className="px-10 py-6 text-right">Administrative</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-50">
-              {loading ? (
-                <tr>
-                  <td colSpan="5" className="py-20 text-center">
-                    <Loader2 className="animate-spin inline-block text-[#044343]" size={32} />
-                  </td>
-                </tr>
-              ) : (
-                tenants.map((tenant) => (
-                  <tr key={tenant._id} className="hover:bg-slate-50/50 transition-colors group">
-                    <td className="px-10 py-8">
-                      <div className="flex items-center gap-4">
-                        <div className="w-14 h-14 rounded-2xl bg-slate-100 flex items-center justify-center font-black text-[#044343] text-xl">
-                          {tenant.name.charAt(0)}
-                        </div>
-                        <div>
-                          <p className="text-sm font-black text-slate-900">{tenant.name}</p>
-                          <p className="text-[10px] text-slate-400 font-bold mt-1 uppercase tracking-widest">ID: {tenant._id.substring(0, 12)}...</p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-8">
-                      <div className="space-y-1.5">
-                        <div className="flex items-center gap-2 text-xs font-bold text-slate-500">
-                          <Database size={14} className="text-teal-600" />
-                          {tenant.databaseName}
-                        </div>
-                        <div className="flex items-center gap-2 text-xs font-bold text-slate-500">
-                          <Calendar size={14} className="text-teal-600" />
-                          {new Date(tenant.createdAt).toLocaleDateString()}
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-8">
-                      <span className="text-xs font-black text-[#044343] bg-teal-50 px-3 py-1 rounded-lg">
-                        {tenant.subdomain || 'internal'}
-                      </span>
-                    </td>
-                    <td className="px-6 py-8">
-                      <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest bg-emerald-100 text-emerald-600">
-                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                        Live
-                      </span>
-                    </td>
-                    <td className="px-10 py-8 text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        <button className="p-3 bg-slate-50 text-slate-400 rounded-xl hover:text-slate-600 hover:bg-slate-100 transition-all">
-                          <ExternalLink size={18} />
-                        </button>
-                        <button onClick={() => onDelete(tenant._id)} className="p-3 bg-rose-50 text-rose-400 rounded-xl hover:text-rose-600 hover:bg-rose-100 transition-all">
-                          <Trash2 size={18} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+         <div className="relative">
+            <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
+            <input type="text" placeholder="Filter nodes..." className="w-64 bg-white border border-slate-200 rounded-lg h-[34px] pl-8 pr-3 text-[13px] outline-none focus:ring-2 focus:ring-teal-500/10 transition-all" />
+         </div>
       </div>
 
-      {/* Provisioning Modal */}
-      {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
-          <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="bg-white w-full max-w-lg rounded-[3rem] p-12 shadow-2xl relative">
-            <button onClick={() => setIsModalOpen(false)} className="absolute top-10 right-10 text-slate-400 hover:text-slate-600">
-              <X size={24} />
-            </button>
-            <h2 className="text-3xl font-black text-slate-900 mb-2">Provision Node</h2>
-            <p className="text-slate-400 font-medium mb-10 text-sm">Create a new isolated library instance on the platform.</p>
+      <div className="table-container">
+        <table className="table-main">
+          <thead>
+            <tr>
+              <th className="px-5">Library Identity</th>
+              <th>Instance Info</th>
+              <th>Domain</th>
+              <th>Status</th>
+              <th className="px-5 text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {loading ? (
+              <tr><td colSpan="5" className="p-8 text-center"><Loader2 className="animate-spin inline-block text-teal-600" size={24} /></td></tr>
+            ) : (
+              tenants.map((tenant) => (
+                <tr key={tenant._id}>
+                  <td className="px-5">
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-lg bg-teal-50 flex items-center justify-center font-bold text-[#044343] border border-teal-100 text-[14px]">
+                        {tenant.name.charAt(0)}
+                      </div>
+                      <div>
+                        <p className="text-[13px] font-bold text-slate-900 leading-none">{tenant.name}</p>
+                        <p className="text-[10px] text-slate-400 font-medium mt-1 uppercase tracking-tighter">ID: {tenant._id.substring(18)}</p>
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-1.5 text-[11px] font-bold text-slate-600">
+                        <Database size={12} className="text-teal-600" /> {tenant.databaseName}
+                      </div>
+                      <div className="flex items-center gap-1.5 text-[11px] font-medium text-slate-400 uppercase tracking-tighter">
+                        <Calendar size={12} /> {new Date(tenant.createdAt).toLocaleDateString()}
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    <span className="badge badge-info lowercase">{tenant.subdomain || 'internal'}</span>
+                  </td>
+                  <td>
+                    <div className="flex items-center gap-1.5">
+                      <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                      <span className="text-[10px] font-bold uppercase text-slate-400 tracking-wider">Live</span>
+                    </div>
+                  </td>
+                  <td className="px-5 text-right">
+                    <div className="flex items-center justify-end gap-1">
+                      <button className="btn btn-ghost btn-sm w-8 h-8 p-0"><ExternalLink size={16} /></button>
+                      <button onClick={() => onDelete(tenant._id)} className="btn btn-ghost btn-sm w-8 h-8 p-0 text-rose-400 hover:text-rose-600"><Trash2 size={16} /></button>
+                    </div>
+                  </td>
+                </tr>
+              ))
+            )}
+            {!loading && !tenants.length && <tr><td colSpan="5" className="p-20 text-center text-slate-400 italic text-xs">No library nodes provisioned yet.</td></tr>}
+          </tbody>
+        </table>
+      </div>
 
-            <form onSubmit={handleSubmit(onAddTenant)} className="space-y-6">
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Library Name</label>
-                <input {...register('name')} required placeholder="e.g. Gotham City Memorial" className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-4 px-6 outline-none focus:ring-2 focus:ring-[#044343]/5 font-bold" />
+      <AnimatePresence>
+        {isModalOpen && (
+          <div className="modal-wrapper">
+            <motion.div initial={{ scale: 0.98, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="modal-panel w-full max-w-md">
+              <div className="modal-h">
+                <h2 className="text-sm font-bold">Provision New Library</h2>
+                <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-slate-900"><X size={18} /></button>
               </div>
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Subdomain Hash</label>
-                <input {...register('subdomain')} required placeholder="e.g. gotham-lib" className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-4 px-6 outline-none focus:ring-2 focus:ring-[#044343]/5 font-bold" />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Admin Email</label>
-                  <input {...register('email')} required type="email" placeholder="admin@lib.com" className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-4 px-6 outline-none focus:ring-2 focus:ring-[#044343]/5 font-bold text-sm" />
+              <form onSubmit={handleSubmit(onAddTenant)} className="flex flex-col">
+                <div className="modal-b space-y-4">
+                  <div className="space-y-1.5"><label className="label">Library Name</label><input {...register('name')} required placeholder="e.g. Central Library" className="input" /></div>
+                  <div className="space-y-1.5"><label className="label">Subdomain Hash</label><input {...register('subdomain')} required placeholder="e.g. central-lib" className="input" /></div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1.5"><label className="label">Admin Email</label><input {...register('email')} required type="email" placeholder="admin@lib.com" className="input" /></div>
+                    <div className="space-y-1.5"><label className="label">Password</label><input {...register('password')} required type="password" placeholder="••••••••" className="input" /></div>
+                  </div>
                 </div>
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Admin Pass</label>
-                  <input {...register('password')} required type="password" placeholder="••••••••" className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-4 px-6 outline-none focus:ring-2 focus:ring-[#044343]/5 font-bold text-sm" />
+                <div className="modal-f">
+                  <button type="button" onClick={() => setIsModalOpen(false)} className="btn btn-secondary btn-md px-6">Cancel</button>
+                  <button type="submit" disabled={isCreating} className="btn btn-primary btn-md px-8 min-w-[140px]">{isCreating ? <Loader2 size={16} className="animate-spin" /> : 'Provision Node'}</button>
                 </div>
-              </div>
-
-              <button 
-                type="submit" 
-                disabled={isCreating}
-                className="w-full bg-[#044343] text-white font-black py-5 rounded-3xl mt-6 shadow-2xl shadow-teal-900/20 active:scale-95 transition-all disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-              >
-                {isCreating ? <Loader2 size={24} className="animate-spin" /> : 'Create & Provision Library'}
-              </button>
-            </form>
-          </motion.div>
-        </div>
-      )}
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

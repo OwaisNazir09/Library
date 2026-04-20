@@ -4,21 +4,9 @@ import { useGetBorrowingsQuery, useReturnBookMutation, useIssueBookMutation } fr
 import { useGetBooksQuery } from '../../store/api/booksApi';
 import { useGetUsersQuery } from '../../store/api/usersApi';
 import { 
-  Search, 
-  Filter, 
-  ArrowUpRight, 
-  Clock, 
-  CheckCircle, 
-  AlertCircle, 
-  Calendar, 
-  Hash, 
-  IndianRupee, 
-  Plus,
-  X,
-  Book,
-  User as UserIcon,
-  Loader2,
-  ChevronRight
+  Search, Filter, ArrowUpRight, Clock, CheckCircle, AlertCircle, 
+  Calendar, Hash, IndianRupee, Plus, X, Book, User as UserIcon, 
+  Loader2, ChevronRight 
 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import LoadingSkeleton from '../../components/common/LoadingSkeleton';
@@ -68,26 +56,17 @@ const BorrowingHistory = () => {
   const onIssueSubmit = async (data) => {
     try {
       await issueBookMutation(data).unwrap();
-      toast.success('Book issued effectively!');
+      toast.success('Book issued');
       setIsIssueModalOpen(false);
       reset();
-    } catch (err) {
-      // Handled globally
-    }
+    } catch (err) {}
   };
 
   const handleReturn = async (id) => {
     try {
       await returnBookMutation(id).unwrap();
-      toast.success('Book successfully returned to inventory');
-    } catch (err) {
-      // Handled globally
-    }
-  };
-
-  const onSearchChange = (e) => {
-    setSearchTerm(e.target.value);
-    setCurrentPage(1);
+      toast.success('Book returned');
+    } catch (err) {}
   };
 
   const setDays = (days) => {
@@ -98,115 +77,65 @@ const BorrowingHistory = () => {
   };
 
   const getStatus = (record) => {
-    if (record.status === 'returned') return 'Returned';
+    if (record.status === 'returned') return { label: 'Returned', color: 'badge-success' };
     const dueDate = new Date(record.dueDate);
-    if (isAfter(new Date(), dueDate)) return 'Late';
-    return 'Borrowed';
+    if (isAfter(new Date(), dueDate)) return { label: 'Late', color: 'badge-danger' };
+    return { label: 'Borrowed', color: 'badge-info' };
   };
 
   const renderTableBody = () => {
-    if (loading && items.length === 0) {
-      return (
-        <tr>
-          <td colSpan="9" className="p-8">
-            <LoadingSkeleton type="table" rows={6} />
-          </td>
-        </tr>
-      );
-    }
-
-    if (error) {
-      return (
-        <tr>
-          <td colSpan="9" className="p-12">
-            <ErrorState message={error.data?.message || 'Error loading borrowings'} onRetry={refetch} />
-          </td>
-        </tr>
-      );
-    }
-
-    if (!Array.isArray(items) || items.length === 0) {
-      return (
-        <tr>
-          <td colSpan="9" className="p-12">
-            <EmptyState
-              title="No Active Borrowings"
-              message="There are currently no books out on loan. All items are in the library inventory."
-              icon={Clock}
-            />
-          </td>
-        </tr>
-      );
-    }
+    if (loading && items.length === 0) return <tr><td colSpan="9" className="p-8"><LoadingSkeleton type="table" rows={10} /></td></tr>;
+    if (error) return <tr><td colSpan="9" className="p-12"><ErrorState message="Error loading borrowings" onRetry={refetch} /></td></tr>;
+    if (!items.length) return <tr><td colSpan="9" className="p-12"><EmptyState title="No active borrowings" icon={Clock} /></td></tr>;
 
     return items.map((record) => {
       const status = getStatus(record);
       return (
-        <tr key={record.id || record._id} className="hover:bg-slate-50/50 transition-colors group text-sm">
-          <td className="px-8 py-5">
+        <tr key={record._id}>
+          <td className="px-5">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center font-bold text-slate-500 overflow-hidden">
-                <img src={`https://ui-avatars.com/api/?name=${record.user?.fullName || record.user?.name}&background=random`} alt="user" />
+              <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center font-bold text-slate-400 border border-slate-100 overflow-hidden">
+                <img src={`https://ui-avatars.com/api/?name=${record.user?.fullName || record.user?.name}&size=32&background=random`} alt="" />
               </div>
-              <div>
-                <p className="text-xs font-bold text-slate-900 leading-tight">{record.user?.fullName || record.user?.name}</p>
-                <p className="text-[9px] text-slate-400 font-bold mt-0.5 tracking-widest uppercase">{record.user?.role || 'Member'}</p>
+              <div className="min-w-0">
+                <p className="text-[13px] font-bold text-slate-900 truncate leading-none">{record.user?.fullName || record.user?.name}</p>
+                <p className="text-[10px] text-slate-400 font-medium mt-1 truncate">{record.user?.email}</p>
               </div>
             </div>
           </td>
-          <td className="px-6 py-5">
-            <p className="text-xs font-bold text-slate-900 leading-tight">{record.book?.title}</p>
-            <p className="text-[9px] text-slate-400 font-bold mt-0.5 uppercase tracking-tighter">{record.book?.isbn}</p>
+          <td>
+            <p className="text-[13px] font-bold text-slate-900 truncate max-w-[200px]">{record.book?.title}</p>
+            <p className="text-[10px] text-slate-400 font-medium">{record.book?.isbn}</p>
           </td>
-          <td className="px-6 py-5 text-center">
-             <p className="text-[10px] font-black text-slate-600 bg-slate-100 py-1 px-2 rounded-lg inline-block">
-               {record.borrowedDate ? format(new Date(record.borrowedDate), 'dd MMM yyyy') : '-'}
-             </p>
+          <td className="text-center font-medium text-slate-600">
+            {record.borrowedDate ? format(new Date(record.borrowedDate), 'dd MMM yy') : '-'}
           </td>
-          <td className="px-6 py-5 text-center">
-             <p className="text-[10px] font-black text-rose-600 bg-rose-50 py-1 px-2 rounded-lg inline-block">
-               {record.dueDate ? format(new Date(record.dueDate), 'dd MMM yyyy') : '-'}
-             </p>
+          <td className="text-center font-medium text-rose-500">
+            {record.dueDate ? format(new Date(record.dueDate), 'dd MMM yy') : '-'}
           </td>
-          <td className="px-6 py-5 text-center">
-             <p className={`text-[10px] font-black py-1 px-2 rounded-lg inline-block ${record.returnedDate ? 'text-emerald-600 bg-emerald-50' : 'text-slate-300 bg-slate-50'}`}>
-               {record.returnedDate ? format(new Date(record.returnedDate), 'dd MMM yyyy') : 'Not Returned'}
-             </p>
-          </td>
-          <td className="px-6 py-5 text-center">
-             <div className="text-xs font-black text-slate-900 flex flex-col items-center">
-                <span className={record.lateDays > 0 ? 'text-rose-600' : 'text-slate-400'}>{record.lateDays || 0} Days</span>
-             </div>
-          </td>
-          <td className="px-6 py-5 text-center">
-             <div className="text-xs font-black text-slate-900 flex flex-col items-center">
-                <span className={record.fineAmount > 0 ? 'text-rose-600' : 'text-slate-400'}>₹{record.fineAmount || 0}</span>
-             </div>
-          </td>
-          <td className="px-6 py-5">
-            <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${
-                status === 'Returned' ? 'bg-emerald-100 text-emerald-600' :
-                status === 'Late' ? 'bg-rose-100 text-rose-600' : 'bg-blue-100 text-blue-600'
-              }`}>
-              {status === 'Returned' && <CheckCircle size={10} />}
-              {status === 'Late' && <AlertCircle size={10} />}
-              {status === 'Borrowed' && <Clock size={10} />}
-              {status}
+          <td className="text-center">
+            <span className={`text-[12px] font-medium ${record.returnedDate ? 'text-emerald-600' : 'text-slate-300'}`}>
+              {record.returnedDate ? format(new Date(record.returnedDate), 'dd MMM yy') : 'Pending'}
             </span>
           </td>
-          <td className="px-8 py-5 text-right">
+          <td className="text-center">
+            <span className={`text-[12px] font-bold ${record.lateDays > 0 ? 'text-rose-500' : 'text-slate-400'}`}>
+              {record.lateDays || 0}d
+            </span>
+          </td>
+          <td className="text-center font-bold text-slate-900">
+             ₹{record.fineAmount || 0}
+          </td>
+          <td>
+            <span className={`badge ${status.color} lowercase`}>{status.label}</span>
+          </td>
+          <td className="px-5 text-right">
             {record.status === 'borrowed' ? (
-              <button
-                onClick={() => handleReturn(record.id || record._id)}
-                disabled={isReturning}
-                className="btn btn-sm btn-secondary w-full"
-              >
-                {isReturning ? <Loader2 size={12} className="animate-spin mx-auto" /> : 'Return Book'}
+              <button onClick={() => handleReturn(record._id)} disabled={isReturning} className="btn btn-secondary btn-sm">
+                {isReturning ? <Loader2 size={12} className="animate-spin" /> : 'Return'}
               </button>
             ) : (
-              <button className="p-2 text-slate-300 hover:text-slate-600 rounded-lg transition-colors">
-                <ArrowUpRight size={18} />
-              </button>
+              <button className="text-slate-300 hover:text-slate-600 p-1"><ArrowUpRight size={16} /></button>
             )}
           </td>
         </tr>
@@ -215,177 +144,103 @@ const BorrowingHistory = () => {
   };
 
   return (
-    <div className="space-y-5 pb-8 animate-in fade-in duration-500">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div className="space-y-5">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-           <div className="flex items-center gap-2 text-[12px] font-medium text-slate-500 uppercase tracking-widest mb-1">
-            <span>Library</span>
-            <ChevronRight size={12} />
-            <span className="text-[#044343]">Circulation</span>
-          </div>
-          <h1>Borrowing History</h1>
+          <h1 className="text-xl font-bold text-slate-900">Borrowing History</h1>
+          <p className="text-xs text-slate-400 font-medium mt-0.5">Track book circulation and late returns</p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
             <input
               type="text"
-              placeholder="Search by member or book..."
+              placeholder="Search history..."
               value={searchTerm}
-              onChange={onSearchChange}
-              className="input-field pl-9 w-64"
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-56 bg-white border border-slate-200 rounded-lg h-[34px] pl-8 pr-3 text-[13px] outline-none focus:ring-2 focus:ring-teal-500/10 focus:border-teal-500 transition-all"
             />
           </div>
-          <button
-            onClick={() => setIsIssueModalOpen(true)}
-            className="btn btn-primary btn-default"
-          >
+          <button onClick={() => setIsIssueModalOpen(true)} className="btn btn-primary btn-md">
             <Plus size={16} />
-            Issue Book
+            <span className="hidden sm:inline ml-1.5">Issue Book</span>
           </button>
         </div>
       </div>
 
-      <div className="compact-table-container">
-        <table className="compact-table">
+      <div className="table-container">
+        <table className="table-main">
           <thead>
             <tr>
-              <th>Member Name</th>
-              <th>Book Asset</th>
-              <th className="text-center">Borrow Date</th>
+              <th className="px-5">Member</th>
+              <th>Book</th>
+              <th className="text-center">Borrowed</th>
               <th className="text-center">Due Date</th>
-              <th className="text-center">Return Date</th>
-              <th className="text-center">Late Days</th>
-              <th className="text-center">Fine (₹)</th>
+              <th className="text-center">Returned</th>
+              <th className="text-center">Late</th>
+              <th className="text-center">Fine</th>
               <th>Status</th>
-              <th className="text-right">Action</th>
+              <th className="text-right px-5">Action</th>
             </tr>
           </thead>
-          <tbody>
-            {renderTableBody()}
-          </tbody>
+          <tbody>{renderTableBody()}</tbody>
         </table>
       </div>
-      <div className="mt-4">
-        <Pagination 
-          total={total}
-          limit={limit}
-          currentPage={currentPage}
-          onPageChange={(page) => setCurrentPage(page)}
-        />
+
+      <div className="flex items-center justify-between pt-2">
+        <p className="text-xs text-slate-500 font-medium">Showing {items.length} records</p>
+        <Pagination total={total} limit={limit} currentPage={currentPage} onPageChange={setCurrentPage} />
       </div>
 
-      {/* Issue Book Modal */}
       <AnimatePresence>
         {isIssueModalOpen && (
-          <div className="modal-overlay">
-            <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              className="modal-content modal-lg max-h-[90vh]"
-            >
-              <div className="modal-header">
-                <h2>Borrow Book Asset</h2>
-                <button
-                  onClick={() => setIsIssueModalOpen(false)}
-                  className="text-slate-400 hover:text-slate-600 transition-colors"
-                >
-                  <X size={20} />
-                </button>
+          <div className="modal-wrapper">
+            <motion.div initial={{ scale: 0.98, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="modal-panel w-full max-w-lg">
+              <div className="modal-h">
+                <h2 className="text-sm font-bold">Issue New Book Asset</h2>
+                <button onClick={() => setIsIssueModalOpen(false)} className="text-slate-400 hover:text-slate-900"><X size={18} /></button>
               </div>
-
-              <form onSubmit={handleSubmit(onIssueSubmit)} className="flex flex-col overflow-hidden">
-                <div className="modal-body space-y-6">
-                {/* Section 1: Member & Asset */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="input-label">Select Member</label>
-                    <select
-                      {...register('userId', { required: true })}
-                      className="input-field"
-                    >
-                      <option value="">Choose member...</option>
-                      {users?.map(u => (
-                        <option key={u._id || u.id} value={u._id || u.id}>{u.fullName || u.name} ({u.email})</option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="input-label">Select Book Asset</label>
-                    <select
-                      {...register('bookId', { required: true })}
-                      className="input-field"
-                    >
-                      <option value="">Choose available book...</option>
-                      {books?.map(b => (
-                        <option 
-                          key={b._id || b.id} 
-                          value={b._id || b.id}
-                          disabled={b.availableCopies <= 0}
-                        >
-                          {b.title} {b.availableCopies <= 0 ? '(No Copies)' : `(Available: ${b.availableCopies})`}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
-                {/* Section 2: Dates & Fine Settings */}
-                <div className="border-t border-slate-100 pt-4 mt-2">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div>
-                        <label className="input-label">Borrow Date</label>
-                        <input 
-                          {...register('borrowedDate', { required: true })} 
-                          type="date" 
-                          className="input-field" 
-                        />
-                      </div>
-
-                      <div>
-                        <label className="input-label">Due Date</label>
-                        <input 
-                          {...register('dueDate', { required: true })} 
-                          type="date" 
-                          className="input-field" 
-                        />
-                      </div>
-
-                      <div className="sm:col-span-2 flex gap-2">
-                         <button type="button" onClick={() => setDays(7)} className="btn btn-sm btn-secondary">7 Days</button>
-                         <button type="button" onClick={() => setDays(14)} className="btn btn-sm btn-secondary">14 Days</button>
-                         <button type="button" onClick={() => setDays(30)} className="btn btn-sm btn-secondary">30 Days</button>
-                      </div>
-
-                      <div className="sm:col-span-2">
-                        <label className="input-label">Fine Per Day (₹)</label>
-                        <input 
-                          {...register('finePerDay', { required: true })} 
-                          type="number" 
-                          className="input-field" 
-                          placeholder="5"
-                        />
-                        <p className="text-[11px] text-slate-500 mt-1">Applied automatically if returned after due date.</p>
-                      </div>
+              <form onSubmit={handleSubmit(onIssueSubmit)} className="flex flex-col">
+                <div className="modal-b space-y-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <label className="label">Member</label>
+                      <select {...register('userId', { required: true })} className="input">
+                        <option value="">Choose member...</option>
+                        {users?.map(u => <option key={u._id} value={u._id}>{u.fullName || u.name}</option>)}
+                      </select>
                     </div>
+                    <div className="space-y-1.5">
+                      <label className="label">Book Asset</label>
+                      <select {...register('bookId', { required: true })} className="input">
+                        <option value="">Choose book...</option>
+                        {books?.filter(b => b.availableCopies > 0).map(b => <option key={b._id} value={b._id}>{b.title}</option>)}
+                      </select>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4 pt-2 border-t border-slate-50">
+                    <div className="space-y-1.5">
+                      <label className="label">Borrow Date</label>
+                      <input {...register('borrowedDate', { required: true })} type="date" className="input" />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="label">Due Date</label>
+                      <input {...register('dueDate', { required: true })} type="date" className="input" />
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <button type="button" onClick={() => setDays(7)} className="btn btn-secondary btn-sm">7d</button>
+                    <button type="button" onClick={() => setDays(14)} className="btn btn-secondary btn-sm">14d</button>
+                    <button type="button" onClick={() => setDays(30)} className="btn btn-secondary btn-sm">30d</button>
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="label">Fine Per Day (₹)</label>
+                    <input {...register('finePerDay', { required: true })} type="number" className="input" placeholder="5" />
+                  </div>
                 </div>
-                </div>
-
-                <div className="modal-footer">
-                  <button
-                    type="button"
-                    onClick={() => setIsIssueModalOpen(false)}
-                    className="btn btn-secondary btn-default"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={isIssuing}
-                    className="btn btn-primary btn-default min-w-[120px]"
-                  >
+                <div className="modal-f">
+                  <button type="button" onClick={() => setIsIssueModalOpen(false)} className="btn btn-secondary btn-md px-6">Cancel</button>
+                  <button type="submit" disabled={isIssuing} className="btn btn-primary btn-md px-8 min-w-[120px]">
                     {isIssuing ? <Loader2 size={16} className="animate-spin" /> : 'Confirm Issue'}
                   </button>
                 </div>

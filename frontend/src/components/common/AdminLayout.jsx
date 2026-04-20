@@ -36,7 +36,7 @@ const AdminLayout = () => {
   ];
 
   const sidebarContent = (
-    <div className="w-80 bg-white h-full flex flex-col border-r border-slate-100 shadow-xl shadow-teal-900/5">
+    <div className="w-80 bg-white dark:bg-slate-900 h-full flex flex-col border-r border-slate-100 dark:border-slate-800 shadow-xl shadow-teal-900/5 transition-colors duration-200">
       <div className="p-10 pb-6 flex-1">
         <div className="flex items-center justify-between mb-10">
           <div className="flex items-center gap-3">
@@ -44,7 +44,7 @@ const AdminLayout = () => {
               <ShieldCheck className="text-white" size={28} />
             </div>
             <div>
-              <h1 className="text-xl font-black text-slate-900 tracking-tight leading-tight">Admin<span className="text-teal-600">Core</span></h1>
+              <h1 className="text-xl font-black text-slate-900 dark:text-slate-100 tracking-tight leading-tight">Admin<span className="text-teal-600">Core</span></h1>
               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Platform Authority</p>
             </div>
           </div>
@@ -62,7 +62,7 @@ const AdminLayout = () => {
               className={({ isActive }) =>
                 `flex items-center justify-between px-6 py-4 rounded-3xl transition-all group ${isActive
                   ? 'bg-[#044343] text-white shadow-xl shadow-teal-900/10'
-                  : 'text-slate-400 hover:text-[#044343] hover:bg-slate-50'
+                  : 'text-slate-400 hover:text-[#044343] hover:bg-slate-50 dark:hover:bg-slate-800 dark:hover:text-teal-400'
                 }`
               }
             >
@@ -76,12 +76,12 @@ const AdminLayout = () => {
         </nav>
       </div>
 
-      <div className="mt-auto p-10 border-t border-slate-50">
+       <div className="mt-auto p-10 border-t border-slate-50 dark:border-slate-800">
         <button
           onClick={handleLogout}
           className="flex items-center gap-4 text-slate-400 font-bold hover:text-rose-500 transition-colors group w-full"
         >
-          <div className="w-10 h-10 rounded-xl bg-slate-50 group-hover:bg-rose-50 flex items-center justify-center transition-colors">
+          <div className="w-10 h-10 rounded-xl bg-slate-50 dark:bg-slate-800 group-hover:bg-rose-50 dark:group-hover:bg-rose-950/20 flex items-center justify-center transition-colors">
             <LogOut size={20} />
           </div>
           <span className="text-sm">Logout Platform</span>
@@ -90,8 +90,8 @@ const AdminLayout = () => {
     </div>
   );
 
-  return (
-    <div className="flex min-h-screen bg-[#F8FAFB] font-sans">
+   return (
+    <div className="flex min-h-screen bg-[#F8FAFB] dark:bg-slate-950 font-sans transition-colors duration-200">
       {/* Mobile Toggle */}
       <header className="fixed top-0 left-0 right-0 h-16 bg-white border-b border-slate-100 lg:hidden flex items-center px-6 z-30 shadow-sm shadow-slate-200/20">
         <button onClick={() => setIsSidebarOpen(true)} className="text-slate-400 p-2 -ml-2">

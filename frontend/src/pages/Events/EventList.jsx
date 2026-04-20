@@ -117,16 +117,12 @@ const EventList = () => {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 text-[12px] font-medium text-slate-500 uppercase tracking-widest mb-1">
-            <span>Library</span>
-            <ChevronRight size={12} />
-            <span className="text-[#044343]">Events</span>
-          </div>
-          <h1>Events Calendar</h1>
+          <h1 className="text-xl font-bold text-slate-900">Events Calendar</h1>
+          <p className="text-xs text-slate-400 font-medium mt-0.5">Manage and schedule library activities</p>
         </div>
         <button
           onClick={() => setIsModalOpen(true)}
-          className="btn btn-primary btn-default"
+          className="btn btn-primary btn-md"
         >
           <Plus size={16} />
           Schedule Event
@@ -134,38 +130,37 @@ const EventList = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-10 gap-6">
-        {/* Left: Calendar (7 Columns) */}
         <div className="lg:col-span-7 space-y-4">
-          <div className="glass-card p-0 overflow-hidden">
+          <div className="card p-0 overflow-hidden">
             {/* Calendar Controls */}
-            <div className="p-6 border-b border-slate-50 flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-teal-50 rounded-2xl flex items-center justify-center text-[#044343]">
-                  <CalendarIcon size={24} />
+            <div className="p-5 border-b border-slate-50 flex items-center justify-between bg-white">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-teal-50 rounded-lg flex items-center justify-center text-[#044343]">
+                  <CalendarIcon size={20} />
                 </div>
                 <div>
-                  <h2 className="text-xl font-black text-slate-900">{format(currentMonth, 'MMMM yyyy')}</h2>
-                  <p className="text-xs text-slate-400 font-bold uppercase tracking-widest">Global Schedule</p>
+                  <h2 className="text-[15px] font-bold text-slate-900">{format(currentMonth, 'MMMM yyyy')}</h2>
+                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Global Schedule</p>
                 </div>
               </div>
-              <div className="flex items-center gap-2 bg-slate-50 p-1.5 rounded-2xl border border-slate-100">
+              <div className="flex items-center gap-1.5 bg-slate-50 p-1 rounded-lg border border-slate-100">
                 <button
                   onClick={prevMonth}
-                  className="p-2 hover:bg-white hover:text-[#044343] rounded-xl transition-all text-slate-400"
+                  className="p-1.5 hover:bg-white hover:text-[#044343] rounded-md transition-all text-slate-400"
                 >
-                  <ChevronLeft size={20} />
+                  <ChevronLeft size={16} />
                 </button>
                 <button
                   onClick={() => setCurrentMonth(new Date())}
-                  className="px-4 py-2 text-[10px] font-black uppercase tracking-widest text-[#044343] hover:bg-white rounded-xl transition-all"
+                  className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest text-[#044343] hover:bg-white rounded-md transition-all"
                 >
                   Today
                 </button>
                 <button
                   onClick={nextMonth}
-                  className="p-2 hover:bg-white hover:text-[#044343] rounded-xl transition-all text-slate-400"
+                  className="p-1.5 hover:bg-white hover:text-[#044343] rounded-md transition-all text-slate-400"
                 >
-                  <ChevronRight size={20} />
+                  <ChevronRight size={16} />
                 </button>
               </div>
             </div>
@@ -232,11 +227,11 @@ const EventList = () => {
         </div>
 
         <div className="lg:col-span-3 space-y-6">
-          <div className="glass-card p-6 group">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-black text-slate-900">Events for {format(selectedDate, 'MMM dd')}</h3>
-              <div className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 group-hover:text-[#044343] transition-colors cursor-pointer">
-                <MoreVertical size={16} />
+          <div className="card p-5 group">
+            <div className="flex items-center justify-between mb-5">
+              <h3 className="text-sm font-bold text-slate-900 tracking-tight">Events for {format(selectedDate, 'MMM dd')}</h3>
+              <div className="w-7 h-7 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 group-hover:text-[#044343] transition-colors cursor-pointer">
+                <MoreVertical size={14} />
               </div>
             </div>
 
@@ -282,7 +277,7 @@ const EventList = () => {
           </div>
 
           {/* Upcoming Section */}
-          <div className="glass-card p-6">
+          <div className="card p-5">
             <div className="flex items-center justify-between mb-5">
               <h3 className="text-[13px] font-semibold text-slate-500 uppercase tracking-wider">Upcoming Highlights</h3>
             </div>
@@ -310,18 +305,18 @@ const EventList = () => {
       {/* Existing Create Event Modal */}
       <AnimatePresence>
         {isModalOpen && (
-          <div className="modal-overlay">
-            <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="modal-content modal-md max-h-[90vh]">
-              <div className="modal-header">
-                <h2>Schedule Event</h2>
-                <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-slate-600 transition-colors">
-                  <X size={20} />
+          <div className="modal-wrapper">
+            <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="modal-panel w-full max-w-lg">
+              <div className="modal-h">
+                <h2 className="text-sm font-bold">Schedule New Event</h2>
+                <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-slate-900 transition-colors">
+                  <X size={18} />
                 </button>
               </div>
               <form onSubmit={handleSubmit(onAddEvent)} className="flex flex-col overflow-hidden">
-                <div className="modal-body space-y-4">
+                <div className="modal-b space-y-4">
                   <div>
-                    <label className="input-label">Event Banner Image</label>
+                    <label className="label">Event Banner Image</label>
                     <div className="relative">
                       <input
                         type="file"
@@ -332,54 +327,50 @@ const EventList = () => {
                       />
                       <label htmlFor="bannerImageInput" className="cursor-pointer block">
                         {bannerPreview ? (
-                          <div className="relative w-full h-32 rounded-2xl overflow-hidden border-2 border-[#044343]/20">
+                          <div className="relative w-full h-32 rounded-lg overflow-hidden border-2 border-[#044343]/20">
                             <img src={bannerPreview} alt="Preview" className="w-full h-full object-cover" />
                             <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
-                              <p className="text-white text-xs font-black">Click to Change</p>
+                              <p className="text-white text-[10px] font-bold uppercase">Change Image</p>
                             </div>
                           </div>
                         ) : (
-                          <div className="w-full h-32 rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50 flex flex-col items-center justify-center gap-2 hover:border-[#044343]/30 transition-colors">
-                            <ImagePlus size={28} className="text-slate-300" />
-                            <p className="text-[11px] font-black text-slate-400">Upload banner image</p>
+                          <div className="w-full h-32 rounded-lg border-2 border-dashed border-slate-200 bg-slate-50 flex flex-col items-center justify-center gap-2 hover:border-[#044343]/30 transition-colors">
+                            <ImagePlus size={24} className="text-slate-300" />
+                            <p className="text-[10px] font-bold text-slate-400 uppercase">Upload banner</p>
                           </div>
                         )}
                       </label>
                     </div>
                   </div>
-                  <div>
-                    <label className="input-label">Event Title</label>
-                    <input {...register('title')} required className="input-field" />
+                  <div className="space-y-1.5">
+                    <label className="label">Event Title</label>
+                    <input {...register('title')} required className="input" placeholder="e.g. Annual Book Fair" />
                   </div>
                   <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="input-label">Date</label>
-                      <input {...register('date')} type="date" required className="input-field" />
+                    <div className="space-y-1.5">
+                      <label className="label">Date</label>
+                      <input {...register('date')} type="date" required className="input" />
                     </div>
-                    <div>
-                      <label className="input-label">Time</label>
-                      <input {...register('time')} type="time" className="input-field" />
+                    <div className="space-y-1.5">
+                      <label className="label">Time</label>
+                      <input {...register('time')} type="time" className="input" />
                     </div>
                   </div>
-                  <div>
-                    <label className="input-label">Location</label>
-                    <input {...register('location')} required className="input-field" />
-                  </div>
-                  <div>
-                    <label className="input-label">Max Participants</label>
-                    <input {...register('maxParticipants')} type="number" className="input-field" />
+                  <div className="space-y-1.5">
+                    <label className="label">Location</label>
+                    <input {...register('location')} required className="input" placeholder="e.g. Main Hall" />
                   </div>
                 </div>
-                <div className="modal-footer">
-                  <button type="button" onClick={() => setIsModalOpen(false)} className="btn btn-secondary btn-default">
+                <div className="modal-f">
+                  <button type="button" onClick={() => setIsModalOpen(false)} className="btn btn-secondary btn-md">
                     Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={isAdding}
-                    className="btn btn-primary btn-default min-w-[120px]"
+                    className="btn btn-primary btn-md min-w-[120px]"
                   >
-                    {isAdding ? <Loader2 size={16} className="animate-spin" /> : 'Publish'}
+                    {isAdding ? <Loader2 size={16} className="animate-spin" /> : 'Publish Event'}
                   </button>
                 </div>
               </form>

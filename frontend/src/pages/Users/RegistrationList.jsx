@@ -3,29 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { useGetUsersQuery, useDeleteUserMutation, useAddUserMutation, useUpdateUserMutation, useApproveUserMutation, useRejectUserMutation } from '../../store/api/usersApi';
 import { useGetPackagesQuery, useAssignPackageMutation } from '../../store/api/membershipApi';
 import {
-  Search,
-  Plus,
-  MoreHorizontal,
-  Mail,
-  Phone,
-  Coffee,
-  X,
-  UserPlus,
-  Calendar,
-  Clock,
-  ShieldCheck,
-  CreditCard,
-  AlertTriangle,
-  ChevronRight,
-  ImagePlus,
-  MapPin,
-  Fingerprint,
-  FileText,
-  Upload,
-  ArrowRight,
-  Key,
-  UserCheck,
-  Loader2
+  Search, Plus, MoreHorizontal, Mail, Phone, Coffee, X, UserPlus, Calendar, Clock,
+  ShieldCheck, CreditCard, AlertTriangle, ChevronRight, ImagePlus, MapPin, Fingerprint,
+  FileText, Upload, ArrowRight, Key, UserCheck, Loader2
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { useForm } from 'react-hook-form';
@@ -41,7 +21,7 @@ const RegistrationList = () => {
   const [currentPage, setCurrentPage] = React.useState(1);
   const [searchTerm, setSearchTerm] = React.useState('');
   const limit = 10;
-  const [activeTab, setActiveTab] = React.useState('approved'); // 'approved' or 'pending'
+  const [activeTab, setActiveTab] = React.useState('approved');
 
   const { data: usersData, isLoading: loading, error, refetch } = useGetUsersQuery({
     page: currentPage,
@@ -72,13 +52,27 @@ const RegistrationList = () => {
   const [isRegisterModalOpen, setIsRegisterModalOpen] = React.useState(false);
   const [isAssignModalOpen, setIsAssignModalOpen] = React.useState(false);
   const [selectedUser, setSelectedUser] = React.useState(null);
-  
+
   const [profilePreview, setProfilePreview] = React.useState(null);
   const [profileFile, setProfileFile] = React.useState(null);
   const [idPhotoPreview, setIdPhotoPreview] = React.useState(null);
   const [idPhotoFile, setIdPhotoFile] = React.useState(null);
   const [isProfileModalOpen, setIsProfileModalOpen] = React.useState(false);
   const [selectedProfile, setSelectedProfile] = React.useState(null);
+
+  const onSearchChange = (e) => {
+    setSearchTerm(e.target.value);
+    setCurrentPage(1);
+  };
+
+  const handleReject = async (id) => {
+    if (window.confirm('Reject this application?')) {
+      try {
+        await rejectUser(id).unwrap();
+        toast.success('Application rejected');
+      } catch (err) { }
+    }
+  };
 
   const { register, handleSubmit, reset } = useForm();
   const { register: regAssign, handleSubmit: handleAssignSubmit, reset: resetAssign } = useForm();
@@ -102,26 +96,28 @@ const RegistrationList = () => {
   const onRegisterStudent = async (data) => {
     try {
       const formData = new FormData();
-      Object.entries(data).forEach(([key, val]) => { 
-        if (val !== undefined && val !== null && val !== "") {
-          formData.append(key, val); 
+
+      const excludedFields = ['role', 'profilePicture', 'idPhoto'];
+
+      Object.entries(data).forEach(([key, val]) => {
+        if (!excludedFields.includes(key) && val !== undefined && val !== null && val !== "") {
+          formData.append(key, val);
         }
       });
-      formData.append('role', 'member');
-      if (profileFile) formData.append('profilePicture', profileFile);
-      if (idPhotoFile) formData.append('idPhoto', idPhotoFile);
+
+      formData.set('role', 'member');
+      if (profileFile) formData.set('profilePicture', profileFile);
+      if (idPhotoFile) formData.set('idPhoto', idPhotoFile);
 
       if (selectedUser) {
         await updateUserMutation({ id: selectedUser._id, data: formData }).unwrap();
-        toast.success('Student updated successfully!');
+        toast.success('Student updated');
       } else {
         await addUserMutation(formData).unwrap();
-        toast.success('Student registered successfully!');
+        toast.success('Student registered');
       }
       closeRegisterModal();
-    } catch (err) {
-      // Error is handled by global handler
-    }
+    } catch (err) { }
   };
 
   const closeRegisterModal = () => {
@@ -135,13 +131,15 @@ const RegistrationList = () => {
 
   const onAssignPackage = async (data) => {
     try {
-      await assignPackageMutation({ userId: selectedUser._id, packageId: data.packageId }).unwrap();
-      toast.success('Package assigned successfully!');
+      await assignPackageMutation({ 
+        userId: selectedUser._id, 
+        packageId: data.packageId 
+      }).unwrap();
+      toast.success('Package assigned successfully');
       setIsAssignModalOpen(false);
       resetAssign();
-    } catch (err) {
-      // Error handled by global handler
-    }
+      refetch();
+    } catch (err) {}
   };
 
   const openAssignModal = (user) => {
@@ -151,205 +149,81 @@ const RegistrationList = () => {
 
   const openEditModal = (user) => {
     setSelectedUser(user);
-    // Format data for form population
     const userData = { ...user };
-    
-    // Extract ID if package is an object
-    if (user.package && typeof user.package === 'object') {
-      userData.package = user.package._id;
-    }
-    
-    if (user.dob) {
-      try {
-        userData.dob = format(parseISO(user.dob), 'yyyy-MM-dd');
-      } catch (e) {
-        userData.dob = '';
-      }
-    }
+    if (user.package && typeof user.package === 'object') userData.package = user.package._id;
+    if (user.dob) userData.dob = format(parseISO(user.dob), 'yyyy-MM-dd');
     reset(userData);
     setProfilePreview(user.profilePicture);
     setIdPhotoPreview(user.idPhoto);
     setIsRegisterModalOpen(true);
   };
 
-  const handleApprove = async (id) => {
-    try {
-      await approveUser(id).unwrap();
-      toast.success('Registration approved!');
-    } catch (err) {}
-  };
-
-  const handleReject = async (id) => {
-    const reason = prompt('Enter rejection reason:');
-    if (!reason) return;
-    try {
-      await rejectUser({ id, rejectionReason: reason }).unwrap();
-      toast.error('Registration rejected.');
-    } catch (err) {}
-  };
-
   const getStatusInfo = (user) => {
-    if (user.status === 'pending') return { label: 'Pending Approval', color: 'bg-amber-100 text-amber-600' };
-    if (!user.packageEndDate) return { label: 'No Package', color: 'bg-slate-100 text-slate-500' };
+    if (user.status === 'pending') return { label: 'Pending', color: 'badge-warning' };
+    if (!user.packageEndDate) return { label: 'No Plan', color: 'badge-neutral' };
     const isExpired = !isAfter(parseISO(user.packageEndDate), new Date());
-    if (isExpired) return { label: 'Expired', color: 'bg-rose-100 text-rose-600' };
-    return { label: 'Active', color: 'bg-emerald-100 text-emerald-600' };
-  };
-
-  const onSearchChange = (e) => {
-    setSearchTerm(e.target.value);
-    setCurrentPage(1);
+    if (isExpired) return { label: 'Expired', color: 'badge-danger' };
+    return { label: 'Active', color: 'badge-success' };
   };
 
   const renderTableBody = () => {
-    if (loading && items.length === 0) {
-      return (
-        <tr>
-          <td colSpan="7" className="p-8">
-            <LoadingSkeleton type="table" rows={8} />
-          </td>
-        </tr>
-      );
-    }
+    if (loading && items.length === 0) return <LoadingSkeleton type="table" rows={10} />;
+    if (error) return <ErrorState message="Error loading members" onRetry={refetch} />;
+    if (!items.length) return <EmptyState title="No students found" icon={UserPlus} onAction={() => setIsRegisterModalOpen(true)} actionLabel="Add Student" />;
 
-    if (error) {
-      return (
-        <tr>
-          <td colSpan="7" className="p-12">
-            <ErrorState message={error.data?.message || 'Error loading members'} onRetry={refetch} />
-          </td>
-        </tr>
-      );
-    }
-
-    if (!Array.isArray(items) || items.length === 0) {
-      return (
-        <tr>
-          <td colSpan="7" className="p-12">
-            <EmptyState
-              title="No Students Registered"
-              message="Start by adding your first student to the system."
-              onAction={() => setIsRegisterModalOpen(true)}
-              actionLabel="Register Student"
-              icon={UserPlus}
-            />
-          </td>
-        </tr>
-      );
-    }
-
-    return items.filter(u => u.role === 'member').map((student) => {
+    return items.map((student) => {
       const status = getStatusInfo(student);
       const daysLeft = student.packageEndDate ? differenceInDays(parseISO(student.packageEndDate), new Date()) : 0;
 
       return (
-        <tr key={student._id} className="hover:bg-slate-50/50 transition-colors group">
-          <td className="px-8 py-5">
-            <div className="flex items-center gap-4">
-              <div className="w-11 h-11 rounded-2xl flex items-center justify-center font-black text-lg overflow-hidden bg-[#044343] text-white shadow-lg shadow-teal-900/10">
+        <tr key={student._id}>
+          <td className="px-5">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-teal-50 flex items-center justify-center text-[#044343] font-bold text-xs overflow-hidden border border-teal-100">
                 {student.profilePicture ? (
-                  <img src={student.profilePicture} alt={student.fullName} className="w-full h-full object-cover" />
-                ) : (
-                  student.fullName?.charAt(0)
-                )}
+                  <img src={student.profilePicture} alt="" className="w-full h-full object-cover" />
+                ) : student.fullName?.charAt(0)}
               </div>
-              <div>
-                <p className="text-sm font-black text-slate-900 leading-tight">{student.fullName}</p>
-                <p className="text-[10px] text-slate-400 font-bold mt-0.5 uppercase tracking-widest">UID: {student._id.substring(18)}</p>
+              <div className="min-w-0">
+                <p className="text-[13px] font-bold text-slate-900 truncate leading-none">{student.fullName}</p>
+                <p className="text-[10px] text-slate-400 font-medium mt-1 truncate">ID: {student._id.substring(18)}</p>
               </div>
             </div>
           </td>
-          <td className="px-6 py-5">
-            <div className="space-y-1">
-              <div className="flex items-center gap-2 text-xs text-slate-600 font-bold">
-                <Mail size={12} className="text-teal-600" />
-                {student.email}
-              </div>
-              <div className="flex items-center gap-2 text-xs text-slate-600 font-bold">
-                <Phone size={12} className="text-teal-600" />
-                {student.phone || 'No Phone'}
-              </div>
+          <td className="text-[12px] font-medium text-slate-600">
+            <p>{student.email}</p>
+            <p className="text-slate-400 text-[10px]">{student.phone || '-'}</p>
+          </td>
+          <td>
+            <div className="flex items-center gap-1.5">
+              <Coffee size={12} className="text-slate-300" />
+              <span className="text-[12px] font-semibold text-slate-700">{student.assignedTable?.tableNumber || '-'}</span>
             </div>
           </td>
-          <td className="px-6 py-5">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-slate-100 rounded-lg flex items-center justify-center text-slate-400">
-                <Coffee size={14} />
-              </div>
-              <span className="text-xs font-black text-slate-900">
-                {student.assignedTable?.tableNumber || 'Unassigned'}
-              </span>
+          <td>
+            <div className="flex items-center gap-1.5">
+              <CreditCard size={12} className="text-slate-300" />
+              <span className="text-[12px] font-semibold text-slate-700 truncate max-w-[100px]">{student.package?.name || 'Free'}</span>
             </div>
           </td>
-          <td className="px-6 py-5">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-slate-100 rounded-lg flex items-center justify-center text-slate-400">
-                <CreditCard size={14} />
-              </div>
-              <span className="text-xs font-black text-slate-900">
-                {student.package?.name || 'N/A'}
-              </span>
-            </div>
+          <td className="text-[12px] font-medium text-slate-500">
+            {student.packageEndDate ? format(parseISO(student.packageEndDate), 'dd MMM yyyy') : '-'}
           </td>
-          <td className="px-6 py-5">
-            {student.packageEndDate ? (
-              <div className="space-y-1">
-                <p className="text-xs font-black text-slate-900">{format(parseISO(student.packageEndDate), 'MMM dd, yyyy')}</p>
-                <div className="flex items-center gap-1.5">
-                  <div className={`w-1.5 h-1.5 rounded-full ${daysLeft > 7 ? 'bg-emerald-500' : 'bg-rose-500 animate-pulse'}`} />
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">
-                    {daysLeft > 0 ? `${daysLeft} Days left` : 'Expired'}
-                  </p>
-                </div>
-              </div>
-            ) : (
-              <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest italic">No Data</span>
-            )}
+          <td>
+            <span className={`badge ${status.color} lowercase`}>{status.label}</span>
           </td>
-          <td className="px-6 py-5">
-            <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-[0.1em] ${status.color}`}>
-              {status.label}
-            </span>
-          </td>
-          <td className="px-8 py-5 text-right">
-            <div className="flex items-center justify-end gap-2">
+          <td className="px-5 text-right">
+            <div className="flex items-center justify-end gap-1.5">
               {activeTab === 'pending' ? (
                 <>
-                  <button
-                    onClick={() => handleApprove(student._id)}
-                    className="btn btn-sm btn-primary bg-emerald-600 hover:bg-emerald-700"
-                  >
-                    <UserCheck size={14} />
-                    Approve
-                  </button>
-                  <button
-                    onClick={() => handleReject(student._id)}
-                    className="btn btn-sm btn-secondary text-rose-600 hover:bg-rose-50"
-                  >
-                    <X size={14} />
-                    Reject
-                  </button>
+                  <button onClick={() => approveUser(student._id)} className="btn btn-ghost btn-sm text-emerald-600">Approve</button>
+                  <button onClick={() => handleReject(student._id)} className="btn btn-ghost btn-sm text-rose-500">Reject</button>
                 </>
               ) : (
                 <>
-                  <button
-                    onClick={() => openEditModal(student)}
-                    className="bg-white border border-slate-200 text-[#044343] px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-[#044343] hover:text-white transition-all shadow-sm"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => openAssignModal(student)}
-                    className="bg-white border border-slate-200 text-[#044343] px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-[#044343] hover:text-white transition-all shadow-sm"
-                  >
-                    Assign Package
-                  </button>
-                  <button 
-                    onClick={() => { setSelectedProfile(student); setIsProfileModalOpen(true); }}
-                    className="p-2 text-slate-300 hover:text-[#044343] hover:bg-slate-100 rounded-xl transition-all"
-                  >
-                    <MoreHorizontal size={18} />
-                  </button>
+                  <button onClick={() => openEditModal(student)} className="btn btn-ghost btn-sm text-slate-400 hover:text-slate-900">Edit</button>
+                  <button onClick={() => openAssignModal(student)} className="btn btn-ghost btn-sm text-slate-400 hover:text-teal-600">Plan</button>
+                  <button onClick={() => { setSelectedProfile(student); setIsProfileModalOpen(true); }} className="btn btn-ghost btn-sm w-7 h-7 p-0"><MoreHorizontal size={14} /></button>
                 </>
               )}
             </div>
@@ -360,487 +234,229 @@ const RegistrationList = () => {
   };
 
   return (
-    <div className="space-y-5 pb-8 animate-in fade-in duration-500">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div className="space-y-5">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-           <div className="flex items-center gap-2 text-[12px] font-medium text-slate-500 uppercase tracking-widest mb-1">
-            <span>Members</span>
-            <ChevronRight size={12} />
-            <span className="text-[#044343]">Students</span>
-          </div>
-          <h1>Student Registrations</h1>
+          <h1 className="text-xl font-bold text-slate-900">Members List</h1>
+          <p className="text-xs text-slate-400 font-medium mt-0.5">Manage library memberships and applications</p>
         </div>
-        <div className="flex items-center gap-3">
-          <div className="relative hidden md:block">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+        <div className="flex items-center gap-2">
+          <div className="relative">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
             <input
               type="text"
-              placeholder="Search by name, ID..."
+              placeholder="Search members..."
               value={searchTerm}
               onChange={onSearchChange}
-              className="input-field pl-9 w-64"
+              className="w-56 bg-white border border-slate-200 rounded-lg h-[34px] pl-8 pr-3 text-[13px] outline-none focus:ring-2 focus:ring-teal-500/10 focus:border-teal-500 transition-all"
             />
           </div>
-          <button
-            onClick={() => { setSelectedUser(null); setIsRegisterModalOpen(true); reset({}); setProfilePreview(null); setIdPhotoPreview(null); }}
-            className="btn btn-primary btn-default"
-          >
+          <button onClick={() => { setSelectedUser(null); setIsRegisterModalOpen(true); reset({}); setProfilePreview(null); setIdPhotoPreview(null); }} className="btn btn-primary btn-md">
             <UserPlus size={16} />
-            Register Student
+            <span className="hidden sm:inline ml-1.5">New Member</span>
           </button>
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="flex items-center gap-6 border-b border-slate-100">
-        <button 
-          onClick={() => { setActiveTab('approved'); setCurrentPage(1); setSearchTerm(''); }}
-          className={`pb-3 text-sm font-bold transition-all relative ${activeTab === 'approved' ? 'text-[#044343]' : 'text-slate-400 hover:text-slate-600'}`}
-        >
-          Active Members
-          {activeTab === 'approved' && <motion.div layoutId="tab" className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#044343]" />}
+      <div className="flex items-center gap-5 border-b border-slate-100">
+        <button onClick={() => { setActiveTab('approved'); setCurrentPage(1); }} className={`pb-2.5 text-xs font-bold uppercase tracking-wider transition-all relative ${activeTab === 'approved' ? 'text-[#044343]' : 'text-slate-400 hover:text-slate-600'}`}>
+          Approved Members
+          {activeTab === 'approved' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#044343]" />}
         </button>
-        <button 
-          onClick={() => { setActiveTab('pending'); setCurrentPage(1); setSearchTerm(''); }}
-          className={`pb-3 text-sm font-bold transition-all relative flex items-center gap-2 ${activeTab === 'pending' ? 'text-[#044343]' : 'text-slate-400 hover:text-slate-600'}`}
-        >
-          Pending Applications
-          {pendingCount > 0 && (
-            <span className="bg-amber-500 text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold">
-              {pendingCount}
-            </span>
-          )}
-          {activeTab === 'pending' && <motion.div layoutId="tab" className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#044343]" />}
+        <button onClick={() => { setActiveTab('pending'); setCurrentPage(1); }} className={`pb-2.5 text-xs font-bold uppercase tracking-wider transition-all relative flex items-center gap-1.5 ${activeTab === 'pending' ? 'text-[#044343]' : 'text-slate-400 hover:text-slate-600'}`}>
+          Applications
+          {pendingCount > 0 && <span className="bg-amber-500 text-white text-[9px] px-1.5 py-0.5 rounded-full">{pendingCount}</span>}
+          {activeTab === 'pending' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#044343]" />}
         </button>
       </div>
 
-      <div className="compact-table-container">
-        <table className="compact-table">
+      <div className="table-container">
+        <table className="table-main">
           <thead>
             <tr>
-              <th>Student Info</th>
+              <th className="px-5">Student</th>
               <th>Contact</th>
-              <th>Assigned Table</th>
-              <th>Active Plan</th>
-              <th>Expiry Date</th>
+              <th>Desk</th>
+              <th>Plan</th>
+              <th>Expiry</th>
               <th>Status</th>
-              <th className="text-right">Actions</th>
+              <th className="text-right px-5">Actions</th>
             </tr>
           </thead>
-            <tbody className="divide-y divide-slate-50">
-              {renderTableBody()}
-            </tbody>
-          </table>
-      </div>
-      <div className="mt-4"> 
-        <Pagination 
-          total={total}
-          limit={limit}
-          currentPage={currentPage}
-          onPageChange={(page) => setCurrentPage(page)}
-        />
+          <tbody>{renderTableBody()}</tbody>
+        </table>
       </div>
 
-      {/* Register Student Modal */}
+      <div className="flex items-center justify-between no-print pt-2">
+        <p className="text-xs text-slate-500 font-medium">Showing {items.length} of {total} records</p>
+        <Pagination total={total} limit={limit} currentPage={currentPage} onPageChange={setCurrentPage} />
+      </div>
+
+      {/* Modals are updated to use global modal classes */}
       <AnimatePresence>
         {isRegisterModalOpen && (
-          <div className="modal-overlay">
-            <motion.div 
-              initial={{ scale: 0.95, opacity: 0 }} 
-              animate={{ scale: 1, opacity: 1 }} 
-              exit={{ scale: 0.95, opacity: 0 }} 
-              className="modal-content modal-lg max-h-[90vh]"
-            >
-              <div className="modal-header">
-              <h2>{selectedUser ? 'Edit Student Details' : 'Register New Student'}</h2>
-              <button onClick={closeRegisterModal} className="text-slate-400 hover:text-slate-600 transition-colors">
-                <X size={20} />
-              </button>
-            </div>
-
+          <div className="modal-wrapper">
+            <motion.div initial={{ scale: 0.98, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="modal-panel w-full max-w-4xl">
+              <div className="modal-h">
+                <h2 className="text-sm font-bold">{selectedUser ? 'Edit Member Record' : 'Register New Member'}</h2>
+                <button onClick={closeRegisterModal} className="text-slate-400 hover:text-slate-900"><X size={18} /></button>
+              </div>
               <form onSubmit={handleSubmit(onRegisterStudent)} className="flex flex-col overflow-hidden">
-                <div className="modal-body space-y-8">
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
-                  
-                  {/* Left Column: Photos */}
-                  <div className="space-y-8">
-                    <div className="space-y-4">
-                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Member Profile Photo *</label>
-                      <div className="relative group mx-auto w-40 h-40">
-                        <input type="file" onChange={handleProfileChange} className="hidden" id="profileImg" accept="image/*" />
-                        <label htmlFor="profileImg" className="cursor-pointer block w-full h-full rounded-[2.5rem] bg-slate-50 border-2 border-dashed border-slate-200 overflow-hidden hover:border-[#044343]/30 transition-all shadow-inner">
-                          {profilePreview ? (
-                            <img src={profilePreview} className="w-full h-full object-cover" />
-                          ) : (
-                            <div className="w-full h-full flex flex-col items-center justify-center gap-2">
-                               <ImagePlus size={32} className="text-slate-300" />
-                               <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Upload Profile</span>
-                            </div>
-                          )}
+                <div className="modal-b max-h-[75vh] overflow-y-auto space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+                    <div className="md:col-span-1 space-y-4">
+                      <div className="space-y-1.5">
+                        <label className="label">Profile Photo</label>
+                        <label className="cursor-pointer block w-32 h-32 mx-auto rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 overflow-hidden hover:bg-slate-100 transition-all flex items-center justify-center">
+                          <input type="file" onChange={handleProfileChange} className="hidden" />
+                          {profilePreview ? <img src={profilePreview} className="w-full h-full object-cover" /> : <ImagePlus size={24} className="text-slate-300" />}
+                        </label>
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="label">ID Photo</label>
+                        <label className="cursor-pointer block w-full aspect-video rounded-lg border-2 border-dashed border-slate-200 bg-slate-50 overflow-hidden hover:bg-slate-100 transition-all flex items-center justify-center">
+                          <input type="file" onChange={handleIdPhotoChange} className="hidden" />
+                          {idPhotoPreview ? <img src={idPhotoPreview} className="w-full h-full object-cover" /> : <Upload size={20} className="text-slate-300" />}
                         </label>
                       </div>
                     </div>
-
-                    <div className="space-y-4">
-                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Identity Document Photo *</label>
-                      <div className="relative group">
-                        <input type="file" onChange={handleIdPhotoChange} className="hidden" id="idImg" accept="image/*" />
-                        <label htmlFor="idImg" className="cursor-pointer block w-full aspect-[16/10] rounded-3xl bg-slate-50 border-2 border-dashed border-slate-200 overflow-hidden hover:border-[#044343]/30 transition-all">
-                          {idPhotoPreview ? (
-                            <img src={idPhotoPreview} className="w-full h-full object-cover" />
-                          ) : (
-                            <div className="w-full h-full flex flex-col items-center justify-center gap-2">
-                               <Upload size={32} className="text-slate-300" />
-                               <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Upload ID Card</span>
-                            </div>
-                          )}
-                        </label>
+                    <div className="md:col-span-3 space-y-6">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="col-span-2 space-y-1.5">
+                          <label className="label">Full Name *</label>
+                          <input {...register('fullName', { required: true })} className="input" placeholder="e.g. John Doe" />
+                        </div>
+                        <div className="space-y-1.5">
+                          <label className="label">Phone *</label>
+                          <input {...register('phone', { required: true })} className="input" placeholder="+91..." />
+                        </div>
+                        <div className="space-y-1.5">
+                          <label className="label">Email *</label>
+                          <input {...register('email', { required: true })} type="email" className="input" placeholder="john@example.com" />
+                        </div>
+                        <div className="space-y-1.5">
+                          <label className="label">DOB</label>
+                          <input {...register('dob')} type="date" className="input" />
+                        </div>
+                        <div className="space-y-1.5">
+                          <label className="label">Gender</label>
+                          <select {...register('gender')} className="input"><option value="Male">Male</option><option value="Female">Female</option></select>
+                        </div>
+                      </div>
+                      <div className="pt-4 border-t border-slate-50 grid grid-cols-2 gap-4">
+                        <div className="col-span-2 space-y-1.5"><label className="label">Address Line 1</label><input {...register('addressLine1')} className="input" /></div>
+                        <div className="space-y-1.5"><label className="label">City</label><input {...register('city')} className="input" /></div>
+                        <div className="space-y-1.5"><label className="label">Pincode</label><input {...register('pincode')} className="input" /></div>
                       </div>
                     </div>
                   </div>
-
-                  {/* Right Column: Fields */}
-                  <div className="lg:col-span-2 space-y-10">
-                    
-                    {/* Section 1: Personal Details */}
-                    <div className="bg-slate-50/50 p-8 rounded-[2rem] border border-slate-100 space-y-6">
-                      <div className="flex items-center gap-2 mb-2">
-                         <span className="w-1.5 h-6 bg-[#044343] rounded-full"></span>
-                         <h3 className="text-xs font-black text-[#044343] uppercase tracking-widest">Section 1: Personal Profile</h3>
-                      </div>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                        <div className="md:col-span-2 space-y-1.5">
-                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Full Name *</label>
-                          <input {...register('fullName', { required: true })} className="w-full bg-white border border-slate-200 rounded-2xl py-3 px-6 outline-none focus:ring-2 focus:ring-[#044343]/10" placeholder="e.g. Owaisee Ahmed" />
-                        </div>
-                        <div className="space-y-1.5">
-                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Phone Number *</label>
-                          <input {...register('phone', { required: true })} className="w-full bg-white border border-slate-200 rounded-2xl py-3 px-6 outline-none focus:ring-2 focus:ring-[#044343]/10" placeholder="+91 98765 43210" />
-                        </div>
-                        <div className="space-y-1.5">
-                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Email Address *</label>
-                          <input {...register('email', { required: true })} type="email" className="w-full bg-white border border-slate-200 rounded-2xl py-3 px-6 outline-none focus:ring-2 focus:ring-[#044343]/10" placeholder="owaiseeee@example.com" />
-                        </div>
-                        <div className="space-y-1.5">
-                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Login Password</label>
-                          <input {...register('password')} type="password" title="Default is password123" className="w-full bg-white border border-slate-200 rounded-2xl py-3 px-6 outline-none focus:ring-2 focus:ring-[#044343]/10" placeholder="••••••••" />
-                        </div>
-                        <div className="space-y-1.5">
-                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Date of Birth</label>
-                          <input {...register('dob')} type="date" className="w-full bg-white border border-slate-200 rounded-2xl py-3 px-6 outline-none focus:ring-2 focus:ring-[#044343]/10 font-bold text-xs h-[50px]" />
-                        </div>
-                        <div className="space-y-1.5">
-                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Gender</label>
-                          <select {...register('gender')} className="w-full bg-white border border-slate-200 rounded-2xl py-3 px-6 outline-none focus:ring-2 focus:ring-[#044343]/10 font-bold text-sm h-[50px] appearance-none">
-                            <option value="Male">Male</option>
-                            <option value="Female">Female</option>
-                            <option value="Other">Other</option>
-                          </select>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Section 2: Address Details */}
-                    <div className="bg-slate-50/50 p-8 rounded-[2rem] border border-slate-100 space-y-6">
-                      <div className="flex items-center gap-2 mb-2">
-                         <span className="w-1.5 h-6 bg-[#044343] rounded-full"></span>
-                         <h3 className="text-xs font-black text-[#044343] uppercase tracking-widest">Section 2: Residence Address</h3>
-                      </div>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                        <div className="md:col-span-2 space-y-1.5">
-                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Address Line 1 *</label>
-                          <input {...register('addressLine1', { required: true })} className="w-full bg-white border border-slate-200 rounded-2xl py-3 px-6 outline-none focus:ring-2 focus:ring-[#044343]/10" placeholder="Street, Apartment..." />
-                        </div>
-                        <div className="md:col-span-2 space-y-1.5">
-                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Address Line 2</label>
-                          <input {...register('addressLine2')} className="w-full bg-white border border-slate-200 rounded-2xl py-3 px-6 outline-none focus:ring-2 focus:ring-[#044343]/10" placeholder="Landmark, Area..." />
-                        </div>
-                        <div className="space-y-1.5">
-                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">City / Town</label>
-                          <input {...register('city')} className="w-full bg-white border border-slate-200 rounded-2xl py-3 px-6 outline-none focus:ring-2 focus:ring-[#044343]/10" placeholder="Bangalore" />
-                        </div>
-                        <div className="space-y-1.5">
-                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">State / Province</label>
-                          <input {...register('state')} className="w-full bg-white border border-slate-200 rounded-2xl py-3 px-6 outline-none focus:ring-2 focus:ring-[#044343]/10" placeholder="Karnataka" />
-                        </div>
-                        <div className="space-y-1.5">
-                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Pincode *</label>
-                          <input {...register('pincode', { required: true })} className="w-full bg-white border border-slate-200 rounded-2xl py-3 px-6 outline-none focus:ring-2 focus:ring-[#044343]/10" placeholder="560001" />
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Section 3: Identity Verification */}
-                    <div className="bg-slate-50/50 p-8 rounded-[2rem] border border-slate-100 space-y-6">
-                      <div className="flex items-center gap-2 mb-2">
-                         <span className="w-1.5 h-6 bg-[#044343] rounded-full"></span>
-                         <h3 className="text-xs font-black text-[#044343] uppercase tracking-widest">Section 3: Identity & Compliance</h3>
-                      </div>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                        <div className="space-y-1.5">
-                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">ID Type *</label>
-                          <select {...register('idType', { required: true })} className="w-full bg-white border border-slate-200 rounded-2xl py-3 px-6 outline-none focus:ring-2 focus:ring-[#044343]/10 font-bold text-sm h-[50px] appearance-none">
-                            <option value="Aadhaar Card">Aadhaar Card</option>
-                            <option value="Driving License">Driving License</option>
-                            <option value="Student ID">Student ID</option>
-                            <option value="Passport">Passport</option>
-                          </select>
-                        </div>
-                        <div className="space-y-1.5">
-                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">ID Card Number *</label>
-                          <input {...register('idNumber', { required: true })} className="w-full bg-white border border-slate-200 rounded-2xl py-3 px-6 outline-none focus:ring-2 focus:ring-[#044343]/10" placeholder="XXXX-XXXX-XXXX" />
-                        </div>
-                        <div className="md:col-span-2 space-y-1.5">
-                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Membership Package (Initial)</label>
-                          <select {...register('package')} className="w-full bg-white border border-slate-200 rounded-2xl py-3 px-6 outline-none focus:ring-2 focus:ring-[#044343]/10 font-bold text-sm h-[50px] appearance-none">
-                            <option value="">Start with Free Plan</option>
-                            {packages.map(pkg => (
-                              <option key={pkg._id} value={pkg._id}>{pkg.name} — ₹{pkg.price} ({pkg.duration} Days)</option>
-                            ))}
-                          </select>
-                        </div>
-                        <div className="grid grid-cols-2 gap-5 md:col-span-2">
-                           <div className="space-y-1.5">
-                             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 text-teal-600">Registration Fee (₹)</label>
-                             <input type="number" {...register('registrationFee')} className="w-full bg-teal-50/30 border border-teal-100 rounded-2xl py-3 px-6 outline-none focus:ring-2 focus:ring-[#044343]/10 font-bold" placeholder="0" />
-                           </div>
-                           <div className="space-y-1.5">
-                             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 text-teal-600">Security Deposit (₹)</label>
-                             <input type="number" {...register('securityDeposit')} className="w-full bg-teal-50/30 border border-teal-100 rounded-2xl py-3 px-6 outline-none focus:ring-2 focus:ring-[#044343]/10 font-bold" placeholder="0" />
-                           </div>
-                        </div>
-                        <div className="md:col-span-2 space-y-1.5">
-                           <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Administrator Notes</label>
-                           <textarea {...register('notes')} rows="4" className="w-full bg-white border border-slate-200 rounded-3xl py-4 px-6 outline-none focus:ring-2 focus:ring-[#044343]/10 resize-none text-sm font-medium" placeholder="Additional details, restrictions or preferences..."></textarea>
-                        </div>
-                      </div>
-                    </div>
-
-                  </div>
                 </div>
-                </div>
-
-                <div className="modal-footer">
-                  <button type="button" onClick={closeRegisterModal} className="btn btn-secondary btn-default">
-                    Cancel
-                  </button>
-                  <button 
-                    type="submit" 
-                    disabled={isAdding || isUpdating}
-                    className="btn btn-primary btn-default min-w-[120px]"
-                  >
-                    {isAdding || isUpdating ? <Loader2 size={16} className="animate-spin" /> : selectedUser ? 'Save Changes' : 'Register Student'}
+                <div className="modal-f">
+                  <button type="button" onClick={closeRegisterModal} className="btn btn-secondary btn-md px-6">Cancel</button>
+                  <button type="submit" disabled={isAdding || isUpdating} className="btn btn-primary btn-md px-8 min-w-[120px]">
+                    {isAdding || isUpdating ? <Loader2 size={16} className="animate-spin" /> : 'Save Member'}
                   </button>
                 </div>
               </form>
             </motion.div>
           </div>
         )}
-      </AnimatePresence>
 
-      <AnimatePresence>
         {isAssignModalOpen && (
-          <div className="modal-overlay">
-            <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="modal-content modal-md">
-              <div className="modal-header">
-                <h2>Assign Package</h2>
-                <button onClick={() => setIsAssignModalOpen(false)} className="text-slate-400 hover:text-slate-600 transition-colors">
-                  <X size={20} />
-                </button>
+          <div className="modal-wrapper">
+            <motion.div initial={{ scale: 0.98, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="modal-panel w-full max-w-md">
+              <div className="modal-h">
+                <h2 className="text-sm font-bold">Manage Membership Plan</h2>
+                <button onClick={() => setIsAssignModalOpen(false)} className="text-slate-400 hover:text-slate-900"><X size={18} /></button>
               </div>
-
-              <div className="modal-body space-y-6">
-                <div className="text-center mb-4">
-                  <div className="w-12 h-12 bg-teal-50 rounded-lg flex items-center justify-center text-[#044343] mx-auto mb-3">
-                    <CreditCard size={24} />
-                  </div>
-                  <p className="text-[14px] text-slate-600">Assigning to: <span className="font-medium text-slate-900">{selectedUser?.fullName}</span></p>
+              <form onSubmit={handleAssignSubmit(onAssignPackage)}>
+                <div className="modal-b space-y-5">
+                   <div>
+                      <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2">Member</p>
+                      <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg border border-slate-100">
+                         <div className="w-8 h-8 rounded bg-white flex items-center justify-center text-[#044343] font-bold text-xs border border-slate-200">
+                           {selectedUser?.fullName?.charAt(0)}
+                         </div>
+                         <div>
+                            <p className="text-[13px] font-bold text-slate-900 leading-none">{selectedUser?.fullName}</p>
+                            <p className="text-[10px] text-slate-500 font-medium mt-1">Current: {selectedUser?.package?.name || 'No Plan'}</p>
+                         </div>
+                      </div>
+                   </div>
+                   <div className="space-y-2">
+                      <label className="label">Select New Plan</label>
+                      <select {...regAssign('packageId', { required: true })} className="input h-[38px] font-bold">
+                        <option value="">Choose a package...</option>
+                        {packages.map(p => (
+                          <option key={p._id} value={p._id}>{p.name} — ₹{p.price}</option>
+                        ))}
+                      </select>
+                   </div>
+                   <div className="p-3 bg-blue-50/50 rounded-lg border border-blue-100 flex gap-3">
+                      <AlertTriangle size={16} className="text-blue-600 shrink-0 mt-0.5" />
+                      <p className="text-[11px] text-blue-700 font-medium leading-relaxed">Changing the plan will reset the membership expiry date based on the new package duration.</p>
+                   </div>
                 </div>
-
-              <form onSubmit={handleAssignSubmit(onAssignPackage)} className="space-y-6">
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Select Active Plan</label>
-                  <select {...regAssign('packageId', { required: true })} className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-4 px-6 outline-none focus:ring-2 focus:ring-[#044343]/5 text-xs font-bold appearance-none">
-                    <option value="">Select a package...</option>
-                    {packages.map(pkg => (
-                      <option key={pkg._id} value={pkg._id}>{pkg.name} — {pkg.duration} Days (₹{pkg.price})</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="bg-amber-50 p-3 rounded-lg border border-amber-100 flex items-start gap-3">
-                  <AlertTriangle size={16} className="text-amber-500 shrink-0 mt-0.5" />
-                  <p className="text-[12px] text-amber-900 leading-relaxed">
-                    Updating package will overwrite existing membership data and recalculate expiry from today.
-                  </p>
-                </div>
-
-                <div className="flex justify-end pt-2">
-                  <button 
-                    type="submit" 
-                    disabled={isAssigning}
-                    className="btn btn-primary btn-default w-full"
-                  >
-                    {isAssigning ? <Loader2 size={16} className="animate-spin" /> : 'Confirm Assignment'}
+                <div className="modal-f">
+                  <button type="button" onClick={() => setIsAssignModalOpen(false)} className="btn btn-secondary btn-md">Cancel</button>
+                  <button type="submit" disabled={isAssigning} className="btn btn-primary btn-md min-w-[120px]">
+                    {isAssigning ? <Loader2 size={16} className="animate-spin" /> : 'Assign Plan'}
                   </button>
                 </div>
               </form>
-              </div>
             </motion.div>
           </div>
         )}
-      </AnimatePresence>
-      {/* Profile Details Modal */}
-      <AnimatePresence>
-        {isProfileModalOpen && selectedProfile && (
-          <div className="modal-overlay">
-            <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="modal-content modal-lg max-h-[90vh]">
-              <div className="modal-header">
-                <h2>Student Profile</h2>
-                <button onClick={() => setIsProfileModalOpen(false)} className="text-slate-400 hover:text-slate-600 transition-colors">
-                  <X size={20} />
-                </button>
+
+        {isProfileModalOpen && (
+          <div className="modal-wrapper">
+            <motion.div initial={{ scale: 0.98, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="modal-panel w-full max-w-2xl">
+              <div className="modal-h">
+                <h2 className="text-sm font-bold">Member Profile Overview</h2>
+                <button onClick={() => setIsProfileModalOpen(false)} className="text-slate-400 hover:text-slate-900"><X size={18} /></button>
               </div>
-              
-              <div className="modal-body">
-              <div className="flex flex-col md:flex-row gap-8">
-                {/* Left: Quick Info */}
-                <div className="md:w-1/3 space-y-6">
-                  <div className="text-center">
-                    <div className="w-24 h-24 rounded-full mx-auto bg-[#044343] p-1 border-4 border-white shadow-sm overflow-hidden">
-                       <img src={selectedProfile.profilePicture || `https://i.pravatar.cc/150?u=${selectedProfile._id}`} className="w-full h-full object-cover rounded-full" alt={selectedProfile.fullName} />
+              <div className="modal-b space-y-8">
+                 <div className="flex items-center gap-6">
+                    <div className="w-24 h-24 rounded-2xl bg-slate-50 border border-slate-200 overflow-hidden shadow-sm">
+                       {selectedProfile?.profilePicture ? <img src={selectedProfile.profilePicture} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-slate-300 font-black text-2xl">{selectedProfile?.fullName?.charAt(0)}</div>}
                     </div>
-                    <h2 className="text-[18px] font-semibold text-slate-900 mt-4 tracking-tight line-clamp-1">{selectedProfile.fullName}</h2>
-                    <p className="text-[12px] text-slate-500 mt-1">Status: {getStatusInfo(selectedProfile).label}</p>
-                  </div>
-
-                  <div className="bg-slate-50 rounded-3xl p-6 border border-slate-100 space-y-4">
-                     <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 rounded-xl bg-white border border-slate-100 flex items-center justify-center text-teal-600 shadow-sm">
-                          <Mail size={18} />
-                        </div>
-                        <div className="min-w-0">
-                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Email Address</p>
-                          <p className="text-xs font-bold text-slate-900 truncate">{selectedProfile.email}</p>
-                        </div>
-                     </div>
-                     <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 rounded-xl bg-white border border-slate-100 flex items-center justify-center text-teal-600 shadow-sm">
-                          <Phone size={18} />
-                        </div>
-                        <div className="min-w-0">
-                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Phone Number</p>
-                          <p className="text-xs font-bold text-slate-900">{selectedProfile.phone || 'N/A'}</p>
-                        </div>
-                     </div>
-                  </div>
-
-                  {selectedProfile.assignedTable ? (
-                    <div className="bg-[#044343] rounded-[2rem] p-8 text-white shadow-xl shadow-teal-900/20 relative overflow-hidden">
-                       <Coffee className="absolute -right-4 -bottom-4 text-white/5" size={120} />
-                       <p className="text-[10px] font-black uppercase tracking-widest opacity-60">Reserved Study Space</p>
-                       <h3 className="text-3xl font-black mt-1">Table {selectedProfile.assignedTable.tableNumber}</h3>
-                       <div className="mt-6 space-y-3">
-                          <div className="flex items-center gap-2 text-[10px] font-bold">
-                             <Key size={12} /> Key: {selectedProfile.assignedTable.keyNumber || 'Digital Access'}
-                          </div>
-                          <div className="flex items-center gap-2 text-[10px] font-bold">
-                             <MapPin size={12} /> {selectedProfile.assignedTable.section}
-                          </div>
+                    <div className="flex-1">
+                       <h3 className="text-lg font-bold text-slate-900 tracking-tight">{selectedProfile?.fullName}</h3>
+                       <p className="text-[13px] text-slate-500 font-medium mt-1">{selectedProfile?.email}</p>
+                       <div className="flex items-center gap-3 mt-3">
+                          <span className={`badge ${getStatusInfo(selectedProfile || {}).color} lowercase`}>{getStatusInfo(selectedProfile || {}).label}</span>
+                          <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">{selectedProfile?.gender}</span>
                        </div>
                     </div>
-                  ) : (
-                    <div className="bg-slate-50 border border-dashed border-slate-200 rounded-[2rem] p-8 text-center text-slate-400">
-                       <Coffee size={32} className="mx-auto mb-2 opacity-50" />
-                       <p className="text-[10px] font-black uppercase tracking-widest">No Desk Assigned</p>
-                       <button 
-                         onClick={() => { setIsProfileModalOpen(false); navigate('/app/tables'); }}
-                         className="mt-4 text-[10px] font-black text-[#044343] hover:underline uppercase tracking-tighter"
-                       >
-                         Go to Tables Management
-                       </button>
+                 </div>
+
+                 <div className="grid grid-cols-2 gap-x-12 gap-y-6">
+                    <div><p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Phone Number</p><p className="text-[13px] font-bold text-slate-700">{selectedProfile?.phone || 'Not provided'}</p></div>
+                    <div><p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Member Since</p><p className="text-[13px] font-bold text-slate-700">{selectedProfile?.createdAt ? format(parseISO(selectedProfile.createdAt), 'dd MMMM yyyy') : '-'}</p></div>
+                    <div><p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Identity ID</p><p className="text-[13px] font-bold text-slate-700">#{selectedProfile?._id?.substring(18)}</p></div>
+                    <div><p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Current Plan</p><p className="text-[13px] font-bold text-slate-900">{selectedProfile?.package?.name || 'No Active Plan'}</p></div>
+                    <div className="col-span-2"><p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Full Address</p><p className="text-[13px] font-bold text-slate-700 leading-relaxed">{[selectedProfile?.addressLine1, selectedProfile?.city, selectedProfile?.pincode].filter(Boolean).join(', ')}</p></div>
+                 </div>
+
+                 <div className="grid grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                       <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Identification Photo</p>
+                       <div className="aspect-video bg-slate-50 border border-slate-100 rounded-lg overflow-hidden">
+                          {selectedProfile?.idPhoto ? <img src={selectedProfile.idPhoto} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-slate-300 font-bold text-[10px] uppercase">No ID Uploaded</div>}
+                       </div>
                     </div>
-                  )}
-                </div>
-
-                {/* Right: Detailed Tabs/Info */}
-                <div className="flex-1 space-y-10">
-                   <div className="grid grid-cols-2 gap-8">
-                      <div className="space-y-4">
-                         <div className="flex items-center gap-2">
-                           <ShieldCheck className="text-teal-600" size={16} />
-                           <h3 className="text-xs font-black text-slate-900 uppercase tracking-widest">Identity Record</h3>
-                         </div>
-                         <div className="bg-slate-50 rounded-2xl p-6 border border-slate-100">
-                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{selectedProfile.idType}</p>
-                            <p className="text-sm font-black text-slate-900 mt-1">{selectedProfile.idNumber}</p>
-                            <div className="mt-4 h-32 rounded-xl overflow-hidden bg-white border border-slate-100">
-                               {selectedProfile.idPhoto ? (
-                                 <img src={selectedProfile.idPhoto} className="w-full h-full object-cover" alt="ID Document" />
-                               ) : <div className="w-full h-full flex items-center justify-center text-slate-200"><Fingerprint size={48} /></div>}
-                            </div>
-                         </div>
-                      </div>
-
-                      <div className="space-y-4">
-                         <div className="flex items-center gap-2">
-                           <CreditCard className="text-teal-600" size={16} />
-                           <h3 className="text-xs font-black text-slate-900 uppercase tracking-widest">Active Plan</h3>
-                         </div>
-                         <div className="bg-slate-50 rounded-2xl p-6 border border-slate-100 flex flex-col justify-between h-[190px]">
-                            <div>
-                              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Current Package</p>
-                              <p className="text-lg font-black text-[#044343] mt-1">{selectedProfile.package?.name || 'Standard Membership'}</p>
-                            </div>
-                            <div className="pt-4 border-t border-slate-200">
-                               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Valid Until</p>
-                               <p className="text-sm font-black text-slate-900">{selectedProfile.packageEndDate ? format(parseISO(selectedProfile.packageEndDate), 'MMMM dd, yyyy') : 'No active plan'}</p>
-                            </div>
-                         </div>
-                      </div>
-                   </div>
-
-                   <div className="space-y-4">
-                      <div className="flex items-center gap-2">
-                         <MapPin className="text-teal-600" size={16} />
-                         <h3 className="text-xs font-black text-slate-900 uppercase tracking-widest">Full Residential Address</h3>
-                      </div>
-                      <div className="bg-slate-50 rounded-2xl p-6 border border-slate-100 grid grid-cols-2 gap-y-4">
-                         <div className="col-span-2">
-                            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Street Address</p>
-                            <p className="text-sm font-bold text-slate-900">{selectedProfile.addressLine1} {selectedProfile.addressLine2}</p>
-                         </div>
-                         <div>
-                            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">City</p>
-                            <p className="text-sm font-bold text-slate-900">{selectedProfile.city || 'N/A'}</p>
-                         </div>
-                         <div>
-                            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Pincode</p>
-                            <p className="text-sm font-bold text-slate-900">{selectedProfile.pincode || 'N/A'}</p>
-                         </div>
-                      </div>
-                   </div>
-
-                   <div className="space-y-4">
-                      <div className="flex items-center gap-2">
-                         <FileText className="text-teal-600" size={16} />
-                         <h3 className="text-xs font-black text-slate-900 uppercase tracking-widest">System Notes</h3>
-                      </div>
-                      <div className="bg-white rounded-2xl p-6 border border-slate-100">
-                         <p className="text-xs font-medium text-slate-600 leading-relaxed italic">
-                           {selectedProfile.notes || "No additional administrator notes recorded for this member."}
-                         </p>
-                      </div>
-                   </div>
-                </div>
+                 </div>
               </div>
+              <div className="modal-f">
+                <button onClick={() => setIsProfileModalOpen(false)} className="btn btn-secondary btn-md px-8">Close</button>
+                <button onClick={() => { setIsProfileModalOpen(false); openEditModal(selectedProfile); }} className="btn btn-primary btn-md px-8">Edit Details</button>
               </div>
             </motion.div>
           </div>
         )}
       </AnimatePresence>
     </div>
-);
+  );
 };
 
 export default RegistrationList;
