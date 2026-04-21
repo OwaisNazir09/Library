@@ -10,15 +10,16 @@ export const tenantHandler = async (req, res, next) => {
   console.log(`[TenantHandler] Headers:`, JSON.stringify(req.headers, null, 2));
 
   // Skip tenant check for these routes
-  const isGlobalRoute = 
-    req.method === 'OPTIONS' || 
-    req.path.includes('/admin') || 
+  const isGlobalRoute =
+    req.method === 'OPTIONS' ||
+    req.path.includes('/admin') ||
     req.path.includes('/auth/login') ||
     req.path.includes('/auth/signup') ||
     req.path.includes('/blogs') ||
     req.path.includes('/resources/public') ||
     (req.method === 'GET' && req.path.startsWith('/resources/')) ||
-    req.path.includes('/tenants');
+    req.path.includes('/tenants') ||
+    req.path.includes('/queries');
 
   if (isGlobalRoute) {
     return next();
@@ -49,7 +50,37 @@ export const tenantHandler = async (req, res, next) => {
       });
     }
 
+    if (tenant.expiryDate && new Date(tenant.expiryDate) < new Date() && tenant.status !== 'expired') {
+      tenant.status = 'expired';
+      await tenant.save();
+    }
+
+    if (tenant.status === 'expired') {
+      return res.status(403).json({
+        status: 'fail',
+        message: 'Subscription expired. Please complete payment to restore access.',
+        code: 'TENANT_EXPIRED'
+      });
+    }
+
+    if (tenant.status === 'suspended') {
+      return res.status(403).json({
+        status: 'fail',
+        message: 'This library instance has been suspended by platform administration.',
+        code: 'TENANT_SUSPENDED'
+      });
+    }
+
+    if (tenant.status === 'disabled') {
+      return res.status(403).json({
+        status: 'fail',
+        message: 'This library instance is currently disabled.',
+        code: 'TENANT_DISABLED'
+      });
+    }
+
     req.tenantId = tenant._id;
+    req.tenant = tenant; // Useful for downstream access to plan/status
     next();
   } catch (err) {
     logger.error('Tenant identification error:', err);

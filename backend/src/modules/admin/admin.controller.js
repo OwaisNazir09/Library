@@ -1,36 +1,63 @@
-import Tenant from '../tenant/tenant.model.js';
-import { getModels } from '../../utils/helpers.js';
 import mongoose from 'mongoose';
+import { addDays } from 'date-fns';
+import Tenant from '../tenant/tenant.model.js';
+import Query from '../query/query.model.js';
+import { getModels } from '../../utils/helpers.js';
 
 export const getAdminStats = async (req, res, next) => {
   try {
-    const totalTenants = await Tenant.countDocuments();
+    const now = new Date();
+    const thirtyDaysAgo = addDays(now, -30);
+    const sevenDaysAhead = addDays(now, 7);
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
 
-    const { User, Book, Transaction } = getModels(mongoose.connection);
-
-    const [totalAdmins, totalSystemUsers, totalBooks] = await Promise.all([
-      User.countDocuments({ role: 'super_admin' }),
-      User.countDocuments(),
-      Book ? Book.countDocuments() : Promise.resolve(0)
+    const [
+      totalLibraries,
+      activeLibraries,
+      trialLibraries,
+      suspendedLibraries,
+      expiredLibraries,
+      expiringSoonCount,
+      recentLibraries
+    ] = await Promise.all([
+      Tenant.countDocuments(),
+      Tenant.countDocuments({ status: 'active' }),
+      Tenant.countDocuments({ status: 'trial' }),
+      Tenant.countDocuments({ status: 'suspended' }),
+      Tenant.countDocuments({ status: 'expired' }),
+      Tenant.countDocuments({
+        expiryDate: { $lte: sevenDaysAhead, $gte: now },
+        status: { $ne: 'expired' }
+      }),
+      Tenant.find().sort({ createdAt: -1 }).limit(5).select('name status plan createdAt email').populate('subscriptionPlanId', 'name')
     ]);
 
-    let revenueSum = 0;
-    if (Transaction) {
-      const revAgg = await Transaction.aggregate([
-        { $match: { type: 'fee_charge' } },
-        { $group: { _id: null, total: { $sum: '$amount' } } }
-      ]);
-      revenueSum = revAgg.length > 0 ? revAgg[0].total : 0;
+    // Growth data — last 6 months
+    const growthData = [];
+    for (let i = 5; i >= 0; i--) {
+      const start = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const end = new Date(now.getFullYear(), now.getMonth() - i + 1, 0);
+      const count = await Tenant.countDocuments({ createdAt: { $gte: start, $lte: end } });
+      growthData.push({
+        name: start.toLocaleString('default', { month: 'short' }),
+        libraries: count
+      });
     }
 
     res.status(200).json({
       status: 'success',
       data: {
-        totalTenants,
-        totalAdmins,
-        totalSystemUsers,
-        totalBooks,
-        revenue: `$${revenueSum.toLocaleString()}`
+        totalLibraries,
+        activeLibraries,
+        trialLibraries,
+        suspendedLibraries,
+        expiredLibraries,
+        monthlyRevenue: 0,
+        totalRevenue: 0,
+        newSignups: await Tenant.countDocuments({ createdAt: { $gte: thirtyDaysAgo } }),
+        expiringSoon: expiringSoonCount,
+        recentLibraries,
+        growthData
       }
     });
   } catch (err) {
@@ -40,7 +67,7 @@ export const getAdminStats = async (req, res, next) => {
 
 export const getAllTenants = async (req, res, next) => {
   try {
-    const tenants = await Tenant.find();
+    const tenants = await Tenant.find().populate('subscriptionPlanId').sort({ createdAt: -1 });
     res.status(200).json({
       status: 'success',
       results: tenants.length,
@@ -53,18 +80,31 @@ export const getAllTenants = async (req, res, next) => {
 
 export const createTenant = async (req, res, next) => {
   try {
-    const { name, subdomain, email, password } = req.body;
+    const { name, subdomain, email, password, plan, trialDays = 14 } = req.body;
+
+    const trialEnd = addDays(new Date(), parseInt(trialDays));
+    const expiryDate = trialEnd; // Default expiry to trial end
 
     // 1. Create the tenant entry
-    const newTenant = await Tenant.create({ name, subdomain, email });
+    const newTenant = await Tenant.create({
+      name,
+      subdomain,
+      email,
+      plan: plan || 'trial',
+      status: 'trial',
+      trialStart: new Date(),
+      trialEnd,
+      expiryDate,
+      ownerName: req.body.ownerName || name
+    });
 
     // 2. Create the initial Librarian for this tenant
     const { User } = getModels(req.db);
     await User.create({
-      fullName: `${name} Admin`,
+      fullName: req.body.ownerName || `${name} Admin`,
       email,
       password,
-      role: 'librarian',
+      role: 'admin', // Changing librarian to admin as requested
       tenantId: newTenant._id
     });
 
@@ -77,19 +117,127 @@ export const createTenant = async (req, res, next) => {
   }
 };
 
+export const updateTenant = async (req, res, next) => {
+  try {
+    const tenant = await Tenant.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+      runValidators: true
+    });
+
+    if (!tenant) return res.status(404).json({ status: 'fail', message: 'No tenant found' });
+
+    res.status(200).json({
+      status: 'success',
+      data: tenant
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
 export const deleteTenant = async (req, res, next) => {
   try {
-    if (mongoose.Types.ObjectId.isValid(req.params.id)) {
-      await Tenant.findByIdAndDelete(req.params.id);
-    } else {
-      await Tenant.findOneAndDelete({ subdomain: req.params.id.toLowerCase() });
-    }
+    const tenant = await Tenant.findByIdAndDelete(req.params.id);
+    if (!tenant) return res.status(404).json({ status: 'fail', message: 'No tenant found' });
+
     res.status(204).json({
       status: 'success',
       data: null
     });
   }
   catch (err) {
+    next(err);
+  }
+};
+
+export const getLibraryAnalytics = async (req, res, next) => {
+  try {
+    const tenantId = req.params.id;
+    const { User, Book, Transaction } = getModels(req.db);
+
+    const [totalStudents, totalBooks, transactions] = await Promise.all([
+      User.countDocuments({ role: 'member' }),
+      Book.countDocuments(),
+      Transaction.countDocuments()
+    ]);
+
+    res.status(200).json({
+      status: 'success',
+      data: {
+        totalStudents,
+        totalBooks,
+        activeUsers: totalStudents,
+        transactions,
+        revenue: 0
+      }
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const getAllGlobalUsers = async (req, res, next) => {
+  try {
+    const { User } = getModels(mongoose.connection);
+    const users = await User.find().populate('tenantId', 'name').sort({ createdAt: -1 });
+    
+    res.status(200).json({
+      status: 'success',
+      results: users.length,
+      data: users
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const updateGlobalUser = async (req, res, next) => {
+  try {
+    const { User } = getModels(mongoose.connection);
+    const user = await User.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+      runValidators: true
+    });
+
+    if (!user) return res.status(404).json({ status: 'fail', message: 'No user found' });
+
+    res.status(200).json({
+      status: 'success',
+      data: user
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const getAllQueries = async (req, res, next) => {
+  try {
+    const queries = await Query.find().sort({ createdAt: -1 });
+    
+    res.status(200).json({
+      status: 'success',
+      results: queries.length,
+      data: queries
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const updateQuery = async (req, res, next) => {
+  try {
+    const query = await Query.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+      runValidators: true
+    });
+
+    if (!query) return res.status(404).json({ status: 'fail', message: 'No query found' });
+
+    res.status(200).json({
+      status: 'success',
+      data: query
+    });
+  } catch (err) {
     next(err);
   }
 };

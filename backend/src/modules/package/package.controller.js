@@ -19,7 +19,7 @@ export const getAllPackages = async (req, res, next) => {
 export const createPackage = async (req, res, next) => {
   try {
     req.body.tenantId = req.tenantId;
-    
+
     const newPackage = await Package.create(req.body);
 
     res.status(201).json({

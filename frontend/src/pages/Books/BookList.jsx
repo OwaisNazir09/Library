@@ -8,6 +8,7 @@ import ErrorState from '../../components/common/ErrorState';
 import EmptyState from '../../components/common/EmptyState';
 import Pagination from '../../components/common/Pagination';
 import React from 'react';
+import { useSubscription } from '../../hooks/useSubscription';
 
 const BookList = () => {
   const [currentPage, setCurrentPage] = React.useState(1);
@@ -166,6 +167,8 @@ const BookList = () => {
     );
   };
 
+  const { isExpired } = useSubscription();
+
   return (
     <div className="space-y-5">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -184,7 +187,11 @@ const BookList = () => {
               className="w-56 bg-white border border-slate-200 rounded-lg h-[34px] pl-8 pr-3 text-[13px] outline-none focus:ring-2 focus:ring-teal-500/10 focus:border-teal-500 transition-all"
             />
           </div>
-          <button className="btn btn-primary btn-md" onClick={() => setIsModalOpen(true)}>
+          <button 
+            className={`btn btn-primary btn-md ${isExpired ? 'opacity-50 cursor-not-allowed grayscale' : ''}`} 
+            onClick={() => !isExpired && setIsModalOpen(true)}
+            title={isExpired ? 'Subscription Expired' : ''}
+          >
             <Plus size={16} />
             <span className="hidden sm:inline">Add Book</span>
           </button>

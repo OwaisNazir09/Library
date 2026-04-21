@@ -8,7 +8,9 @@ import rateLimit from "express-rate-limit";
 
 import globalErrorHandler from "./middleware/errorHandler.js";
 import { tenantHandler } from "./middleware/tenant.js";
-import tenantRoutes from "./modules/tenant/tenant.routes.js";
+import { checkSubscription } from "./middleware/subscriptionCheck.js";
+
+
 import authRoutes from "./modules/auth/auth.routes.js";
 import userRoutes from "./modules/user/user.routes.js";
 import bookRoutes from "./modules/book/book.routes.js";
@@ -26,9 +28,12 @@ import resourceRoutes from "./modules/resource/resource.routes.js";
 import financeRoutes from "./modules/ledger/finance.routes.js";
 import blogRoutes from "./modules/blog/blog.routes.js";
 import attendanceRoutes from "./modules/attendance/attendance.routes.js";
+import tenantRoutes from "./modules/tenant/tenant.routes.js";
 
 const app = express();
 
+app.use("/api", tenantHandler);
+app.use("/api", checkSubscription);
 app.use(
   cors({
     origin: [
@@ -48,6 +53,7 @@ app.use(
       "Content-Type",
       "Authorization",
       "x-tenant-id",
+      "x-platform",
       "X-Requested-With",
       "Accept",
     ],
@@ -74,8 +80,6 @@ app.use(express.urlencoded({ extended: true, limit: "10kb" }));
 app.use(mongoSanitize());
 
 app.use(xss());
-
-app.use("/api", tenantHandler);
 
 app.use("/api/tenants", tenantRoutes);
 app.use("/api/auth", authRoutes);

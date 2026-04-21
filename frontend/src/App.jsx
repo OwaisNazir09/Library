@@ -6,8 +6,12 @@ import QueryPage from './pages/Query/QueryPage';
 import AdminLayout from './components/common/AdminLayout';
 import SuperAdminDashboard from './pages/Admin/AdminDashboard';
 import TenantManagement from './pages/Admin/TenantManagement';
-import GlobalUsers from './pages/Admin/UserManagementGlobal';
-import QueriesDashboard from './pages/Admin/QueriesDashboard';
+import GlobalUsers from './pages/Admin/GlobalUsers';
+import InterestQueries from './pages/Admin/InterestQueries';
+import BillingSubscriptions from './pages/Admin/BillingSubscriptions';
+import Analytics from './pages/Admin/Analytics';
+import PlatformSettings from './pages/Admin/PlatformSettings';
+import Packages from './pages/Admin/Packages';
 import AdminDashboard from './pages/Dashboard/AdminDashboard';
 import BookList from './pages/Books/BookList';
 import RegistrationList from './pages/Users/RegistrationList';
@@ -48,11 +52,14 @@ const App = () => {
         <Route path="/admin" element={<AdminLayout />}>
           <Route index element={<Navigate to="/admin/dashboard" replace />} />
           <Route path="dashboard" element={<SuperAdminDashboard />} />
-          <Route path="tenants" element={<TenantManagement />} />
+          <Route path="libraries" element={<TenantManagement />} />
+          <Route path="tenants" element={<Navigate to="/admin/libraries" replace />} />
           <Route path="users" element={<GlobalUsers />} />
-          <Route path="queries" element={<QueriesDashboard />} />
-          <Route path="analytics" element={<SuperAdminDashboard />} />
-          <Route path="settings" element={<Settings />} />
+          <Route path="queries" element={<InterestQueries />} />
+          <Route path="packages" element={<Packages />} />
+          <Route path="billing" element={<BillingSubscriptions />} />
+          <Route path="analytics" element={<Analytics />} />
+          <Route path="settings" element={<PlatformSettings />} />
         </Route>
       </Route>
 

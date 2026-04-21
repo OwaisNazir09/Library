@@ -20,31 +20,33 @@ import {
 } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import { logout } from '../../store/slices/authSlice';
+import { useSubscription } from '../../hooks/useSubscription';
 
-const groups = [
+const librarianGroups = [
   {
     label: 'MAIN MENU',
     items: [
       { name: 'Overview', icon: LayoutGrid, path: '/app/dashboard' },
-      { name: 'Books', icon: BookOpen, path: '/app/books' },
-      { name: 'Book Circulation', icon: PlusCircle, path: '/app/borrowings' },
+      { name: 'Books', icon: BookOpen, path: '/app/books', feature: 'bookManagement' },
+      { name: 'Book Circulation', icon: PlusCircle, path: '/app/borrowings', feature: 'circulation' },
       { name: 'Library Activities', icon: Library, path: '/app/events' },
       { name: 'Attendance Logs', icon: Clock, path: '/app/attendance' },
-      { name: 'Student Registrations', icon: Users, path: '/app/registrations' },
+      { name: 'Student Registrations', icon: Users, path: '/app/registrations', feature: 'students' },
       { name: 'Membership Packages', icon: LayoutGrid, path: '/app/packages' },
-      { name: 'Study Desks', icon: Coffee, path: '/app/tables' },
-      { name: 'Digital Library', icon: BookOpen, path: '/app/digital-library' },
+      { name: 'Study Desks', icon: Coffee, path: '/app/tables', feature: 'studyDesks' },
+      { name: 'Digital Library', icon: BookOpen, path: '/app/digital-library', feature: 'digitalLibrary' },
     ]
   },
   {
     label: 'REPORTS',
     items: [
-      { name: 'Reports & Analytics', icon: BarChart2, path: '/app/reports' },
+      { name: 'Reports & Analytics', icon: BarChart2, path: '/app/reports', feature: 'reports' },
       { name: 'Overdue Reminder', icon: Clock, path: '/app/reminders' },
     ]
   },
   {
     label: 'FINANCE',
+    feature: 'finance',
     items: [
       { name: 'Finance Dashboard', icon: LayoutGrid, path: '/app/finance' },
       { name: 'Chart of Accounts', icon: Library, path: '/app/finance/accounts' },
@@ -64,11 +66,51 @@ const groups = [
   }
 ];
 
+const superAdminGroups = [
+  {
+    label: 'PLATFORM AUTHORITY',
+    items: [
+      { name: 'Dashboard', icon: LayoutGrid, path: '/admin/dashboard' },
+      { name: 'Libraries (Nodes)', icon: Library, path: '/admin/libraries' },
+      { name: 'Packages & Plans', icon: Receipt, path: '/admin/packages' },
+      { name: 'Users (Global)', icon: Users, path: '/admin/users' },
+      { name: 'Interest Queries', icon: HelpCircle, path: '/admin/queries' },
+    ]
+  },
+  {
+    label: 'MANAGEMENT',
+    items: [
+      { name: 'Billing & Subscriptions', icon: Receipt, path: '/admin/billing' },
+      { name: 'Platform Analytics', icon: BarChart2, path: '/admin/analytics' },
+      { name: 'Domains & Instances', icon: LayoutGrid, path: '/admin/instances' },
+    ]
+  },
+  {
+    label: 'SYSTEM',
+    items: [
+      { name: 'Feature Flags', icon: LayoutGrid, path: '/admin/features' },
+      { name: 'Audit Logs', icon: Clock, path: '/admin/audit' },
+      { name: 'Support Tickets', icon: HelpCircle, path: '/admin/support' },
+      { name: 'Platform Settings', icon: Settings, path: '/admin/settings' },
+    ]
+  }
+];
+
+
+
 const Sidebar = ({ isOpen, onClose }) => {
   const location = useLocation();
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { user } = useSelector((state) => state.auth);
+  const { hasFeature } = useSubscription();
+
+  const groups = user?.role === 'super_admin' 
+    ? superAdminGroups 
+    : librarianGroups.filter(group => !group.feature || hasFeature(group.feature)).map(group => ({
+        ...group,
+        items: group.items.filter(item => !item.feature || hasFeature(item.feature))
+      }));
 
   const handleLogout = () => {
     dispatch(logout());
@@ -83,7 +125,9 @@ const Sidebar = ({ isOpen, onClose }) => {
           <div className="w-8 h-8 flex items-center justify-center">
             <img src="/appicon.png" alt="Welib" className="w-full h-full object-contain" />
           </div>
-          <span className="text-xl font-bold text-slate-900 tracking-tight dark:text-slate-100">Welib</span>
+          <span className="text-xl font-bold text-slate-900 tracking-tight dark:text-slate-100">
+            {user?.role === 'super_admin' ? 'AdminCore' : 'Welib'}
+          </span>
         </div>
         <button onClick={onClose} className="lg:hidden p-2 text-slate-400 hover:text-black transition-colors">
           <X size={24} />

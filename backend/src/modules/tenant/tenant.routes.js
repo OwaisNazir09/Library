@@ -4,7 +4,8 @@ import {
   getAllTenants, 
   getTenant,
   joinLibrary,
-  getMyLibraries
+  getMyLibraries,
+  getCurrentTenant
 } from './tenant.controller.js';
 import { protect } from '../../middleware/auth.js';
 
@@ -20,5 +21,6 @@ router.route('/:id')
 // Library membership
 router.post('/join', protect, joinLibrary);
 router.get('/my', protect, getMyLibraries);
+router.get('/current', getCurrentTenant);
 
 export default router;

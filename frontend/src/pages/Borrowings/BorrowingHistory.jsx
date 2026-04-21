@@ -16,6 +16,7 @@ import Pagination from '../../components/common/Pagination';
 import { toast } from 'react-hot-toast';
 import { format, isAfter } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useSubscription } from '../../hooks/useSubscription';
 
 const BorrowingHistory = () => {
   const [currentPage, setCurrentPage] = React.useState(1);
@@ -143,6 +144,8 @@ const BorrowingHistory = () => {
     });
   };
 
+  const { isExpired } = useSubscription();
+
   return (
     <div className="space-y-5">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -161,7 +164,11 @@ const BorrowingHistory = () => {
               className="w-56 bg-white border border-slate-200 rounded-lg h-[34px] pl-8 pr-3 text-[13px] outline-none focus:ring-2 focus:ring-teal-500/10 focus:border-teal-500 transition-all"
             />
           </div>
-          <button onClick={() => setIsIssueModalOpen(true)} className="btn btn-primary btn-md">
+          <button 
+            onClick={() => !isExpired && setIsIssueModalOpen(true)} 
+            className={`btn btn-primary btn-md ${isExpired ? 'opacity-50 cursor-not-allowed grayscale' : ''}`}
+            title={isExpired ? 'Subscription Expired' : ''}
+          >
             <Plus size={16} />
             <span className="hidden sm:inline ml-1.5">Issue Book</span>
           </button>

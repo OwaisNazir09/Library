@@ -14,6 +14,10 @@ const tenantSchema = new mongoose.Schema({
     trim: true,
     lowercase: true
   },
+  ownerName: {
+    type: String,
+    trim: true
+  },
   email: {
     type: String,
     required: [true, 'Email is required'],
@@ -27,6 +31,34 @@ const tenantSchema = new mongoose.Schema({
     type: String,
     unique: true,
     sparse: true
+  },
+  plan: {
+    type: String,
+    default: 'trial'
+  },
+  subscriptionPlanId: {
+    type: mongoose.Schema.ObjectId,
+    ref: 'SubscriptionPlan'
+  },
+  status: {
+    type: String,
+    enum: ['active', 'trial', 'expired', 'suspended', 'disabled'],
+    default: 'trial'
+  },
+  trialStart: {
+    type: Date,
+    default: Date.now
+  },
+  trialEnd: Date,
+  expiryDate: Date,
+  paymentStatus: {
+    type: String,
+    enum: ['pending', 'paid', 'failed'],
+    default: 'pending'
+  },
+  isSuspended: {
+    type: Boolean,
+    default: false
   },
   isActive: {
     type: Boolean,
@@ -45,6 +77,25 @@ const tenantSchema = new mongoose.Schema({
       type: Number,
       default: 10
     }
+  },
+  features: {
+    bookManagement: { type: Boolean, default: true },
+    students: { type: Boolean, default: true },
+    circulation: { type: Boolean, default: true },
+    digitalLibrary: { type: Boolean, default: false },
+    finance: { type: Boolean, default: false },
+    reports: { type: Boolean, default: false },
+    studyDesks: { type: Boolean, default: false },
+    multiBranch: { type: Boolean, default: false },
+    staffAccounts: { type: Boolean, default: false },
+    apiAccess: { type: Boolean, default: false }
+  },
+  limits: {
+    maxBooks: { type: Number, default: 500 },
+    maxStudents: { type: Number, default: 300 },
+    maxStaff: { type: Number, default: 5 },
+    maxBranches: { type: Number, default: 1 },
+    storageLimit: { type: Number, default: 1024 }
   },
   createdAt: {
     type: Date,

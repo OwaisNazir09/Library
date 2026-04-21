@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken';
 import { getModels } from '../../utils/helpers.js';
+import Tenant from '../tenant/tenant.model.js';
 
 const signToken = id => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -36,7 +37,7 @@ export const signup = async (req, res, next) => {
   try {
     console.log('[Auth] Signup attempt:', req.body.email);
     const { User } = getModels(req.db);
-    
+
     // Map uploaded files to documents schema
     const formattedDocs = [];
     if (req.files && req.files.length > 0) {
@@ -100,13 +101,35 @@ export const login = async (req, res, next) => {
       throw error;
     }
 
-    // Check Approval Status (Admins can always login)
     if (user.role === 'member' && user.status !== 'approved') {
       let msg = 'Your account is pending approval.';
       if (user.status === 'rejected') msg = `Your registration was rejected. Reason: ${user.rejectionReason || 'No reason provided.'}`;
       if (user.status === 'suspended') msg = 'Your account has been suspended.';
-      
+
       const error = new Error(msg);
+      error.statusCode = 403;
+      throw error;
+    }
+
+    // Tenant Status Check for library admins and members
+    if (user.tenantId && user.role !== 'super_admin') {
+      const tenant = await Tenant.findById(user.tenantId);
+      if (tenant) {
+        if (tenant.status === 'expired') {
+          const error = new Error('Library subscription expired. Access restricted until payment is processed.');
+          error.statusCode = 403;
+          throw error;
+        }
+        if (tenant.status === 'suspended') {
+          const error = new Error('Library instance suspended by platform administration.');
+          error.statusCode = 403;
+          throw error;
+        }
+      }
+    }
+
+    if (req.headers['x-platform'] === 'web' && !['admin', 'librarian', 'super_admin'].includes(user.role)) {
+      const error = new Error('Only admins can login to the web portal. Please use the mobile app.');
       error.statusCode = 403;
       throw error;
     }

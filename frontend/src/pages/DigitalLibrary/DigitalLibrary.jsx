@@ -14,6 +14,7 @@ import EmptyState from '../../components/common/EmptyState';
 import Pagination from '../../components/common/Pagination';
 import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
+import { useSubscription } from '../../hooks/useSubscription';
 
 const DigitalLibrary = () => {
   const navigate = useNavigate();
@@ -118,6 +119,23 @@ const DigitalLibrary = () => {
     window.open(resource.fileUrl, '_blank');
   };
 
+  const { isExpired, hasFeature } = useSubscription();
+
+  if (!hasFeature('digitalLibrary')) {
+    return (
+      <div className="card py-20 flex flex-col items-center justify-center space-y-6">
+        <div className="w-20 h-20 rounded-3xl bg-amber-50 flex items-center justify-center text-amber-600">
+          <Lock size={40} />
+        </div>
+        <div className="text-center space-y-2">
+          <h2 className="text-2xl font-bold text-slate-900">Module Locked</h2>
+          <p className="text-slate-500 max-w-sm">The Digital Repository module is not included in your current subscription plan. Contact your administrator to upgrade.</p>
+        </div>
+        <button onClick={() => navigate('/app/packages')} className="btn btn-primary btn-md px-10">View Plans</button>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-5">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -130,7 +148,11 @@ const DigitalLibrary = () => {
             <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
             <input type="text" placeholder="Search assets..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-56 bg-white border border-slate-200 rounded-lg h-[34px] pl-8 pr-3 text-[13px] outline-none focus:ring-2 focus:ring-teal-500/10 transition-all" />
           </div>
-          <button onClick={() => openModal()} className="btn btn-primary btn-md">
+          <button 
+            onClick={() => !isExpired && openModal()} 
+            className={`btn btn-primary btn-md ${isExpired ? 'opacity-50 cursor-not-allowed grayscale' : ''}`}
+            title={isExpired ? 'Subscription Expired' : ''}
+          >
             <Plus size={16} /> <span className="hidden sm:inline">Upload Resource</span>
           </button>
         </div>

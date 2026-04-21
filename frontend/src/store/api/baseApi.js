@@ -4,8 +4,7 @@ import { toast } from "react-hot-toast";
 const baseQuery = fetchBaseQuery({
   baseUrl: "https://library-7qme.onrender.com/api",
 
-
-  //baseUrl: 'http://192.168.31.145:3245/api',
+  //baseUrl: "http://localhost:3245/api",
   prepareHeaders: (headers) => {
     const token = localStorage.getItem("token");
     const tenantId = localStorage.getItem("tenantId");
@@ -14,6 +13,8 @@ const baseQuery = fetchBaseQuery({
     if (token) {
       headers.set("Authorization", `Bearer ${token}`);
     }
+
+    headers.set("x-platform", "web");
 
     if (tenantId && role !== "super_admin") {
       headers.set("x-tenant-id", tenantId);
@@ -39,7 +40,9 @@ const baseQueryWithGlobalHandle = async (args, api, extraOptions) => {
         break;
 
       case 403:
-        toast.error("Access Denied: You do not have permission");
+        toast.error(
+          data?.message || "Access Denied: You do not have permission",
+        );
         break;
 
       case 500:

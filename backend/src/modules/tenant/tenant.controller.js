@@ -117,3 +117,26 @@ export const getMyLibraries = async (req, res, next) => {
     next(err);
   }
 };
+
+export const getCurrentTenant = async (req, res, next) => {
+  try {
+    if (!req.tenantId) {
+      return res.status(400).json({ message: 'No tenant context found' });
+    }
+
+    const tenant = await Tenant.findById(req.tenantId).populate('subscriptionPlanId');
+
+    if (!tenant) {
+      return res.status(404).json({ message: 'Tenant not found' });
+    }
+
+    res.status(200).json({
+      status: 'success',
+      data: {
+        tenant
+      }
+    });
+  } catch (err) {
+    next(err);
+  }
+};

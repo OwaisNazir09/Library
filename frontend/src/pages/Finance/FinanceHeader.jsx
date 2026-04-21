@@ -5,10 +5,12 @@ import {
   Plus, TrendingDown, TrendingUp, RefreshCcw, 
   Wallet, PieChart, Receipt, Layers, Users
 } from 'lucide-react';
+import { useSubscription } from '../../hooks/useSubscription';
 
 const FinanceHeader = ({ onAction }) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { isExpired } = useSubscription();
 
   const tabs = [
     { id: 'overview',     label: 'Overview',      icon: PieChart,   path: '/app/finance' },
@@ -39,8 +41,10 @@ const FinanceHeader = ({ onAction }) => {
           {actions.map((act) => (
             <button
               key={act.id}
-              onClick={() => onAction(act.id)}
-              className="btn btn-sm btn-secondary font-semibold"
+              onClick={() => !isExpired && onAction(act.id)}
+              disabled={isExpired}
+              title={isExpired ? 'Subscription Expired' : ''}
+              className={`btn btn-sm btn-secondary font-semibold ${isExpired ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
               <act.icon size={14} className={act.color} />
               <span className="text-[11px] uppercase tracking-wider">{act.label}</span>

@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { useGetFinanceStatsQuery, useGetTransactionsQuery } from '../../store/api/financeApi';
 import { format } from 'date-fns';
+import { useSubscription } from '../../hooks/useSubscription';
 import FinanceHeader from './FinanceHeader';
 import UniversalTransactionModal from './UniversalTransactionModal';
 
@@ -28,6 +29,23 @@ const StatCard = ({ label, value, icon: Icon, color, bg, subtitle }) => (
 const FinanceDashboard = () => {
   const navigate = useNavigate();
   const [modal, setModal] = React.useState({ type: null, isOpen: false });
+
+  const { hasFeature } = useSubscription();
+
+  if (!hasFeature('finance')) {
+    return (
+      <div className="card py-20 flex flex-col items-center justify-center space-y-6">
+        <div className="w-20 h-20 rounded-3xl bg-amber-50 flex items-center justify-center text-amber-600">
+          <TrendingUp size={40} />
+        </div>
+        <div className="text-center space-y-2">
+          <h2 className="text-2xl font-bold text-slate-900">Finance Module Locked</h2>
+          <p className="text-slate-500 max-w-sm">The Financial Ledger and Accounting module is not included in your current subscription plan. Contact your administrator to upgrade.</p>
+        </div>
+        <button onClick={() => navigate('/app/packages')} className="btn btn-primary btn-md px-10">View Plans</button>
+      </div>
+    );
+  }
 
   const { data: statsData, isLoading: statsLoading } = useGetFinanceStatsQuery();
   const { data: transactionsData, isLoading: txLoading } = useGetTransactionsQuery({ limit: 8, sort: '-date' });

@@ -4,6 +4,7 @@
 
 :root {
   --primary: #044343;
+  --primary-light: #065e5e;
   --secondary: #10B981;
   --background: #F9FAFB;
   --border: #E5E7EB;
@@ -67,7 +68,7 @@
 
   /* Minimal SaaS Containers */
   .card {
-    @apply bg-white border border-slate-200 rounded-lg p-4 shadow-[0_1px_2px_0_rgba(0,0,0,0.05)] transition-colors duration-200 dark:bg-slate-900 dark:border-slate-800;
+    @apply bg-white border border-slate-200 rounded-lg p-4 shadow-sm transition-colors duration-200 dark:bg-slate-900 dark:border-slate-800;
   }
 
   /* Compact Buttons */
@@ -187,18 +188,24 @@
   .fade-in {
     animation: fadeIn 0.15s ease-out;
   }
+
+  .animate-slide-up {
+    animation: slideUp 0.2s ease-out;
+  }
+
+  .badge-warning {
+    @apply bg-amber-50 text-amber-700 border border-amber-100 dark:bg-amber-950/20 dark:text-amber-400 dark:border-amber-900/30;
+  }
 }
 
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(4px);
-  }
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
 
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 /* Scrollbar Refinement */

@@ -2,6 +2,7 @@ import React from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import Header from './Navbar';
+import SubscriptionBanner from './SubscriptionBanner';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const Layout = () => {
@@ -22,6 +23,7 @@ const Layout = () => {
 
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         <Header onMenuClick={() => setIsSidebarOpen(true)} />
+        <SubscriptionBanner />
 
         <main className="flex-1 overflow-y-auto px-6 py-6">
           <div className="mx-auto max-w-[1400px]">
