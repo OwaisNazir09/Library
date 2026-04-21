@@ -30,25 +30,23 @@ async function checkUser() {
       console.log('User found:', user.email);
       console.log('Role:', user.role);
       console.log('Has Password:', !!user.password);
-      
-      // Reset password to 'password123' if requested (optional)
+
       const bcrypt = await import('bcryptjs');
       user.password = await bcrypt.default.hash('password123', 12);
       await user.save();
       console.log('Password reset to password123 for', email);
     } else {
       console.log('User not found:', email);
-      
-      // Create it
+
       const bcrypt = await import('bcryptjs');
       const hashedPassword = await bcrypt.default.hash('password123', 12);
       await User.create({
         email,
         password: hashedPassword,
-        fullName: 'Admin User',
-        role: 'admin'
+        fullName: 'Librarian User',
+        role: 'librarian'
       });
-      console.log('Created user admin@ccc.cc with password password123');
+      console.log('Created user admin@ccc.cc with role librarian');
     }
 
     process.exit(0);

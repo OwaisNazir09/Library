@@ -8,6 +8,6 @@ router.use(protect);
 
 router.get('/', getMyNotifications);
 router.patch('/mark-as-read', markNotificationsAsRead);
-router.post('/send', restrictTo('admin', 'librarian', 'super_admin'), sendNotification);
+router.post('/send', restrictTo('librarian', 'super_admin'), sendNotification);
 
 export default router;

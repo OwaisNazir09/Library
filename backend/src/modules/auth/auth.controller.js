@@ -128,8 +128,8 @@ export const login = async (req, res, next) => {
       }
     }
 
-    if (req.headers['x-platform'] === 'web' && !['admin', 'librarian', 'super_admin'].includes(user.role)) {
-      const error = new Error('Only admins can login to the web portal. Please use the mobile app.');
+    if (req.headers['x-platform'] === 'web' && !['librarian', 'super_admin'].includes(user.role)) {
+      const error = new Error('Authorized personnel only can login to the web portal.');
       error.statusCode = 403;
       throw error;
     }

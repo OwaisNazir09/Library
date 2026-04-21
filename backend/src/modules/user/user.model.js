@@ -25,9 +25,9 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: [true, 'Full name is required']
   },
-  role: {
+    role: {
     type: String,
-    enum: ['member', 'librarian', 'admin', 'super_admin'],
+    enum: ['member', 'librarian', 'super_admin'],
     default: 'member'
   },
   phone: String,

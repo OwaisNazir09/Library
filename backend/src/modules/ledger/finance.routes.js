@@ -1,17 +1,17 @@
 import express from 'express';
 import * as fc from './finance.controller.js';
 import { protect, restrictTo } from '../../middleware/auth.js';
+import { restrictToFeature } from '../../middleware/subscriptionCheck.js';
 
 const router = express.Router();
 
 router.use(protect);
+router.use(restrictToFeature('finance'));
 
-// Student self-access
 router.get('/me/ledger', fc.getMyLedger);
 
-router.use(restrictTo('librarian', 'admin', 'super_admin'));
+router.use(restrictTo('librarian', 'super_admin'));
 
-// Dashboard
 router.get('/stats', fc.getFinanceStats);
 
 router.get('/accounts', fc.getAccounts);

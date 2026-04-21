@@ -1,6 +1,7 @@
 import express from 'express';
 import { getAllUsers, getUser, updateUser, deleteUser, getMe, createUser, approveRegistration, rejectRegistration, assignPackage } from './user.controller.js';
 import { protect, restrictTo } from '../../middleware/auth.js';
+import { restrictToFeature } from '../../middleware/subscriptionCheck.js';
 import { createUploader } from '../../middleware/upload.middleware.js';
 
 const router = express.Router();
@@ -16,7 +17,8 @@ const userUpload = upload.fields([
 router.get('/me', getMe, getUser);
 router.patch('/update-me', getMe, userUpload, updateUser);
 
-router.use(restrictTo('admin', 'librarian'));
+router.use(restrictTo('librarian'));
+router.use(restrictToFeature('students'));
 
 router.route('/')
   .get(getAllUsers)

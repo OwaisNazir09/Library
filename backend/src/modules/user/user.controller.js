@@ -131,6 +131,39 @@ export const updateUser = async (req, res, next) => {
       throw error;
     }
 
+    if (req.body.registrationFee || req.body.securityDeposit || req.body.studyDeskFee || req.body.package) {
+      const { ensureStudentAccount, getSystemAccount, recordTransaction, seedChartOfAccounts } = await import('../ledger/finance.controller.js');
+      await seedChartOfAccounts(req.db, req.tenantId);
+      const studentAccount = await ensureStudentAccount(req.db, req.tenantId, user._id, user.fullName);
+
+      const regFee = Number(req.body.registrationFee) || 0;
+      if (regFee > 0) {
+        const acc = await getSystemAccount(req.db, req.tenantId, 'Registration Fees', 'Income', 'Operating Income');
+        await recordTransaction(req.db, req.tenantId, { debitAccountId: studentAccount._id, creditAccountId: acc._id, amount: regFee, type: 'fee_charge', description: 'Registration Fee (Manual)', userId: req.user?._id, studentId: user._id });
+      }
+
+      const secDeposit = Number(req.body.securityDeposit) || 0;
+      if (secDeposit > 0) {
+        const acc = await getSystemAccount(req.db, req.tenantId, 'Security Deposits', 'Liabilities', 'Deposit');
+        await recordTransaction(req.db, req.tenantId, { debitAccountId: studentAccount._id, creditAccountId: acc._id, amount: secDeposit, type: 'fee_charge', description: 'Refundable Security Deposit (Manual)', userId: req.user?._id, studentId: user._id });
+      }
+
+      const deskFee = Number(req.body.studyDeskFee) || 0;
+      if (deskFee > 0) {
+        const acc = await getSystemAccount(req.db, req.tenantId, 'Study Desk Income', 'Income', 'Service Income');
+        await recordTransaction(req.db, req.tenantId, { debitAccountId: studentAccount._id, creditAccountId: acc._id, amount: deskFee, type: 'fee_charge', description: 'Study Desk Fee (Manual)', userId: req.user?._id, studentId: user._id });
+      }
+
+      if (req.body.package && user.status === 'approved') {
+        const pkg = await (await import('../package/package.model.js')).default.findById(req.body.package);
+        if (pkg && Number(pkg.price) > 0) {
+          const acc = await getSystemAccount(req.db, req.tenantId, 'Membership Income', 'Income', 'Operating Income');
+          await recordTransaction(req.db, req.tenantId, { debitAccountId: studentAccount._id, creditAccountId: acc._id, amount: Number(pkg.price), type: 'fee_charge', description: `Membership Fee (${pkg.name})`, userId: req.user?._id, studentId: user._id });
+          await user.updateOne({ membershipCharged: true });
+        }
+      }
+    }
+
     res.status(200).json({
       status: 'success',
       data: { user }
@@ -246,6 +279,32 @@ export const createUser = async (req, res, next) => {
 
     if (membershipCharged) {
       await newUser.updateOne({ membershipCharged: true });
+    }
+
+    try {
+      const sendEmail = (await import('../../utils/emailService.js')).default;
+      const { welcomeEmailTemplate } = await import('../../templates/emails/welcomeEmail.js');
+      const { default: Tenant } = await import('../tenant/tenant.model.js');
+      
+      const tenant = await Tenant.findById(req.tenantId);
+      const libraryName = tenant?.name || 'Welib Library';
+
+      await sendEmail({
+        email: newUser.email,
+        name: newUser.fullName,
+        subject: `Welcome to ${libraryName} - Registration Successful`,
+        html: welcomeEmailTemplate({
+          fullName: newUser.fullName,
+          idNumber: newUser.idNumber,
+          email: newUser.email,
+          status: newUser.status,
+          password: req.body.password || 'password123',
+          libraryName
+        }),
+        message: `Hello ${newUser.fullName}, your registration at ${libraryName} is successful. Your Library ID is ${newUser.idNumber}.`
+      });
+    } catch (emailErr) {
+      console.error('Registration Email Error:', emailErr.message);
     }
 
     res.status(201).json({ status: 'success', data: { user: newUser, account: studentAccount } });

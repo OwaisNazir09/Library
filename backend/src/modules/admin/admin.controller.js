@@ -98,13 +98,12 @@ export const createTenant = async (req, res, next) => {
       ownerName: req.body.ownerName || name
     });
 
-    // 2. Create the initial Librarian for this tenant
     const { User } = getModels(req.db);
     await User.create({
       fullName: req.body.ownerName || `${name} Admin`,
       email,
       password,
-      role: 'admin', // Changing librarian to admin as requested
+      role: 'librarian',
       tenantId: newTenant._id
     });
 
@@ -179,11 +178,35 @@ export const getLibraryAnalytics = async (req, res, next) => {
 export const getAllGlobalUsers = async (req, res, next) => {
   try {
     const { User } = getModels(mongoose.connection);
-    const users = await User.find().populate('tenantId', 'name').sort({ createdAt: -1 });
-    
+
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 10;
+    const skip = (page - 1) * limit;
+    const search = req.query.search || '';
+
+    const query = {};
+    if (search) {
+      query.$or = [
+        { fullName: { $regex: search, $options: 'i' } },
+        { email: { $regex: search, $options: 'i' } }
+      ];
+    }
+
+    const [users, total] = await Promise.all([
+      User.find(query)
+        .populate('tenantId', 'name')
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit),
+      User.countDocuments(query)
+    ]);
+
     res.status(200).json({
       status: 'success',
       results: users.length,
+      total,
+      page,
+      pages: Math.ceil(total / limit),
       data: users
     });
   } catch (err) {
@@ -213,7 +236,7 @@ export const updateGlobalUser = async (req, res, next) => {
 export const getAllQueries = async (req, res, next) => {
   try {
     const queries = await Query.find().sort({ createdAt: -1 });
-    
+
     res.status(200).json({
       status: 'success',
       results: queries.length,

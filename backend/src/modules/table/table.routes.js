@@ -1,11 +1,13 @@
 import express from 'express';
 import * as tableController from './table.controller.js';
 import { protect, restrictTo } from '../../middleware/auth.js';
+import { restrictToFeature } from '../../middleware/subscriptionCheck.js';
 
 const router = express.Router();
 
 router.use(protect);
-router.use(restrictTo('librarian', 'admin'));
+router.use(restrictToFeature('studyDesks'));
+router.use(restrictTo('librarian'));
 
 router.route('/')
   .get(tableController.getAllTables)

@@ -46,7 +46,7 @@ const subscriptionPlanSchema = new mongoose.Schema({
     maxStudents: { type: Number, default: 300 },
     maxStaff: { type: Number, default: 5 },
     maxBranches: { type: Number, default: 1 },
-    storageLimit: { type: Number, default: 1024 } // in MB
+    storageLimit: { type: Number, default: 1024 }
   },
   status: {
     type: String,

@@ -9,10 +9,23 @@ import {
   useGetTrialBalanceQuery, useGetProfitAndLossQuery, useGetBalanceSheetQuery 
 } from '../../store/api/financeApi';
 import { format } from 'date-fns';
+import { useSubscription } from '../../hooks/useSubscription';
+import LockedFeature from '../../components/common/LockedFeature';
 
 const FinanceReports = () => {
   const [activeTab, setActiveTab] = useState('pl');
   const [filters, setFilters] = useState({ startDate: '', endDate: '' });
+  const { hasFeature } = useSubscription();
+
+  if (!hasFeature('finance')) {
+    return (
+      <LockedFeature 
+        featureName="Financial Reports" 
+        description="Detailed Profit & Loss, Balance Sheets, and Trial Balance reports are available on premium plans. Upgrade to gain full financial oversight."
+        icon={BarChart3}
+      />
+    );
+  }
 
   const { data: tbData, isLoading: tbLoading } = useGetTrialBalanceQuery();
   const { data: plData, isLoading: plLoading } = useGetProfitAndLossQuery(filters);
@@ -108,9 +121,16 @@ const PLReport = ({ pl, fmt }) => (
         </div>
       </div>
     </div>
-    <div className={`p-6 rounded-lg flex items-center justify-between ${pl.netProfit >= 0 ? 'bg-[#044343] text-white' : 'bg-rose-500 text-white'}`}>
-      <div><p className="text-[10px] font-bold uppercase tracking-widest opacity-70">Net Profit / Loss</p><h3 className="text-2xl font-bold mt-0.5">{fmt(pl.netProfit)}</h3></div>
-      <div className="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center">{pl.netProfit >= 0 ? <TrendingUp size={24} /> : <TrendingDown size={24} />}</div>
+    <div className={`p-5 rounded-xl flex items-center justify-between !text-white ${pl.netProfit >= 0 ? 'bg-[#044343]' : 'bg-rose-600'}`}>
+      <div>
+        <p className="text-[10px] font-bold uppercase tracking-widest opacity-80">
+          {pl.netProfit >= 0 ? 'Net Profit' : 'Net Loss'}
+        </p>
+        <h3 className="text-2xl font-bold mt-0.5">{fmt(Math.abs(pl.netProfit || 0))}</h3>
+      </div>
+      <div className="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center">
+        {pl.netProfit >= 0 ? <TrendingUp size={20} /> : <TrendingDown size={20} />}
+      </div>
     </div>
   </div>
 );
@@ -150,10 +170,13 @@ const BSReport = ({ bs, fmt }) => (
         </div>
       </div>
     </div>
-    <div className={`p-5 rounded-lg flex items-center justify-between text-white ${bs.isBalanced ? 'bg-[#044343]' : 'bg-rose-500'}`}>
-       <div><p className="text-[10px] font-bold uppercase tracking-widest opacity-70">Balance Status</p><p className="text-xl font-bold mt-0.5">{bs.isBalanced ? 'Accounts Match' : 'Discrepancy Found'}</p></div>
+    <div className={`p-5 rounded-xl flex items-center justify-between !text-white ${bs.isBalanced ? 'bg-[#044343]' : 'bg-rose-600'}`}>
+       <div>
+         <p className="text-[10px] font-bold uppercase tracking-widest opacity-80">Balance Status</p>
+         <p className="text-xl font-bold mt-0.5">{bs.isBalanced ? 'Accounts Match' : 'Discrepancy Found'}</p>
+       </div>
        <div className="text-right">
-         <p className="text-[10px] font-bold uppercase tracking-widest opacity-70">Total A = L+E</p>
+         <p className="text-[10px] font-bold uppercase tracking-widest opacity-70">Total Assets</p>
          <p className="text-lg font-bold">{fmt(bs.totalAssets)}</p>
        </div>
     </div>

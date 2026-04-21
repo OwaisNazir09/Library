@@ -10,18 +10,19 @@ import { format } from 'date-fns';
 import { useSubscription } from '../../hooks/useSubscription';
 import FinanceHeader from './FinanceHeader';
 import UniversalTransactionModal from './UniversalTransactionModal';
+import LockedFeature from '../../components/common/LockedFeature';
 
 const fmt = (n) => `₹${(n || 0).toLocaleString('en-IN')}`;
 
-const StatCard = ({ label, value, icon: Icon, color, bg, subtitle }) => (
-  <div className="card flex items-start gap-4">
-    <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${bg}`}>
-      <Icon size={18} className={color} />
+const StatCard = ({ label, value, icon: Icon, color, bg, subtitle, isSolid }) => (
+  <div className={`card flex items-start gap-4 transition-all duration-300 ${isSolid ? `${bg} border-transparent shadow-lg shadow-teal-900/10` : ''}`}>
+    <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${isSolid ? 'bg-white/10' : bg}`}>
+      <Icon size={18} className={isSolid ? 'text-white' : color} />
     </div>
     <div className="min-w-0 flex-1">
-      <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{label}</p>
-      <p className={`text-lg font-bold tracking-tight mt-0.5 ${color} truncate`}>{value}</p>
-      {subtitle && <p className="text-[10px] text-slate-400 font-medium mt-0.5 truncate">{subtitle}</p>}
+      <p className={`text-[10px] font-bold uppercase tracking-wider ${isSolid ? '!text-white opacity-90' : 'text-slate-500'}`}>{label}</p>
+      <p className={`text-lg font-bold tracking-tight mt-0.5 truncate ${isSolid ? '!text-white' : color}`}>{value}</p>
+      {subtitle && <p className={`text-[10px] font-medium mt-0.5 truncate ${isSolid ? '!text-white opacity-70' : 'text-slate-400'}`}>{subtitle}</p>}
     </div>
   </div>
 );
@@ -34,15 +35,22 @@ const FinanceDashboard = () => {
 
   if (!hasFeature('finance')) {
     return (
-      <div className="card py-20 flex flex-col items-center justify-center space-y-6">
-        <div className="w-20 h-20 rounded-3xl bg-amber-50 flex items-center justify-center text-amber-600">
-          <TrendingUp size={40} />
+      <div className="relative min-h-[70vh]">
+        {/* Blurred Background Mockup */}
+        <div className="absolute inset-0 blur-md pointer-events-none opacity-40">
+          <div className="grid grid-cols-6 gap-4 mb-8">
+            {[1,2,3,4,5,6].map(i => <div key={i} className="h-24 bg-slate-100 rounded-2xl" />)}
+          </div>
+          <div className="h-64 bg-slate-50 rounded-3xl" />
         </div>
-        <div className="text-center space-y-2">
-          <h2 className="text-2xl font-bold text-slate-900">Finance Module Locked</h2>
-          <p className="text-slate-500 max-w-sm">The Financial Ledger and Accounting module is not included in your current subscription plan. Contact your administrator to upgrade.</p>
-        </div>
-        <button onClick={() => navigate('/app/packages')} className="btn btn-primary btn-md px-10">View Plans</button>
+
+        <LockedFeature 
+          isModal={true}
+          onClose={() => navigate('/app/dashboard')}
+          featureName="Finance & Ledger" 
+          description="The Financial Ledger, Student Accounting, and Transaction reporting module is not included in your current subscription plan."
+          icon={TrendingUp}
+        />
       </div>
     );
   }
@@ -55,10 +63,12 @@ const FinanceDashboard = () => {
 
   const handleAction = (type) => setModal({ type, isOpen: true });
 
-  const netColor = (stats?.netProfit || 0) >= 0 ? 'text-emerald-600' : 'text-rose-600';
+  const isProfit = (stats?.netProfit || 0) >= 0;
+  const netBg = isProfit ? 'bg-[#044343]' : 'bg-rose-600';
+  const netIcon = isProfit ? TrendingUp : TrendingDown;
 
   const statCards = [
-    { label: 'Net Profit', value: fmt(stats?.netProfit), icon: Wallet, color: netColor, bg: 'bg-violet-50', subtitle: (stats?.netProfit || 0) >= 0 ? 'Profitable' : 'Loss' },
+    { label: isProfit ? 'Net Profit' : 'Net Loss', value: fmt(Math.abs(stats?.netProfit || 0)), icon: netIcon, color: 'text-white', bg: netBg, subtitle: isProfit ? 'Profitable' : 'Under Loss', isSolid: true },
     { label: 'Total Assets', value: fmt(stats?.totalAssets), icon: TrendingUp, color: 'text-emerald-600', bg: 'bg-emerald-50', subtitle: 'Current worth' },
     { label: 'Total Liabilities', value: fmt(stats?.totalLiabilities), icon: TrendingDown, color: 'text-rose-500', bg: 'bg-rose-50', subtitle: 'Obligations' },
     { label: 'Liquid Assets', value: fmt(stats?.liquidAssets), icon: IndianRupee, color: 'text-sky-600', bg: 'bg-sky-50', subtitle: 'Cash + Bank' },

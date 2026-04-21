@@ -106,7 +106,30 @@ const BookList = () => {
   };
 
   const renderContent = () => {
-    if (loading && items.length === 0) return <LoadingSkeleton type="table" rows={10} />;
+    if (loading && items.length === 0) {
+      return (
+        <div className="table-container">
+          <table className="table-main">
+            <thead>
+              <tr>
+                <th className="px-5">Title & Author</th>
+                <th>Category</th>
+                <th>ISBN</th>
+                <th>Status</th>
+                <th className="text-right px-5">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td colSpan="5" className="p-0">
+                  <LoadingSkeleton type="table" rows={10} />
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      );
+    }
     if (error) return <ErrorState message="Error loading books" onRetry={refetch} />;
     if (!items.length) return <EmptyState title="No books found" icon={BookOpen} onAction={() => setIsModalOpen(true)} actionLabel="Add Book" />;
 

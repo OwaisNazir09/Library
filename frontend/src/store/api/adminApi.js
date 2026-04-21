@@ -41,7 +41,10 @@ export const adminApi = baseApi.injectEndpoints({
       providesTags: ['Admin'],
     }),
     getGlobalUsers: builder.query({
-      query: () => '/admin/users',
+      query: (params) => ({
+        url: '/admin/users',
+        params,
+      }),
       providesTags: ['Admin'],
     }),
     updateGlobalUser: builder.mutation({

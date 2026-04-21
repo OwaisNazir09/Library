@@ -26,13 +26,13 @@ const librarianGroups = [
   {
     label: 'MAIN MENU',
     items: [
-      { name: 'Overview', icon: LayoutGrid, path: '/app/dashboard' },
+      { name: 'Overview', icon: LayoutGrid, path: '/app/dashboard', end: true },
       { name: 'Books', icon: BookOpen, path: '/app/books', feature: 'bookManagement' },
       { name: 'Book Circulation', icon: PlusCircle, path: '/app/borrowings', feature: 'circulation' },
-      { name: 'Library Activities', icon: Library, path: '/app/events' },
-      { name: 'Attendance Logs', icon: Clock, path: '/app/attendance' },
+      { name: 'Library Activities', icon: Library, path: '/app/events', feature: 'circulation' },
+      { name: 'Attendance Logs', icon: Clock, path: '/app/attendance', feature: 'students' },
       { name: 'Student Registrations', icon: Users, path: '/app/registrations', feature: 'students' },
-      { name: 'Membership Packages', icon: LayoutGrid, path: '/app/packages' },
+      { name: 'Membership Packages', icon: LayoutGrid, path: '/app/packages', feature: 'students' },
       { name: 'Study Desks', icon: Coffee, path: '/app/tables', feature: 'studyDesks' },
       { name: 'Digital Library', icon: BookOpen, path: '/app/digital-library', feature: 'digitalLibrary' },
     ]
@@ -48,7 +48,7 @@ const librarianGroups = [
     label: 'FINANCE',
     feature: 'finance',
     items: [
-      { name: 'Finance Dashboard', icon: LayoutGrid, path: '/app/finance' },
+      { name: 'Finance Dashboard', icon: LayoutGrid, path: '/app/finance', end: true },
       { name: 'Chart of Accounts', icon: Library, path: '/app/finance/accounts' },
       { name: 'Student Ledgers', icon: Users, path: '/app/finance/student-accounts' },
       { name: 'Transactions', icon: IndianRupeeIcon, path: '/app/finance/transactions' },
@@ -70,7 +70,7 @@ const superAdminGroups = [
   {
     label: 'PLATFORM AUTHORITY',
     items: [
-      { name: 'Dashboard', icon: LayoutGrid, path: '/admin/dashboard' },
+      { name: 'Dashboard', icon: LayoutGrid, path: '/admin/dashboard', end: true },
       { name: 'Libraries (Nodes)', icon: Library, path: '/admin/libraries' },
       { name: 'Packages & Plans', icon: Receipt, path: '/admin/packages' },
       { name: 'Users (Global)', icon: Users, path: '/admin/users' },
@@ -145,6 +145,7 @@ const Sidebar = ({ isOpen, onClose }) => {
                 <NavLink
                   key={item.name}
                   to={item.path}
+                  end={item.end}
                   onClick={() => window.innerWidth < 1024 && onClose()}
                   className={({ isActive }) => `
                     flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 group

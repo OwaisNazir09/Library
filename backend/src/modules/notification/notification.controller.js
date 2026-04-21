@@ -1,11 +1,7 @@
 import { getModels } from '../../utils/helpers.js';
 import { sendMulticastNotification } from '../../services/firebase.service.js';
 
-/**
- * Send notification to multiple users
- * POST /api/notifications/send
- * Body: { title, body, target: 'all' | 'library', libraryId, data }
- */
+
 export const sendNotification = async (req, res) => {
   try {
     const { title, body, target, libraryId, userId, data, type } = req.body;
@@ -13,7 +9,6 @@ export const sendNotification = async (req, res) => {
 
     let query = { pushToken: { $exists: true, $ne: null } };
 
-    // 1. Permission Check
     if (req.user.role !== 'super_admin') {
       query.tenantId = req.user.tenantId;
       if (userId) query._id = userId;
@@ -29,7 +24,7 @@ export const sendNotification = async (req, res) => {
     const tokens = users.map(u => u.pushToken).filter(t => !!t);
 
     // Save to Database
-    const notificationPromises = users.map(user => 
+    const notificationPromises = users.map(user =>
       Notification.create({
         tenantId: user.tenantId,
         user: user._id,

@@ -101,7 +101,12 @@ const RegistrationList = () => {
 
       Object.entries(data).forEach(([key, val]) => {
         if (!excludedFields.includes(key) && val !== undefined && val !== null && val !== "") {
-          formData.append(key, val);
+          if (Array.isArray(val)) {
+            const filtered = val.filter(v => v !== "" && v !== null);
+            filtered.forEach(v => formData.append(key, v));
+          } else {
+            formData.append(key, val);
+          }
         }
       });
 
@@ -167,9 +172,17 @@ const RegistrationList = () => {
   };
 
   const renderTableBody = () => {
-    if (loading && items.length === 0) return <LoadingSkeleton type="table" rows={10} />;
-    if (error) return <ErrorState message="Error loading members" onRetry={refetch} />;
-    if (!items.length) return <EmptyState title="No members found" icon={UserPlus} onAction={() => setIsRegisterModalOpen(true)} actionLabel="Register Member" />;
+    if (loading && items.length === 0) {
+      return (
+        <tr>
+          <td colSpan="7" className="p-0">
+            <LoadingSkeleton type="table" rows={10} />
+          </td>
+        </tr>
+      );
+    }
+    if (error) return <tr><td colSpan="7" className="p-0"><ErrorState message="Error loading members" onRetry={refetch} /></td></tr>;
+    if (!items.length) return <tr><td colSpan="7" className="p-0"><EmptyState title="No members found" icon={UserPlus} onAction={() => setIsRegisterModalOpen(true)} actionLabel="Register Member" /></td></tr>;
 
     return items.map((student) => {
       const status = getStatusInfo(student);
@@ -291,11 +304,20 @@ const RegistrationList = () => {
           </thead>
           <tbody>{renderTableBody()}</tbody>
         </table>
+        {total > limit && (
+          <Pagination 
+            total={total} 
+            limit={limit} 
+            currentPage={currentPage} 
+            onPageChange={setCurrentPage} 
+          />
+        )}
       </div>
 
       <div className="flex items-center justify-between no-print pt-2">
-        <p className="text-[12px] text-slate-500 font-bold uppercase tracking-widest">Showing {items.length} of {total} records</p>
-        <Pagination total={total} limit={limit} currentPage={currentPage} onPageChange={setCurrentPage} />
+        <p className="text-[12px] text-slate-500 font-bold uppercase tracking-widest">
+          Showing {items.length} of {total} members
+        </p>
       </div>
 
       <AnimatePresence>
@@ -366,6 +388,39 @@ const RegistrationList = () => {
                           <div className="col-span-2 space-y-2"><label className="label">Local Address</label><input {...register('addressLine1')} className="input" placeholder="House no, Street, Locality" /></div>
                           <div className="space-y-2"><label className="label">City / District</label><input {...register('city')} className="input" /></div>
                           <div className="space-y-2"><label className="label">Postal Pincode</label><input {...register('pincode')} className="input" /></div>
+                        </div>
+                      </div>
+
+                      <div className="space-y-6">
+                        <div className="flex items-center gap-2 border-b border-slate-50 pb-2">
+                           <ShieldCheck size={16} className="text-[#044343]" />
+                           <span className="text-[11px] font-bold text-[#044343] uppercase tracking-widest">Access & Subscription</span>
+                        </div>
+                        <div className="grid grid-cols-2 gap-5">
+                          <div className="space-y-2">
+                            <label className="label">Security Password</label>
+                            <div className="relative">
+                              <Key className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-300" size={14} />
+                              <input {...register('password')} type="password" placeholder="Default: password123" className="input pl-9" />
+                            </div>
+                          </div>
+                          <div className="space-y-2">
+                            <label className="label">Membership Tier</label>
+                            <select {...register('package')} className="input cursor-pointer">
+                              <option value="">Select Plan...</option>
+                              {packages.map(p => (
+                                <option key={p._id} value={p._id}>{p.name} — ₹{p.price}</option>
+                              ))}
+                            </select>
+                          </div>
+                          <div className="space-y-2">
+                            <label className="label">Registration Fee (₹)</label>
+                            <input {...register('registrationFee')} type="number" className="input" placeholder="0" />
+                          </div>
+                          <div className="space-y-2">
+                            <label className="label">Security Deposit (₹)</label>
+                            <input {...register('securityDeposit')} type="number" className="input" placeholder="0" />
+                          </div>
                         </div>
                       </div>
                     </div>

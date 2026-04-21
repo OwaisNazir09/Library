@@ -47,6 +47,17 @@ export const updatePlan = async (req, res, next) => {
       return res.status(404).json({ message: 'No plan found with that ID' });
     }
 
+    await Tenant.updateMany(
+      { subscriptionPlanId: updatedPlan._id },
+      {
+        $set: {
+          features: updatedPlan.features,
+          limits: updatedPlan.limits,
+          plan: updatedPlan.name
+        }
+      }
+    );
+
     res.status(200).json({
       status: 'success',
       data: {
@@ -94,7 +105,7 @@ export const assignPlanToLibrary = async (req, res, next) => {
     tenant.plan = plan.name;
     tenant.expiryDate = new Date(expiryDate);
     tenant.status = 'active';
-    
+
     // Sync features and limits from plan
     tenant.features = { ...plan.features };
     tenant.limits = { ...plan.limits };
@@ -116,9 +127,29 @@ export const assignPlanToLibrary = async (req, res, next) => {
 export const getSubscriptionAnalytics = async (req, res, next) => {
   try {
     const totalTenants = await Tenant.countDocuments();
-    const activeSubscriptions = await Tenant.countDocuments({ status: 'active' });
+    const activeSubscriptions = await Tenant.countDocuments({ status: 'active', paymentStatus: 'paid' });
     const expiredSubscriptions = await Tenant.countDocuments({ status: 'expired' });
     const trialSubscriptions = await Tenant.countDocuments({ status: 'trial' });
+
+    // Calculate Revenue and MRR
+    const paidTenants = await Tenant.find({ 
+      paymentStatus: 'paid',
+      subscriptionPlanId: { $exists: true }
+    }).populate('subscriptionPlanId');
+
+    let totalRevenue = 0;
+    let mrr = 0;
+
+    paidTenants.forEach(tenant => {
+      const plan = tenant.subscriptionPlanId;
+      if (plan) {
+        totalRevenue += plan.price;
+        // Normalize MRR
+        if (plan.billingCycle === 'monthly') mrr += plan.price;
+        if (plan.billingCycle === 'quarterly') mrr += (plan.price / 3);
+        if (plan.billingCycle === 'yearly') mrr += (plan.price / 12);
+      }
+    });
 
     // Most used plan
     const planUsage = await Tenant.aggregate([
@@ -144,6 +175,8 @@ export const getSubscriptionAnalytics = async (req, res, next) => {
         activeSubscriptions,
         expiredSubscriptions,
         trialSubscriptions,
+        totalRevenue: Math.round(totalRevenue),
+        mrr: Math.round(mrr),
         mostUsedPlan: planUsage[0] || null
       }
     });

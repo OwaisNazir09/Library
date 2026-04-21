@@ -15,51 +15,48 @@ const genReceiptNumber = async (Receipt, tenantId) => {
   return `RCP-${year}-${String(count + 1).padStart(5, '0')}`;
 };
 
-// ── ATOMIC Double-Entry Core ──────────────────────────────────────────────────
 export const recordTransaction = async (db, tenantId, details) => {
   const { Account, Transaction } = getModels(db);
   const { debitAccountId, creditAccountId, amount, type, description, reference, date, userId, studentId, category } = details;
 
   const session = await db.startSession();
-  session.startTransaction();
   try {
-    const [debitAccount, creditAccount] = await Promise.all([
-      Account.findOne({ _id: debitAccountId, tenantId }).session(session),
-      Account.findOne({ _id: creditAccountId, tenantId }).session(session),
-    ]);
+    let result;
+    await session.withTransaction(async () => {
+      const [debitAccount, creditAccount] = await Promise.all([
+        Account.findOne({ _id: debitAccountId, tenantId }).session(session),
+        Account.findOne({ _id: creditAccountId, tenantId }).session(session),
+      ]);
 
-    if (!debitAccount || !creditAccount) throw new Error('Debit or Credit account not found');
+      if (!debitAccount || !creditAccount) throw new Error('Debit or Credit account not found');
 
-    const updateBalance = (acc, amt, isDebit) => {
-      const isAssetOrExpense = ['Assets', 'Expenses'].includes(acc.type);
-      acc.currentBalance += isAssetOrExpense ? (isDebit ? amt : -amt) : (isDebit ? -amt : amt);
-    };
+      const updateBalance = (acc, amt, isDebit) => {
+        const isAssetOrExpense = ['Assets', 'Expenses'].includes(acc.type);
+        acc.currentBalance += isAssetOrExpense ? (isDebit ? amt : -amt) : (isDebit ? -amt : amt);
+      };
 
-    updateBalance(debitAccount, amount, true);
-    updateBalance(creditAccount, amount, false);
+      updateBalance(debitAccount, amount, true);
+      updateBalance(creditAccount, amount, false);
 
-    await debitAccount.save({ session });
-    await creditAccount.save({ session });
+      await debitAccount.save({ session });
+      await creditAccount.save({ session });
 
-    const txRef = await genRef(Transaction, tenantId);
-    const tx = await Transaction.create([{
-      tenantId, debitAccountId, creditAccountId, amount, type, description,
-      reference, category,
-      transactionRef: txRef,
-      date: date || new Date(),
-      createdBy: userId,
-      studentId: studentId || null,
-      debitAccountBalance: debitAccount.currentBalance,
-      creditAccountBalance: creditAccount.currentBalance,
-    }], { session });
-
-    await session.commitTransaction();
-    session.endSession();
-    return tx[0];
-  } catch (err) {
-    await session.abortTransaction();
-    session.endSession();
-    throw err;
+      const txRef = await genRef(Transaction, tenantId);
+      const tx = await Transaction.create([{
+        tenantId, debitAccountId, creditAccountId, amount, type, description,
+        reference, category,
+        transactionRef: txRef,
+        date: date || new Date(),
+        createdBy: userId,
+        studentId: studentId || null,
+        debitAccountBalance: debitAccount.currentBalance,
+        creditAccountBalance: creditAccount.currentBalance,
+      }], { session });
+      result = tx[0];
+    });
+    return result;
+  } finally {
+    await session.endSession();
   }
 };
 

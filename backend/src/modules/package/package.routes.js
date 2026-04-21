@@ -5,7 +5,7 @@ import { protect, restrictTo } from '../../middleware/auth.js';
 const router = express.Router();
 
 router.use(protect);
-router.use(restrictTo('librarian', 'admin'));
+router.use(restrictTo('librarian'));
 
 router
   .route('/')
