@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useGetResourcesQuery, useTrackDownloadMutation } from '../../store/api/digitalLibraryApi';
+import { useGetResourcesQuery, useTrackDownloadMutation, useUpdateResourceMutation, useDeleteResourceMutation } from '../../store/api/digitalLibraryApi';
 import {
   ArrowLeft,
   Download,
@@ -18,25 +18,83 @@ import {
   Archive,
   Book,
   ChevronRight,
-  TrendingUp
+  TrendingUp,
+  Edit,
+  Trash2,
+  X,
+  Upload,
+  ImageIcon,
+  Loader2
 } from 'lucide-react';
 import { format } from 'date-fns';
 import LoadingSkeleton from '../../components/common/LoadingSkeleton';
 import ErrorState from '../../components/common/ErrorState';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useForm } from 'react-hook-form';
+import { toast } from 'react-hot-toast';
 
 const ResourceDetail = () => {
   const { resourceId } = useParams();
   const navigate = useNavigate();
-  const { data: resourcesData, isLoading: loading, error } = useGetResourcesQuery();
+  const { data: resourcesData, isLoading: loading, error, refetch } = useGetResourcesQuery();
   const [trackDownload] = useTrackDownloadMutation();
+  const [updateResource, { isLoading: isUpdating }] = useUpdateResourceMutation();
+  const [deleteResource] = useDeleteResourceMutation();
 
   const resource = resourcesData?.data?.resources?.find(r => r._id === resourceId);
+
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [filePreview, setFilePreview] = useState(null);
+  const [coverPreview, setCoverPreview] = useState(null);
+  const [resourceFile, setResourceFile] = useState(null);
+  const [coverFile, setCoverFile] = useState(null);
+
+  const { register, handleSubmit, reset, setValue } = useForm();
 
   const handleDownload = () => {
     if (!resource) return;
     trackDownload(resource._id);
     window.open(resource.fileUrl, '_blank');
+  };
+
+  const openEditModal = () => {
+    setValue('title', resource.title);
+    setValue('description', resource.description);
+    setValue('category', resource.category);
+    setValue('subject', resource.subject);
+    setValue('visibility', resource.visibility);
+    setCoverPreview(resource.coverImage);
+    setIsEditModalOpen(true);
+  };
+
+  const onUpdateSubmit = async (data) => {
+    const formData = new FormData();
+    Object.entries(data).forEach(([key, val]) => {
+      if (val !== undefined && val !== null && val !== "") formData.append(key, val);
+    });
+    if (resourceFile) formData.append('file', resourceFile);
+    if (coverFile) formData.append('coverImage', coverFile);
+
+    try {
+      await updateResource({ id: resource._id, data: formData }).unwrap();
+      toast.success('Resource updated successfully');
+      setIsEditModalOpen(false);
+      refetch();
+    } catch (err) {
+      toast.error('Failed to update resource');
+    }
+  };
+
+  const handleDelete = async () => {
+    if (window.confirm('Are you sure you want to delete this resource?')) {
+      try {
+        await deleteResource(resource._id).unwrap();
+        toast.success('Resource deleted');
+        navigate('/app/digital-library');
+      } catch (err) {
+        toast.error('Failed to delete resource');
+      }
+    }
   };
 
   if (loading) return <div className="p-8"><LoadingSkeleton type="card" rows={1} /></div>;
@@ -57,7 +115,7 @@ const ResourceDetail = () => {
         {/* LEFT COLUMN: MAIN ASSET VIEW (8 COLS) */}
         <div className="lg:col-span-8 space-y-6">
           <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
-            <div className="p-8 border-b border-slate-100 flex justify-between items-start">
+            <div className="p-8 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-6">
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
                   <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-tighter ${resource.visibility === 'global' ? 'bg-blue-100 text-blue-700' : 'bg-teal-100 text-teal-700'}`}>
@@ -71,6 +129,12 @@ const ResourceDetail = () => {
                 </h1>
               </div>
               <div className="flex gap-2">
+                <button
+                  onClick={openEditModal}
+                  className="px-4 py-2.5 border border-slate-200 rounded-lg font-bold text-[10px] uppercase tracking-widest flex items-center gap-2 hover:bg-slate-50 transition-colors text-slate-600"
+                >
+                  <Edit size={14} /> Edit
+                </button>
                 <button
                   onClick={handleDownload}
                   className="bg-[#044343] text-white px-6 py-2.5 rounded-lg font-bold text-xs uppercase tracking-widest flex items-center gap-2 hover:bg-[#033636] transition-colors shadow-md shadow-teal-900/10"
@@ -229,6 +293,50 @@ const ResourceDetail = () => {
           </div>
         </div>
       </div>
+
+      <AnimatePresence>
+        {isEditModalOpen && (
+          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+            <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="bg-white rounded-[2rem] w-full max-w-2xl shadow-2xl overflow-hidden">
+               <div className="p-6 border-b border-slate-100 flex items-center justify-between">
+                 <h2 className="text-sm font-black uppercase tracking-widest text-slate-900">Edit Asset Metadata</h2>
+                 <button onClick={() => setIsEditModalOpen(false)} className="text-slate-400 hover:text-slate-900"><X size={18} /></button>
+               </div>
+               <form onSubmit={handleSubmit(onUpdateSubmit)} className="flex flex-col">
+                 <div className="p-8 grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <div className="space-y-4">
+                       <div className="aspect-[3/4] bg-slate-50 border border-dashed border-slate-200 rounded-2xl relative overflow-hidden flex flex-col items-center justify-center">
+                          <input type="file" onChange={(e) => { const file = e.target.files[0]; if (file) { setCoverFile(file); setCoverPreview(URL.createObjectURL(file)); } }} accept="image/*" className="absolute inset-0 opacity-0 cursor-pointer z-10" />
+                          {coverPreview ? <img src={coverPreview} className="w-full h-full object-cover" /> : <div className="text-center p-4"><ImageIcon size={24} className="text-slate-300 mx-auto" /><p className="text-[10px] text-slate-400 font-bold mt-2 uppercase">Cover Image</p></div>}
+                       </div>
+                       <div className="p-4 bg-slate-50 border border-slate-100 rounded-xl relative flex flex-col items-center justify-center gap-2">
+                          <input type="file" onChange={(e) => { const file = e.target.files[0]; if (file) { setResourceFile(file); setFilePreview(file.name); } }} accept=".pdf" className="absolute inset-0 opacity-0 cursor-pointer" />
+                          <Upload size={18} className="text-teal-600" />
+                          <p className="text-[10px] font-black text-slate-500 uppercase text-center line-clamp-1">{filePreview || 'Replace PDF'}</p>
+                       </div>
+                    </div>
+                    <div className="md:col-span-2 space-y-5">
+                       <div className="space-y-1.5"><label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Resource Title</label><input {...register('title', { required: true })} className="w-full bg-slate-50 border border-slate-100 rounded-lg h-10 px-4 text-sm font-bold outline-none focus:ring-2 focus:ring-[#044343]/5" /></div>
+                       <div className="grid grid-cols-2 gap-4">
+                         <div className="space-y-1.5"><label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Category</label><select {...register('category')} className="w-full bg-slate-50 border border-slate-100 rounded-lg h-10 px-3 text-sm font-bold outline-none"><option value="School Books">School Books</option><option value="College Books">College Books</option></select></div>
+                         <div className="space-y-1.5"><label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Subject</label><input {...register('subject')} className="w-full bg-slate-50 border border-slate-100 rounded-lg h-10 px-4 text-sm font-bold outline-none" /></div>
+                       </div>
+                       <div className="space-y-1.5"><label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Visibility</label><div className="flex gap-6"><label className="flex items-center gap-2 text-xs font-bold text-slate-600 cursor-pointer"><input type="radio" {...register('visibility')} value="library" className="accent-[#044343]" /> Library Private</label><label className="flex items-center gap-2 text-xs font-bold text-slate-600 cursor-pointer"><input type="radio" {...register('visibility')} value="global" className="accent-[#044343]" /> Global Portal</label></div></div>
+                       <div className="space-y-1.5"><label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Description</label><textarea {...register('description')} rows={3} className="w-full bg-slate-50 border border-slate-100 rounded-lg p-4 text-sm font-medium outline-none resize-none" /></div>
+                    </div>
+                 </div>
+                 <div className="p-6 bg-slate-50/50 border-t border-slate-100 flex items-center justify-between gap-4">
+                    <button type="button" onClick={handleDelete} className="flex items-center gap-2 text-rose-500 hover:text-rose-700 text-[10px] font-black uppercase tracking-widest px-4 transition-colors"><Trash2 size={14} /> Remove Asset</button>
+                    <div className="flex gap-3">
+                      <button type="button" onClick={() => setIsEditModalOpen(false)} className="px-6 py-2.5 text-slate-500 font-bold text-[10px] uppercase tracking-widest">Cancel</button>
+                      <button type="submit" disabled={isUpdating} className="bg-[#044343] text-white px-8 py-2.5 rounded-lg font-black text-[10px] uppercase tracking-widest hover:bg-[#033636] transition-all flex items-center gap-2 min-w-[140px] justify-center">{isUpdating ? <Loader2 size={14} className="animate-spin" /> : 'Commit Changes'}</button>
+                    </div>
+                 </div>
+               </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

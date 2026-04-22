@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { useGetReceiptsQuery, useGetReceiptQuery } from '../../store/api/financeApi';
 import LoadingSkeleton from '../../components/common/LoadingSkeleton';
+import EmptyState from '../../components/common/EmptyState';
 import Pagination from '../../components/common/Pagination';
 import { format } from 'date-fns';
 

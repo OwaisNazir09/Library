@@ -106,6 +106,14 @@ export const adminApi = baseApi.injectEndpoints({
       query: () => '/admin/packages/analytics',
       providesTags: ['Subscription'],
     }),
+    getBillingData: builder.query({
+      query: () => '/admin/billing',
+      providesTags: ['Admin', 'Subscription'],
+    }),
+    getPlatformAnalytics: builder.query({
+      query: () => '/admin/analytics',
+      providesTags: ['Admin'],
+    }),
   }),
 });
 
@@ -126,4 +134,6 @@ export const {
   useDeletePlanMutation,
   useAssignPlanMutation,
   useGetSubscriptionAnalyticsQuery,
+  useGetBillingDataQuery,
+  useGetPlatformAnalyticsQuery,
 } = adminApi;

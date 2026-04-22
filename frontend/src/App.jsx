@@ -6,6 +6,7 @@ import QueryPage from './pages/Query/QueryPage';
 import AdminLayout from './components/common/AdminLayout';
 import SuperAdminDashboard from './pages/Admin/AdminDashboard';
 import TenantManagement from './pages/Admin/TenantManagement';
+import CreateLibrary from './pages/Admin/CreateLibrary';
 import GlobalUsers from './pages/Admin/GlobalUsers';
 import InterestQueries from './pages/Admin/InterestQueries';
 import BillingSubscriptions from './pages/Admin/BillingSubscriptions';
@@ -36,6 +37,7 @@ import Transactions from './pages/Finance/Transactions';
 import Receipts from './pages/Finance/Receipts';
 import FinanceReports from './pages/Finance/FinanceReports';
 import AccountManagement from './pages/Finance/AccountManagement';
+import ExpiringMemberships from './pages/Reports/ExpiringMemberships';
 
 import ProtectedRoute from './components/common/ProtectedRoute';
 
@@ -53,6 +55,7 @@ const App = () => {
           <Route index element={<Navigate to="/admin/dashboard" replace />} />
           <Route path="dashboard" element={<SuperAdminDashboard />} />
           <Route path="libraries" element={<TenantManagement />} />
+          <Route path="libraries/create" element={<CreateLibrary />} />
           <Route path="tenants" element={<Navigate to="/admin/libraries" replace />} />
           <Route path="users" element={<GlobalUsers />} />
           <Route path="queries" element={<InterestQueries />} />
@@ -74,6 +77,7 @@ const App = () => {
           <Route path="events" element={<EventList />} />
           <Route path="attendance" element={<AttendanceList />} />
           <Route path="reports" element={<Reports />} />
+          <Route path="reports/expiring-memberships" element={<ExpiringMemberships />} />
           <Route path="reminders" element={<Reminders />} />
           <Route path="fines" element={<Fines />} />
           <Route path="finance" element={<FinanceDashboard />} />

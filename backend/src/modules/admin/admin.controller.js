@@ -3,6 +3,10 @@ import { addDays } from 'date-fns';
 import Tenant from '../tenant/tenant.model.js';
 import Query from '../query/query.model.js';
 import { getModels } from '../../utils/helpers.js';
+import sendEmail from '../../utils/emailService.js';
+import { welcomeEmailTemplate } from '../../templates/emails/welcomeEmail.js';
+import { libraryInvitationTemplate } from '../../templates/emails/libraryInvitation.js';
+import { seedChartOfAccounts, recordTransaction, getSystemAccount } from '../ledger/finance.controller.js';
 
 export const getAdminStats = async (req, res, next) => {
   try {
@@ -68,6 +72,8 @@ export const getAdminStats = async (req, res, next) => {
 export const getAllTenants = async (req, res, next) => {
   try {
     const tenants = await Tenant.find().populate('subscriptionPlanId').sort({ createdAt: -1 });
+
+
     res.status(200).json({
       status: 'success',
       results: tenants.length,
@@ -80,32 +86,124 @@ export const getAllTenants = async (req, res, next) => {
 
 export const createTenant = async (req, res, next) => {
   try {
-    const { name, subdomain, email, password, plan, trialDays = 14 } = req.body;
+    const {
+      name,
+      subdomain,
+      email,
+      password,
+      plan,
+      subscriptionPlanId,
+      trialDays = 14,
+      ownerName,
+      phone,
+      whatsapp,
+      libraryType,
+      libraryCode,
+      description,
+      openingTime,
+      closingTime,
+      address,
+      city,
+      state,
+      pincode,
+      country,
+      limits,
+      features
+    } = req.body;
 
     const trialEnd = addDays(new Date(), parseInt(trialDays));
-    const expiryDate = trialEnd; // Default expiry to trial end
+    const expiryDate = trialEnd;
 
-    // 1. Create the tenant entry
     const newTenant = await Tenant.create({
       name,
       subdomain,
       email,
+      databaseName: `lib_${subdomain.toLowerCase().replace(/[^a-z0-9]/g, '_')}`,
       plan: plan || 'trial',
-      status: 'trial',
+      subscriptionPlanId: subscriptionPlanId || null,
+      status: 'active',
       trialStart: new Date(),
       trialEnd,
       expiryDate,
-      ownerName: req.body.ownerName || name
+      ownerName: ownerName || name,
+      phone,
+      whatsapp,
+      libraryType,
+      libraryCode: libraryCode || `LIB-${Math.random().toString(36).substring(2, 7).toUpperCase()}`,
+      description,
+      openingTime,
+      closingTime,
+      address,
+      city,
+      state,
+      pincode,
+      country,
+      limits: limits || {
+        maxBooks: 500,
+        maxStudents: 300,
+        maxStaff: 5
+      },
+      features: features || {
+        bookManagement: true,
+        students: true,
+        circulation: true,
+        finance: true,
+        reports: true,
+        studyDesks: true,
+        digitalLibrary: true
+      }
     });
 
+    const finalPassword = password || Math.random().toString(36).substring(2, 10);
+
     const { User } = getModels(req.db);
-    await User.create({
-      fullName: req.body.ownerName || `${name} Admin`,
+    const adminUser = await User.create({
+      fullName: ownerName || `${name} Admin`,
       email,
-      password,
+      password: finalPassword,
       role: 'librarian',
-      tenantId: newTenant._id
+      tenantId: newTenant._id,
+      status: 'approved'
     });
+
+    // 2. Initialize Finance (Seed COA and create Ledger Entry)
+    try {
+      await seedChartOfAccounts(req.db, newTenant._id);
+
+      const salesAccount = await getSystemAccount(req.db, newTenant._id, 'Service Income', 'Income', 'Service Income');
+      const cashAccount = await getSystemAccount(req.db, newTenant._id, 'Cash in Hand', 'Assets', 'Cash');
+
+      await recordTransaction(req.db, newTenant._id, {
+        debitAccountId: cashAccount._id,
+        creditAccountId: salesAccount._id,
+        amount: 0.01,
+        type: 'income',
+        description: 'System Activation & Infrastructure Provisioning',
+        userId: adminUser._id
+      });
+    } catch (finErr) {
+      console.error('Failed to initialize finance for new tenant:', finErr);
+    }
+
+    try {
+      const loginUrl = `http://${subdomain}.welib.app/login`;
+
+      await sendEmail({
+        email: email,
+        subject: 'Welcome to Welib — Your Library is Ready',
+        html: libraryInvitationTemplate({
+          ownerName: ownerName || name,
+          libraryName: name,
+          email: email,
+          password: finalPassword,
+          loginUrl,
+          plan: plan || 'Trial',
+          trialExpiry: trialEnd.toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })
+        })
+      });
+    } catch (emailErr) {
+      console.error('Failed to send welcome email:', emailErr);
+    }
 
     res.status(201).json({
       status: 'success',
@@ -259,6 +357,101 @@ export const updateQuery = async (req, res, next) => {
     res.status(200).json({
       status: 'success',
       data: query
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const getBillingData = async (req, res, next) => {
+  try {
+    const { PlatformLedger } = getModels(req.db);
+    // Get all tenants with their subscription info
+    const tenants = await Tenant.find()
+      .select('name ownerName email status plan trialStart trialEnd expiryDate createdAt')
+      .populate('subscriptionPlanId', 'name price billingCycle');
+
+    const billingData = tenants.map(tenant => ({
+      libraryId: tenant._id,
+      libraryName: tenant.name,
+      ownerName: tenant.ownerName,
+      plan: tenant.subscriptionPlanId?.name || tenant.plan,
+      amount: tenant.subscriptionPlanId?.price || 0,
+      billingCycle: tenant.subscriptionPlanId?.billingCycle || 'Monthly',
+      startDate: tenant.createdAt,
+      nextDue: tenant.expiryDate,
+      paymentStatus: tenant.status === 'active' ? 'Paid' : tenant.status === 'trial' ? 'Trial' : 'Overdue',
+      libraryStatus: tenant.status,
+      trialStatus: tenant.status === 'trial',
+      autoRenewal: false // Feature flag placeholder
+    }));
+
+    res.status(200).json({
+      status: 'success',
+      results: billingData.length,
+      data: billingData
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const getPlatformAnalytics = async (req, res, next) => {
+  try {
+    const now = new Date();
+    const sixMonthsAgo = addDays(now, -180);
+
+    const [
+      planUsage,
+      growthData,
+      expiryForecast
+    ] = await Promise.all([
+      Tenant.aggregate([
+        { $group: { _id: '$plan', count: { $sum: 1 } } }
+      ]),
+      Tenant.aggregate([
+        { $match: { createdAt: { $gte: sixMonthsAgo } } },
+        {
+          $group: {
+            _id: { $dateToString: { format: '%Y-%m', date: '$createdAt' } },
+            count: { $sum: 1 }
+          }
+        },
+        { $sort: { _id: 1 } }
+      ]),
+      Tenant.aggregate([
+        { $match: { expiryDate: { $gte: now, $lte: addDays(now, 30) } } },
+        {
+          $group: {
+            _id: { $dateToString: { format: '%Y-%m-%d', date: '$expiryDate' } },
+            count: { $sum: 1 }
+          }
+        },
+        { $sort: { _id: 1 } }
+      ])
+    ]);
+
+    // Format plan usage
+    const planDistribution = planUsage.map(p => ({
+      name: p._id || 'free',
+      value: p.count
+    }));
+
+    // Placeholder for Top Paying Libraries & Revenue by Month
+    // This should ideally pull from PlatformLedger, but we keep it simple for now
+    const topPayingLibraries = await Tenant.find({ status: 'active' })
+      .select('name plan')
+      .limit(5);
+
+    res.status(200).json({
+      status: 'success',
+      data: {
+        topPayingLibraries,
+        planUsage: planDistribution,
+        revenueByMonth: [], // Integrate with ledger later
+        newLibrariesGrowth: growthData.map(g => ({ month: g._id, libraries: g.count })),
+        expiryForecast: expiryForecast.map(e => ({ date: e._id, expiries: e.count }))
+      }
     });
   } catch (err) {
     next(err);

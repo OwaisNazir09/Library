@@ -79,3 +79,48 @@ export const getMonthlyAnalytics = async (req, res, next) => {
     next(err);
   }
 };
+
+export const getExpiringMemberships = async (req, res, next) => {
+  try {
+    const { User } = getModels(req.db);
+    const filter = req.tenantId ? { tenantId: req.tenantId } : {};
+
+    const today = new Date();
+    const next30Days = new Date();
+    next30Days.setDate(today.getDate() + 30);
+
+    const last30Days = new Date();
+    last30Days.setDate(today.getDate() - 30);
+
+    const [upcoming, recent] = await Promise.all([
+      User.find({
+        ...filter,
+        role: 'member',
+        packageEndDate: {
+          $gte: today,
+          $lte: next30Days
+        },
+        subscriptionStatus: 'active'
+      }).populate('package').sort({ packageEndDate: 1 }),
+      User.find({
+        ...filter,
+        role: 'member',
+        packageEndDate: {
+          $gte: last30Days,
+          $lt: today
+        },
+        subscriptionStatus: 'expired'
+      }).populate('package').sort({ packageEndDate: -1 })
+    ]);
+
+    res.status(200).json({
+      status: 'success',
+      data: {
+        upcoming,
+        recent
+      }
+    });
+  } catch (err) {
+    next(err);
+  }
+};

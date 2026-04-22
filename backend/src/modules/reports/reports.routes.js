@@ -11,5 +11,6 @@ router.use(restrictTo('librarian', 'super_admin'));
 
 router.get('/summary', reportsController.getSummary);
 router.get('/monthly', reportsController.getMonthlyAnalytics);
+router.get('/expiring-memberships', reportsController.getExpiringMemberships);
 
 export default router;

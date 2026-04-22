@@ -2,25 +2,29 @@ import React from 'react';
 import {
   Library, TrendingUp, Users, CreditCard, Clock, AlertCircle,
   Activity, Loader2, ShieldCheck, CheckCircle, XCircle, Timer,
-  ArrowUpRight, Calendar, BarChart2
+  ArrowUpRight, Calendar, BarChart2, PieChart as PieIcon, DollarSign,
+  RefreshCw
 } from 'lucide-react';
 import {
   AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid,
-  Tooltip, ResponsiveContainer
+  Tooltip, ResponsiveContainer, PieChart, Pie, Cell
 } from 'recharts';
 import { useGetAdminDashboardQuery } from '../../store/api/adminApi';
 import { format, parseISO } from 'date-fns';
 
 const StatCard = ({ title, value, sub, icon: Icon, color, bg }) => (
-  <div className="card p-6">
+  <div className="card p-6 bg-white border-transparent shadow-sm hover:shadow-md transition-all group">
     <div className="flex items-start justify-between mb-4">
-      <div className={`w-10 h-10 rounded-xl ${bg} flex items-center justify-center`}>
-        <Icon size={18} className={color} />
+      <div className={`w-12 h-12 rounded-2xl ${bg} flex items-center justify-center transition-transform group-hover:scale-110`}>
+        <Icon size={22} className={color} />
+      </div>
+      <div className="p-1 bg-slate-50 rounded-lg group-hover:bg-slate-100 transition-colors">
+        <ArrowUpRight size={14} className="text-slate-300 group-hover:text-slate-600" />
       </div>
     </div>
-    <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-widest mb-1">{title}</p>
-    <h2 className="text-2xl font-bold text-slate-900">{value}</h2>
-    <p className="text-[11px] text-slate-400 mt-1">{sub}</p>
+    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{title}</p>
+    <h2 className="text-2xl font-black text-slate-900 tracking-tight">{value}</h2>
+    <p className="text-[11px] font-bold text-slate-400 mt-1">{sub}</p>
   </div>
 );
 
@@ -40,160 +44,210 @@ const AdminDashboard = () => {
 
   if (isLoading) return (
     <div className="flex items-center justify-center h-[60vh] gap-3">
-      <Loader2 className="animate-spin text-[#044343]" size={24} />
-      <span className="text-sm text-slate-400 font-medium">Loading platform data...</span>
+      <Loader2 className="animate-spin text-teal-600" size={32} />
+      <span className="text-xs font-black text-slate-400 uppercase tracking-widest">Waking Up Admin Authority...</span>
     </div>
   );
 
   if (error) return (
     <div className="flex flex-col items-center justify-center h-[60vh] gap-4">
-      <AlertCircle size={40} className="text-rose-400" />
-      <p className="text-slate-500 text-sm">{error.data?.message || 'Failed to connect to Authority API'}</p>
-      <button onClick={() => refetch()} className="btn btn-primary btn-md px-6">Retry</button>
+      <div className="w-16 h-16 rounded-full bg-rose-50 flex items-center justify-center">
+        <AlertCircle size={32} className="text-rose-500" />
+      </div>
+      <p className="text-slate-900 font-bold">{error.data?.message || 'Failed to connect to Authority API'}</p>
+      <button onClick={() => refetch()} className="btn btn-primary btn-md px-10">Retry Connection</button>
     </div>
   );
 
   const cards = [
-    { title: 'Total Libraries', value: stats?.totalLibraries ?? 0, sub: 'All managed nodes', icon: Library, color: 'text-indigo-600', bg: 'bg-indigo-50' },
-    { title: 'Active Libraries', value: stats?.activeLibraries ?? 0, sub: 'Currently operational', icon: CheckCircle, color: 'text-emerald-600', bg: 'bg-emerald-50' },
-    { title: 'Trial Libraries', value: stats?.trialLibraries ?? 0, sub: 'In evaluation period', icon: Timer, color: 'text-sky-600', bg: 'bg-sky-50' },
-    { title: 'Suspended', value: stats?.suspendedLibraries ?? 0, sub: 'Platform restricted', icon: XCircle, color: 'text-rose-600', bg: 'bg-rose-50' },
-    { title: 'Monthly Revenue', value: `₹${(stats?.monthlyRevenue || 0).toLocaleString()}`, sub: 'This billing cycle', icon: CreditCard, color: 'text-violet-600', bg: 'bg-violet-50' },
-    { title: 'New Signups', value: stats?.newSignups ?? 0, sub: 'Last 30 days', icon: Users, color: 'text-teal-600', bg: 'bg-teal-50' },
-    { title: 'Expiring Soon', value: stats?.expiringSoon ?? 0, sub: 'Within 7 days', icon: Clock, color: 'text-amber-600', bg: 'bg-amber-50' },
-    { title: 'Total Libraries', value: stats?.totalLibraries ?? 0, sub: 'Platform lifetime', icon: BarChart2, color: 'text-slate-600', bg: 'bg-slate-100' },
+    { title: 'Total Libraries', value: stats?.totalLibraries ?? 0, sub: 'Global footprint', icon: Library, color: 'text-slate-900', bg: 'bg-slate-100' },
+    { title: 'Active Libraries', value: stats?.activeLibraries ?? 0, sub: 'Currently Operational', icon: ShieldCheck, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+    { title: 'Trial Libraries', value: stats?.trialLibraries ?? 0, sub: 'Awaiting Conversion', icon: Timer, color: 'text-sky-600', bg: 'bg-sky-50' },
+    { title: 'Expired Libraries', value: stats?.expiredLibraries ?? 0, sub: 'Requires Attention', icon: XCircle, color: 'text-rose-600', bg: 'bg-rose-50' },
+    { title: 'Monthly Revenue', value: `₹${(stats?.monthlyRevenue || 0).toLocaleString('en-IN')}`, sub: 'Estimated for April', icon: DollarSign, color: 'text-violet-600', bg: 'bg-violet-50' },
+    { title: 'Total Revenue', value: `₹${(stats?.totalRevenue || 0).toLocaleString('en-IN')}`, sub: 'Lifetime platform yield', icon: TrendingUp, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+    { title: 'Pending Payments', value: stats?.pendingPayments || 0, sub: 'Awaiting Settlement', icon: Clock, color: 'text-amber-600', bg: 'bg-amber-50' },
+    { title: 'New Libraries', value: stats?.newSignups ?? 0, sub: 'Last 30 days growth', icon: Users, color: 'text-teal-600', bg: 'bg-teal-50' },
   ];
 
-  const nodeDistribution = [
-    { label: 'Active', count: stats?.activeLibraries ?? 0, color: 'bg-emerald-500' },
-    { label: 'Trial', count: stats?.trialLibraries ?? 0, color: 'bg-sky-500' },
-    { label: 'Expired', count: stats?.expiredLibraries ?? 0, color: 'bg-slate-300' },
-    { label: 'Suspended', count: stats?.suspendedLibraries ?? 0, color: 'bg-rose-400' },
+  const planColors = ['#044343', '#0E7490', '#6366F1', '#A855F7'];
+  const planData = [
+    { name: 'Trial', value: stats?.trialLibraries || 0 },
+    { name: 'Starter', value: 10 }, // Placeholders for now
+    { name: 'Pro', value: 5 },
+    { name: 'Enterprise', value: 2 },
   ];
-  const total = stats?.totalLibraries || 1;
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 pb-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl font-bold text-slate-900">Platform Overview</h1>
-          <p className="text-sm text-slate-400 mt-0.5">Global intelligence across all managed library nodes.</p>
+          <h1 className="text-2xl font-black text-slate-900 tracking-tight">Platform Authority</h1>
+          <p className="text-sm font-medium text-slate-500 mt-0.5">Real-time intelligence across the SaaS ecosystem.</p>
         </div>
-        <div className="flex items-center gap-2 px-3 py-1.5 bg-white border border-slate-100 rounded-lg text-[11px] font-semibold text-slate-500 shadow-sm">
-          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-          Platform Operational
+        <div className="flex items-center gap-3">
+          <div className="px-4 py-2 bg-white border border-slate-100 rounded-2xl text-[11px] font-black text-slate-500 shadow-sm flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            SYSTEM NOMINAL
+          </div>
+          <button onClick={() => refetch()} className="w-10 h-10 rounded-2xl bg-white border border-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-900 hover:border-slate-300 transition-all shadow-sm">
+            <RefreshCw size={18} />
+          </button>
         </div>
       </div>
 
       {/* Metric Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {cards.slice(0, 8).map((card, i) => (
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {cards.map((card, i) => (
           <StatCard key={i} {...card} />
         ))}
       </div>
 
       {/* Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Growth Chart */}
-        <div className="lg:col-span-2 card p-6">
-          <div className="flex items-center justify-between mb-6">
+        {/* Revenue Growth Chart */}
+        <div className="lg:col-span-2 card p-8 bg-white border-transparent shadow-sm">
+          <div className="flex items-center justify-between mb-8">
             <div>
-              <h3 className="text-sm font-bold text-slate-900">Library Growth</h3>
-              <p className="text-[11px] text-slate-400 mt-0.5">Monthly provisioning over last 6 months</p>
+              <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest">Revenue Growth</h3>
+              <p className="text-[11px] font-bold text-slate-400 mt-1">Platform monthly revenue yield</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="flex items-center gap-1 text-[11px] font-black text-emerald-600 bg-emerald-50 px-2 py-1 rounded-lg">
+                <TrendingUp size={12} /> +12%
+              </span>
             </div>
           </div>
-          <ResponsiveContainer width="100%" height={200}>
+          <ResponsiveContainer width="100%" height={250}>
             <AreaChart data={stats?.growthData || []}>
               <defs>
-                <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#044343" stopOpacity={0.08} />
-                  <stop offset="95%" stopColor="#044343" stopOpacity={0} />
+                <linearGradient id="revenueGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#6366F1" stopOpacity={0.1} />
+                  <stop offset="95%" stopColor="#6366F1" stopOpacity={0} />
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F1F5F9" />
-              <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#94A3B8', fontWeight: 600 }} />
-              <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#94A3B8', fontWeight: 600 }} />
-              <Tooltip contentStyle={{ borderRadius: '10px', border: '1px solid #E2E8F0', fontSize: 12, boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }} />
-              <Area type="monotone" dataKey="libraries" stroke="#044343" strokeWidth={2} fill="url(#areaGrad)" />
+              <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#94A3B8', fontWeight: 900 }} />
+              <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#94A3B8', fontWeight: 900 }} />
+              <Tooltip 
+                contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)', padding: '12px' }}
+                labelStyle={{ fontWeight: 900, marginBottom: '4px', fontSize: '10px', color: '#64748b', textTransform: 'uppercase' }}
+              />
+              <Area type="monotone" dataKey="libraries" stroke="#6366F1" strokeWidth={3} fill="url(#revenueGrad)" />
             </AreaChart>
           </ResponsiveContainer>
         </div>
 
-        {/* Node Distribution */}
-        <div className="card p-6">
-          <h3 className="text-sm font-bold text-slate-900 mb-6">Node Distribution</h3>
-          <div className="space-y-5">
-            {nodeDistribution.map((item, i) => (
-              <div key={i}>
-                <div className="flex items-center justify-between mb-1.5">
-                  <span className="text-[11px] font-semibold text-slate-500">{item.label}</span>
-                  <span className="text-[11px] font-bold text-slate-800">{item.count}</span>
+        {/* Plan Distribution */}
+        <div className="card p-8 bg-white border-transparent shadow-sm flex flex-col">
+          <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest mb-1">Plan Distribution</h3>
+          <p className="text-[11px] font-bold text-slate-400 mb-8">Node distribution by service tier</p>
+          <div className="flex-1 flex flex-col justify-center">
+            <ResponsiveContainer width="100%" height={200}>
+              <PieChart>
+                <Pie
+                  data={planData}
+                  innerRadius={60}
+                  outerRadius={80}
+                  paddingAngle={5}
+                  dataKey="value"
+                >
+                  {planData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={planColors[index % planColors.length]} />
+                  ))}
+                </Pie>
+                <Tooltip />
+              </PieChart>
+            </ResponsiveContainer>
+            <div className="grid grid-cols-2 gap-4 mt-6">
+              {planData.map((p, i) => (
+                <div key={i} className="flex items-center gap-2">
+                  <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: planColors[i] }} />
+                  <div>
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-tight">{p.name}</p>
+                    <p className="text-xs font-black text-slate-900">{p.value} Nodes</p>
+                  </div>
                 </div>
-                <div className="h-1.5 w-full bg-slate-100 rounded-full">
-                  <div className={`h-full ${item.color} rounded-full transition-all`} style={{ width: `${(item.count / total) * 100}%` }} />
-                </div>
-              </div>
-            ))}
-          </div>
-          <div className="mt-8 p-4 bg-[#044343]/5 rounded-xl border border-[#044343]/10">
-            <div className="flex items-center gap-2 mb-1">
-              <ShieldCheck size={14} className="text-[#044343]" />
-              <span className="text-[10px] font-bold text-[#044343] uppercase tracking-widest">Security Status</span>
+              ))}
             </div>
-            <p className="text-[11px] text-[#044343]/70">All tenant databases encrypted. Platform nominal.</p>
           </div>
         </div>
       </div>
 
-      {/* Recent Libraries */}
-      <div className="card p-0 overflow-hidden">
-        <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
-          <h3 className="text-sm font-bold text-slate-900">Recently Provisioned</h3>
-          <button className="text-[11px] font-semibold text-[#044343] hover:underline">View All Libraries →</button>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* New Libraries Chart */}
+        <div className="lg:col-span-1 card p-8 bg-white border-transparent shadow-sm">
+          <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest mb-1">Onboarding Trend</h3>
+          <p className="text-[11px] font-bold text-slate-400 mb-8">New nodes provisioned per month</p>
+          <ResponsiveContainer width="100%" height={200}>
+            <BarChart data={stats?.growthData || []}>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F1F5F9" />
+              <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#94A3B8', fontWeight: 900 }} />
+              <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#94A3B8', fontWeight: 900 }} />
+              <Tooltip cursor={{ fill: '#F8FAFC' }} contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)' }} />
+              <Bar dataKey="libraries" fill="#044343" radius={[4, 4, 0, 0]} barSize={20} />
+            </BarChart>
+          </ResponsiveContainer>
         </div>
-        <table className="table-main">
-          <thead>
-            <tr>
-              <th className="px-6">Library</th>
-              <th>Plan</th>
-              <th>Status</th>
-              <th className="px-6 text-right">Provisioned</th>
-            </tr>
-          </thead>
-          <tbody>
-            {(stats?.recentLibraries || []).length === 0 ? (
-              <tr>
-                <td colSpan="4" className="text-center py-10 text-slate-400 text-sm">No libraries provisioned yet.</td>
-              </tr>
-            ) : (
-              (stats?.recentLibraries || []).map((lib) => (
-                <tr key={lib._id}>
-                  <td className="px-6">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-lg bg-[#044343]/10 flex items-center justify-center text-[#044343] font-bold text-sm">
-                        {lib.name?.charAt(0)}
-                      </div>
-                      <div>
-                        <p className="text-sm font-semibold text-slate-900 leading-none">{lib.name}</p>
-                        <p className="text-[11px] text-slate-400 mt-1">{lib.email}</p>
-                      </div>
-                    </div>
-                  </td>
-                  <td>
-                    <span className="text-[11px] font-bold text-[#044343] uppercase tracking-widest">{lib.plan}</span>
-                  </td>
-                  <td>
-                    <span className={`badge ${getStatusBadge(lib.status)}`}>{lib.status}</span>
-                  </td>
-                  <td className="px-6 text-right text-[11px] font-semibold text-slate-400">
-                    {lib.createdAt ? format(parseISO(lib.createdAt), 'dd MMM yyyy') : '—'}
-                  </td>
+
+        {/* Recent Libraries */}
+        <div className="lg:col-span-2 card p-0 overflow-hidden bg-white border-transparent shadow-sm">
+          <div className="px-8 py-6 border-b border-slate-50 flex items-center justify-between">
+            <div>
+              <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest">Recent Provisions</h3>
+              <p className="text-[11px] font-bold text-slate-400 mt-1">Latest infrastructure nodes activated</p>
+            </div>
+            <button className="text-[11px] font-black text-teal-600 uppercase tracking-widest hover:text-teal-700">View Infrastructure Node List</button>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="table-main">
+              <thead>
+                <tr className="bg-slate-50/50">
+                  <th className="px-8 py-4">Library</th>
+                  <th>Plan</th>
+                  <th>Status</th>
+                  <th className="px-8 text-right">Provisioned</th>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              </thead>
+              <tbody>
+                {(stats?.recentLibraries || []).length === 0 ? (
+                  <tr>
+                    <td colSpan="4" className="text-center py-20 opacity-30">
+                      <Library size={48} className="mx-auto mb-4 text-slate-400" />
+                      <p className="text-xs font-black text-slate-400 uppercase tracking-widest">No nodes provisioned yet</p>
+                    </td>
+                  </tr>
+                ) : (
+                  (stats?.recentLibraries || []).map((lib) => (
+                    <tr key={lib._id} className="hover:bg-slate-50/50 transition-colors">
+                      <td className="px-8 py-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-9 h-9 rounded-xl bg-slate-900 text-white flex items-center justify-center font-black text-sm">
+                            {lib.name?.charAt(0)}
+                          </div>
+                          <div>
+                            <p className="text-sm font-black text-slate-900 leading-none">{lib.name}</p>
+                            <p className="text-[11px] text-slate-400 font-bold mt-1 uppercase tracking-tighter">{lib.email}</p>
+                          </div>
+                        </div>
+                      </td>
+                      <td>
+                        <span className="text-[11px] font-black text-[#044343] uppercase tracking-widest">{lib.plan}</span>
+                      </td>
+                      <td>
+                        <span className={`badge ${getStatusBadge(lib.status)} font-black text-[9px] uppercase tracking-widest`}>{lib.status}</span>
+                      </td>
+                      <td className="px-8 text-right text-[11px] font-bold text-slate-400 uppercase">
+                        {lib.createdAt ? format(parseISO(lib.createdAt), 'dd MMM yyyy') : '—'}
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
     </div>
   );

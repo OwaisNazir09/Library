@@ -27,7 +27,7 @@ export const checkSubscription = async (req, res, next) => {
 
       // Allow access to billing page only (if we have one)
       // For now, we block everything that isn't a GET request to basic info, or specific billing routes
-      const allowedPaths = ['/api/billing', '/api/tenant/info'];
+      const allowedPaths = ['/api/billing', '/api/tenant/info', '/api/tenants/current'];
       const isAllowedPath = allowedPaths.some(path => req.originalUrl.startsWith(path));
 
       if (!isAllowedPath) {

@@ -18,7 +18,7 @@ export const tenantHandler = async (req, res, next) => {
     req.path.includes('/blogs') ||
     req.path.includes('/resources/public') ||
     (req.method === 'GET' && req.path.startsWith('/resources/')) ||
-    req.path.includes('/tenants') ||
+    (req.path.includes('/tenants') && !req.path.includes('/tenants/current')) ||
     req.path.includes('/queries');
 
   if (isGlobalRoute) {
@@ -55,28 +55,32 @@ export const tenantHandler = async (req, res, next) => {
       await tenant.save();
     }
 
-    if (tenant.status === 'expired') {
-      return res.status(403).json({
-        status: 'fail',
-        message: 'Subscription expired. Please complete payment to restore access.',
-        code: 'TENANT_EXPIRED'
-      });
-    }
+    const isPublicInfoRoute = req.path.includes('/tenants/current');
 
-    if (tenant.status === 'suspended') {
-      return res.status(403).json({
-        status: 'fail',
-        message: 'This library instance has been suspended by platform administration.',
-        code: 'TENANT_SUSPENDED'
-      });
-    }
+    if (!isPublicInfoRoute) {
+      if (tenant.status === 'expired') {
+        return res.status(403).json({
+          status: 'fail',
+          message: 'Subscription expired. Please complete payment to restore access.',
+          code: 'TENANT_EXPIRED'
+        });
+      }
 
-    if (tenant.status === 'disabled') {
-      return res.status(403).json({
-        status: 'fail',
-        message: 'This library instance is currently disabled.',
-        code: 'TENANT_DISABLED'
-      });
+      if (tenant.status === 'suspended') {
+        return res.status(403).json({
+          status: 'fail',
+          message: 'This library instance has been suspended by platform administration.',
+          code: 'TENANT_SUSPENDED'
+        });
+      }
+
+      if (tenant.status === 'disabled') {
+        return res.status(403).json({
+          status: 'fail',
+          message: 'This library instance is currently disabled.',
+          code: 'TENANT_DISABLED'
+        });
+      }
     }
 
     req.tenantId = tenant._id;

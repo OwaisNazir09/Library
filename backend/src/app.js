@@ -32,8 +32,6 @@ import tenantRoutes from "./modules/tenant/tenant.routes.js";
 
 const app = express();
 
-app.use("/api", tenantHandler);
-app.use("/api", checkSubscription);
 app.use(
   cors({
     origin: [
@@ -61,6 +59,9 @@ app.use(
 );
 
 app.options("*", cors());
+
+app.use("/api", tenantHandler);
+app.use("/api", checkSubscription);
 app.use(helmet());
 
 if (process.env.NODE_ENV === "development") {

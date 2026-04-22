@@ -9,3 +9,8 @@ export const getMonthlyAnalytics = async () => {
   const response = await api.get('/reports/monthly');
   return response.data;
 };
+
+export const getExpiringMemberships = async () => {
+  const response = await api.get('/reports/expiring-memberships');
+  return response.data;
+};

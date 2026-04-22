@@ -21,17 +21,14 @@ export const getModels = (connection) => {
     Notification: connection.models.Notification || connection.model('Notification', notificationSchema),
     Fine: connection.models.Fine || connection.model('Fine', fineSchema),
     Resource: connection.models.Resource || connection.model('Resource', resourceSchema),
-    
-    // News & Community
+
     Blog: connection.models.Blog || connection.model('Blog', blogSchema),
     Attendance: connection.models.Attendance || connection.model('Attendance', attendanceSchema),
 
-    // Professional Accounting System
     Account: connection.models.Account || connection.model('Account', accountSchema),
     Transaction: connection.models.Transaction || connection.model('Transaction', transactionSchema),
     Receipt: connection.models.Receipt || connection.model('Receipt', receiptSchema),
 
-    // Backward Compatibility
     InternalAccount: connection.models.Account || connection.model('Account', accountSchema),
     StudentAccount: connection.models.Account || connection.model('Account', accountSchema),
   };

@@ -36,17 +36,12 @@ export const getAllResources = async (req, res, next) => {
   try {
     const { Resource } = getModels(req.db);
 
-    const query = {
-      $or: [
-        { visibility: 'global' },
-        { visibility: 'library', tenantId: req.tenantId }
-      ]
-    };
+    const query = { tenantId: req.tenantId };
 
     const features = new ApiFeatures(Resource.find(query), req.query)
       .filter()
       .search(['title', 'category', 'subject', 'tags'])
-      .sort('-isFeatured -createdAt') // Default sort
+      .sort('-isFeatured -createdAt')
       .limitFields()
       .paginate();
 

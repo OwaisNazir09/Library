@@ -27,6 +27,21 @@ const tenantSchema = new mongoose.Schema({
   },
   phone: String,
   address: String,
+  city: String,
+  state: String,
+  country: { type: String, default: 'India' },
+  pincode: String,
+  whatsapp: String,
+  libraryType: {
+    type: String,
+    enum: ['Study Library', 'Book Library', 'Digital Library', 'Hybrid'],
+    default: 'Book Library'
+  },
+  libraryCode: String,
+  logo: String,
+  description: String,
+  openingTime: String,
+  closingTime: String,
   databaseName: {
     type: String,
     unique: true,

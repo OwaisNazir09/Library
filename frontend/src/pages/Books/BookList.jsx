@@ -60,7 +60,7 @@ const BookList = () => {
         toast.success('Book successfully registered');
       }
       closeModal();
-    } catch (err) {}
+    } catch (err) { }
   };
 
   const openEditModal = (book) => {
@@ -101,7 +101,7 @@ const BookList = () => {
       try {
         await deleteBook(id).unwrap();
         toast.success('Book removed');
-      } catch (err) {}
+      } catch (err) { }
     }
   };
 
@@ -210,8 +210,8 @@ const BookList = () => {
               className="w-56 bg-white border border-slate-200 rounded-lg h-[34px] pl-8 pr-3 text-[13px] outline-none focus:ring-2 focus:ring-teal-500/10 focus:border-teal-500 transition-all"
             />
           </div>
-          <button 
-            className={`btn btn-primary btn-md ${isExpired ? 'opacity-50 cursor-not-allowed grayscale' : ''}`} 
+          <button
+            className={`btn btn-primary btn-md ${isExpired ? 'opacity-50 cursor-not-allowed grayscale' : ''}`}
             onClick={() => !isExpired && setIsModalOpen(true)}
             title={isExpired ? 'Subscription Expired' : ''}
           >
@@ -238,8 +238,8 @@ const BookList = () => {
         <div className="modal-wrapper">
           <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} className="modal-panel w-full max-w-4xl">
             <div className="modal-h bg-slate-50/50">
-               <h2 className="text-sm font-bold">{selectedBook ? 'Edit Book Record' : 'Register New Book'}</h2>
-               <button onClick={closeModal} className="text-slate-400 hover:text-slate-900"><X size={18} /></button>
+              <h2 className="text-sm font-bold">{selectedBook ? 'Edit Book Record' : 'Register New Book'}</h2>
+              <button onClick={closeModal} className="text-slate-400 hover:text-slate-900"><X size={18} /></button>
             </div>
             <form onSubmit={handleSubmit(onAddBook)} className="flex flex-col overflow-hidden">
               <div className="modal-b grid grid-cols-1 md:grid-cols-4 gap-6">

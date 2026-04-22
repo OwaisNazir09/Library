@@ -25,7 +25,7 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: [true, 'Full name is required']
   },
-    role: {
+  role: {
     type: String,
     enum: ['member', 'librarian', 'super_admin'],
     default: 'member'
@@ -78,7 +78,7 @@ const userSchema = new mongoose.Schema({
     enum: ['active', 'expired', 'inactive'],
     default: 'inactive'
   },
-  // --- Approval Workflow Fields ---
+  fcmToken: String,
   status: {
     type: String,
     enum: ['pending', 'approved', 'rejected', 'suspended'],

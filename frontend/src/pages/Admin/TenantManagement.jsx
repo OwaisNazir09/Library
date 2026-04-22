@@ -13,7 +13,7 @@ import {
   Plus, Search, MoreHorizontal, Trash2, ExternalLink, Calendar,
   Database, Loader2, X, Globe, Shield, User, Mail, Phone, 
   CreditCard, Info, AlertTriangle, CheckCircle2, History,
-  LayoutGrid, Activity, Package, Settings
+  LayoutGrid, Activity, Package, Settings, ShieldOff
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { useForm } from 'react-hook-form';
@@ -84,7 +84,7 @@ const TenantManagement = () => {
           <button onClick={() => navigate('/admin/packages')} className="btn btn-secondary btn-md px-6 flex items-center gap-2">
             <Package size={18} /> Manage Plans
           </button>
-          <button onClick={() => setIsModalOpen(true)} className="btn btn-primary btn-md px-6">
+          <button onClick={() => navigate('/admin/libraries/create')} className="btn btn-primary btn-md px-6">
             <Plus size={18} /> Provision New Node
           </button>
         </div>
@@ -110,69 +110,88 @@ const TenantManagement = () => {
       </div>
 
       <div className="table-container">
-        <table className="table-main">
+        <table className="table-main min-w-[1200px]">
           <thead>
             <tr>
               <th className="px-6">Library Identity</th>
               <th>Owner & Contact</th>
-              <th>Subscription</th>
-              <th>Timeline</th>
+              <th>Plan</th>
+              <th>Students</th>
+              <th>Revenue</th>
               <th>Status</th>
-              <th className="px-6 text-right">Operations</th>
+              <th>Created Date</th>
+              <th className="px-6 text-right">Actions</th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan="6" className="p-20 text-center"><Loader2 className="animate-spin inline-block text-[#044343]" size={32} /></td></tr>
+              <tr><td colSpan="8" className="p-20 text-center"><Loader2 className="animate-spin inline-block text-[#044343]" size={32} /></td></tr>
             ) : (
               tenants.map((tenant) => (
-                <tr key={tenant._id} className="hover:bg-slate-50/50 transition-colors cursor-pointer" onClick={() => { setSelectedLibrary(tenant); setIsDetailsOpen(true); }}>
-                  <td className="px-6">
+                <tr key={tenant._id} className="hover:bg-slate-50/50 transition-colors">
+                  <td className="px-6 py-4">
                     <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center font-bold text-[#044343] border border-slate-100 shadow-sm">
+                      <div className="w-10 h-10 rounded-xl bg-slate-900 text-white flex items-center justify-center font-bold shadow-sm">
                         {tenant.name.charAt(0)}
                       </div>
                       <div>
-                        <p className="text-[14px] font-bold text-slate-900 leading-none">{tenant.name}</p>
-                        <p className="text-[10px] text-slate-400 font-bold mt-2 uppercase tracking-widest">ID: {tenant._id.substring(18).toUpperCase()}</p>
+                        <p className="text-[14px] font-black text-slate-900 leading-none">{tenant.name}</p>
                         <p className="text-[10px] text-teal-600 font-bold mt-1 lowercase">{tenant.subdomain}.welib.app</p>
                       </div>
                     </div>
                   </td>
                   <td>
-                    <div className="space-y-1.5">
+                    <div className="space-y-0.5">
                        <p className="text-[13px] font-bold text-slate-700 leading-none">{tenant.ownerName || 'N/A'}</p>
                        <p className="text-[11px] text-slate-400 font-medium">{tenant.email}</p>
                        <p className="text-[11px] text-slate-400 font-medium">{tenant.phone || '-'}</p>
                     </div>
                   </td>
                   <td>
-                    <div className="space-y-1.5">
-                       <span className="text-[12px] font-bold text-[#044343] uppercase tracking-widest">{tenant.plan}</span>
-                       <div className="flex items-center gap-1.5">
-                          <div className={`w-1.5 h-1.5 rounded-full ${tenant.paymentStatus === 'paid' ? 'bg-emerald-500' : 'bg-amber-500'}`} />
-                          <span className="text-[10px] font-bold text-slate-500 uppercase">{tenant.paymentStatus}</span>
-                       </div>
-                    </div>
+                    <span className="text-[12px] font-black text-[#044343] uppercase tracking-widest">{tenant.plan}</span>
                   </td>
                   <td>
-                    <div className="space-y-1.5">
-                       <div className="flex items-center gap-2 text-[11px] font-bold text-slate-600">
-                          <Calendar size={12} className="text-slate-300" /> Exp: {tenant.expiryDate ? format(parseISO(tenant.expiryDate), 'dd MMM yy') : 'N/A'}
-                       </div>
-                       <div className="flex items-center gap-2 text-[10px] font-bold text-slate-400 uppercase tracking-tighter">
-                          Provisioned {format(parseISO(tenant.createdAt), 'dd MMM yy')}
-                       </div>
-                    </div>
+                    <span className="text-[13px] font-bold text-slate-700">{tenant.limits?.maxStudents || 0}</span>
                   </td>
                   <td>
-                    <span className={`badge ${getStatusBadge(tenant.status)}`}>{tenant.status}</span>
+                    <span className="text-[13px] font-black text-emerald-600">₹0</span>
                   </td>
-                  <td className="px-6 text-right" onClick={(e) => e.stopPropagation()}>
+                  <td>
+                    <span className={`badge ${getStatusBadge(tenant.status)} font-black text-[10px] uppercase`}>{tenant.status}</span>
+                  </td>
+                  <td>
+                    <span className="text-[11px] font-bold text-slate-400 uppercase">
+                      {format(parseISO(tenant.createdAt), 'dd MMM yyyy')}
+                    </span>
+                  </td>
+                  <td className="px-6 text-right">
                     <div className="flex items-center justify-end gap-2">
-                      <button onClick={(e) => { e.stopPropagation(); setSelectedLibrary(tenant); setIsAssignModalOpen(true); }} title="Assign Package" className="btn btn-secondary btn-sm w-9 h-9 p-0 rounded-xl text-teal-600 hover:bg-teal-50"><Package size={16} /></button>
-                      <button onClick={() => { setSelectedLibrary(tenant); setIsDetailsOpen(true); }} className="btn btn-secondary btn-sm w-9 h-9 p-0 rounded-xl"><Info size={16} /></button>
-                      <button onClick={() => onDelete(tenant._id)} className="btn btn-ghost btn-sm w-9 h-9 p-0 rounded-xl text-rose-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"><Trash2 size={16} /></button>
+                      <div className="relative group/menu">
+                        <button className="p-2 text-slate-400 hover:text-slate-900 transition-colors bg-slate-50 rounded-lg">
+                          <MoreHorizontal size={18} />
+                        </button>
+                        <div className="absolute right-0 top-full mt-1 z-50 bg-white border border-slate-200 rounded-xl shadow-xl w-48 py-2 invisible group-hover/menu:visible opacity-0 group-hover/menu:opacity-100 transition-all">
+                          <button onClick={() => { setSelectedLibrary(tenant); setIsDetailsOpen(true); }} className="w-full flex items-center gap-3 px-4 py-2 hover:bg-slate-50 text-[12px] font-bold text-slate-700">
+                            <Info size={16} /> View Library
+                          </button>
+                          <button onClick={() => onUpdateStatus(tenant._id, 'suspended')} className="w-full flex items-center gap-3 px-4 py-2 hover:bg-slate-50 text-[12px] font-bold text-rose-600">
+                            <ShieldOff size={16} /> Suspend Library
+                          </button>
+                          <button onClick={() => { setSelectedLibrary(tenant); setIsAssignModalOpen(true); }} className="w-full flex items-center gap-3 px-4 py-2 hover:bg-slate-50 text-[12px] font-bold text-teal-600">
+                            <Package size={16} /> Upgrade Plan
+                          </button>
+                          <button className="w-full flex items-center gap-3 px-4 py-2 hover:bg-slate-50 text-[12px] font-bold text-amber-600">
+                            <Settings size={16} /> Reset Password
+                          </button>
+                          <button onClick={() => onDelete(tenant._id)} className="w-full flex items-center gap-3 px-4 py-2 hover:bg-slate-50 text-[12px] font-bold text-rose-500">
+                            <Trash2 size={16} /> Delete Library
+                          </button>
+                          <div className="h-px bg-slate-100 my-1" />
+                          <button className="w-full flex items-center gap-3 px-4 py-2 hover:bg-slate-50 text-[12px] font-bold text-indigo-600">
+                            <ExternalLink size={16} /> Login as Admin
+                          </button>
+                        </div>
+                      </div>
                     </div>
                   </td>
                 </tr>
