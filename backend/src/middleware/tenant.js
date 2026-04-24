@@ -5,11 +5,9 @@ import logger from '../utils/logger.js';
 export const tenantHandler = async (req, res, next) => {
   req.db = mongoose.connection;
 
-  // Debug logs
   console.log(`[TenantHandler] Path: ${req.path}, Method: ${req.method}`);
   console.log(`[TenantHandler] Headers:`, JSON.stringify(req.headers, null, 2));
 
-  // Skip tenant check for these routes
   const isGlobalRoute =
     req.method === 'OPTIONS' ||
     req.path.includes('/admin') ||
@@ -19,15 +17,16 @@ export const tenantHandler = async (req, res, next) => {
     req.path.includes('/resources/public') ||
     (req.method === 'GET' && req.path.startsWith('/resources/')) ||
     (req.path.includes('/tenants') && !req.path.includes('/tenants/current')) ||
-    req.path.includes('/queries');
+    req.path.includes('/queries') ||
+    req.path.includes('/quotes');
 
-  if (isGlobalRoute) {
-    return next();
-  }
 
   const tenantId = req.headers['x-tenant-id'];
 
   if (!tenantId) {
+    if (isGlobalRoute) {
+      return next();
+    }
     console.log(`[TenantHandler] Missing x-tenant-id for path: ${req.path}`);
     return res.status(400).json({
       status: 'fail',

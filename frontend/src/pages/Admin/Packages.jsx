@@ -221,7 +221,9 @@ const PackageModal = ({ isOpen, onClose, editingPlan, createPlan, updatePlan }) 
       studyDesks: false,
       multiBranch: false,
       staffAccounts: false,
-      apiAccess: false
+      apiAccess: false,
+      blogs: false,
+      dailyQuotes: false
     },
     limits: {
       maxBooks: 500,

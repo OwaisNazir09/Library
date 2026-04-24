@@ -38,6 +38,8 @@ import Receipts from './pages/Finance/Receipts';
 import FinanceReports from './pages/Finance/FinanceReports';
 import AccountManagement from './pages/Finance/AccountManagement';
 import ExpiringMemberships from './pages/Reports/ExpiringMemberships';
+import BlogApproval from './pages/Blogs/BlogApproval';
+import QuotesAdmin from './pages/Quotes/QuotesAdmin';
 
 import ProtectedRoute from './components/common/ProtectedRoute';
 
@@ -62,6 +64,7 @@ const App = () => {
           <Route path="packages" element={<Packages />} />
           <Route path="billing" element={<BillingSubscriptions />} />
           <Route path="analytics" element={<Analytics />} />
+          <Route path="quotes" element={<QuotesAdmin />} />
           <Route path="settings" element={<PlatformSettings />} />
         </Route>
       </Route>
@@ -94,6 +97,8 @@ const App = () => {
           <Route path="tables" element={<Tables />} />
           <Route path="digital-library" element={<DigitalLibrary />} />
           <Route path="digital-library/:resourceId" element={<ResourceDetail />} />
+          <Route path="blogs" element={<BlogApproval />} />
+          <Route path="quotes" element={<QuotesAdmin />} />
           <Route path="settings" element={<Settings />} />
         </Route>
       </Route>

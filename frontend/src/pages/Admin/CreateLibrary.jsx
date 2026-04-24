@@ -48,7 +48,9 @@ const CreateLibrary = () => {
         studyDesks: true,
         circulation: true,
         bookManagement: true,
-        students: true
+        students: true,
+        blogs: false,
+        dailyQuotes: false
       }
     }
   });
@@ -256,7 +258,7 @@ const CreateLibrary = () => {
                     </div>
 
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                      {['digitalLibrary', 'finance', 'reports', 'studyDesks', 'circulation', 'bookManagement', 'students'].map(feat => (
+                      {['digitalLibrary', 'finance', 'reports', 'studyDesks', 'circulation', 'bookManagement', 'students', 'blogs', 'dailyQuotes'].map(feat => (
                         <label key={feat} className="group flex items-center justify-between p-4 border border-slate-50 rounded-2xl bg-slate-50/50 cursor-pointer hover:bg-slate-50 transition-all">
                           <span className="text-[10px] font-black text-slate-500 uppercase tracking-tighter group-hover:text-slate-900 transition-colors">
                             {feat.replace(/([A-Z])/g, ' $1')}

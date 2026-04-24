@@ -1,68 +1,74 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { View, StyleSheet, Animated, Dimensions } from 'react-native';
 
 const { width } = Dimensions.get('window');
-const COLUMN_COUNT = 2;
-const ITEM_WIDTH = (width - 48) / COLUMN_COUNT;
+const CARD_WIDTH = (width - 48) / 2;
 
-const SkeletonCard = () => {
-  const animatedValue = new Animated.Value(0);
+const SkeletonCard = ({ style }) => {
+  const shimmer = useRef(new Animated.Value(0)).current;
 
-  React.useEffect(() => {
+  useEffect(() => {
     Animated.loop(
       Animated.sequence([
-        Animated.timing(animatedValue, {
+        Animated.timing(shimmer, {
           toValue: 1,
-          duration: 1000,
+          duration: 900,
           useNativeDriver: true,
         }),
-        Animated.timing(animatedValue, {
+        Animated.timing(shimmer, {
           toValue: 0,
-          duration: 1000,
+          duration: 900,
           useNativeDriver: true,
         }),
       ])
     ).start();
   }, []);
 
-  const opacity = animatedValue.interpolate({
+  const opacity = shimmer.interpolate({
     inputRange: [0, 1],
-    outputRange: [0.3, 0.7],
+    outputRange: [0.35, 0.7],
   });
 
   return (
-    <View style={styles.card}>
-      <Animated.View style={[styles.image, { opacity }]} />
-      <View style={styles.titleWrapper}>
-        <Animated.View style={[styles.line, { width: '90%', opacity }]} />
-        <Animated.View style={[styles.line, { width: '60%', opacity }]} />
-      </View>
+    <View style={[styles.card, style]}>
+      <Animated.View style={[styles.imageBox, { opacity }]} />
+      <Animated.View style={[styles.line, styles.lineTitle, { opacity }]} />
+      <Animated.View style={[styles.line, styles.lineSubtitle, { opacity }]} />
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   card: {
-    width: ITEM_WIDTH,
-    marginBottom: 20,
-    alignItems: 'center',
+    backgroundColor: '#fff',
+    borderRadius: 20,
+    padding: 10,
+    width: CARD_WIDTH,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    elevation: 2,
   },
-  image: {
+  imageBox: {
     width: '100%',
-    aspectRatio: 0.7,
-    borderRadius: 12,
-    backgroundColor: '#f1f5f9',
-  },
-  titleWrapper: {
-    width: '100%',
-    marginTop: 10,
-    alignItems: 'center',
-    gap: 6
+    aspectRatio: 0.72,
+    borderRadius: 14,
+    backgroundColor: '#EEE8FF',
+    marginBottom: 10,
   },
   line: {
-    height: 12,
-    backgroundColor: '#f1f5f9',
+    height: 10,
     borderRadius: 6,
+    backgroundColor: '#EEE8FF',
+    marginHorizontal: 4,
+    marginBottom: 6,
+  },
+  lineTitle: {
+    width: '80%',
+  },
+  lineSubtitle: {
+    width: '55%',
   },
 });
 

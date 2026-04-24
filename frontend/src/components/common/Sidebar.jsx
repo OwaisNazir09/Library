@@ -16,7 +16,8 @@ import {
   Coffee,
   X,
   Receipt,
-  Bell
+  Bell,
+  FileText
 } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import { logout } from '../../store/slices/authSlice';
@@ -33,15 +34,22 @@ const librarianGroups = [
       { name: 'Attendance Logs', icon: Clock, path: '/app/attendance', feature: 'students' },
       { name: 'Student Registrations', icon: Users, path: '/app/registrations', feature: 'students' },
       { name: 'Membership Packages', icon: LayoutGrid, path: '/app/packages', feature: 'students' },
-      { name: 'Study Desks', icon: Coffee, path: '/app/tables', feature: 'studyDesks' },
-      { name: 'Digital Library', icon: BookOpen, path: '/app/digital-library', feature: 'digitalLibrary' },
-    ]
-  },
+       { name: 'Study Desks', icon: Coffee, path: '/app/tables', feature: 'studyDesks' },
+       { name: 'Digital Library', icon: BookOpen, path: '/app/digital-library', feature: 'digitalLibrary' },
+       { name: 'Community Blogs', icon: FileText, path: '/app/blogs', feature: 'blogs' },
+     ]
+   },
   {
     label: 'REPORTS',
     items: [
       { name: 'Reports & Analytics', icon: BarChart2, path: '/app/reports', feature: 'reports' },
       { name: 'Overdue Reminder', icon: Clock, path: '/app/reminders' },
+    ]
+  },
+  {
+    label: 'CONTENT MANAGEMENT',
+    items: [
+      { name: 'Daily Quotes', icon: FileText, path: '/app/quotes', feature: 'dailyQuotes' },
     ]
   },
   {
@@ -83,6 +91,12 @@ const superAdminGroups = [
       { name: 'Billing & Subscriptions', icon: Receipt, path: '/admin/billing' },
       { name: 'Platform Analytics', icon: BarChart2, path: '/admin/analytics' },
       { name: 'Domains & Instances', icon: LayoutGrid, path: '/admin/instances' },
+    ]
+  },
+  {
+    label: 'CONTENT MANAGEMENT',
+    items: [
+      { name: 'Daily Quotes', icon: FileText, path: '/admin/quotes' },
     ]
   },
   {

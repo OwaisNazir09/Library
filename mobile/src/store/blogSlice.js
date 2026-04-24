@@ -39,6 +39,30 @@ export const submitBlog = createAsyncThunk(
   }
 );
 
+export const toggleLikeBlog = createAsyncThunk(
+  'blogs/toggleLike',
+  async (id, { rejectWithValue }) => {
+    try {
+      const res = await blogApi.toggleLike(id);
+      return { id, liked: res.data.data.liked };
+    } catch (err) {
+      return rejectWithValue(err.message);
+    }
+  }
+);
+
+export const addCommentToBlog = createAsyncThunk(
+  'blogs/addComment',
+  async ({ id, content }, { rejectWithValue }) => {
+    try {
+      const res = await blogApi.addComment(id, content);
+      return { id, comment: res.data.data.comment };
+    } catch (err) {
+      return rejectWithValue(err.message);
+    }
+  }
+);
+
 // ─── Slice ────────────────────────────────────────────────────────────────────
 
 const blogSlice = createSlice({
@@ -112,6 +136,32 @@ const blogSlice = createSlice({
         state.submitting = false;
         state.error = action.payload;
       });
+
+    // toggleLikeBlog
+    builder.addCase(toggleLikeBlog.fulfilled, (state, action) => {
+      const { id, liked } = action.payload;
+      if (state.selectedBlog?._id === id) {
+        state.selectedBlog.likesCount += liked ? 1 : -1;
+        state.selectedBlog.isLiked = liked;
+      }
+      const blog = state.blogsList.find(b => b._id === id);
+      if (blog) {
+        blog.likesCount += liked ? 1 : -1;
+      }
+    });
+
+    // addCommentToBlog
+    builder.addCase(addCommentToBlog.fulfilled, (state, action) => {
+      const { id, comment } = action.payload;
+      if (state.selectedBlog?._id === id) {
+        state.selectedBlog.commentsCount += 1;
+        // Optionally add to a local comments list if we have one
+      }
+      const blog = state.blogsList.find(b => b._id === id);
+      if (blog) {
+        blog.commentsCount += 1;
+      }
+    });
   }
 });
 

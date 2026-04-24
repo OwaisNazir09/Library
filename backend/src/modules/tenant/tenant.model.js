@@ -103,7 +103,9 @@ const tenantSchema = new mongoose.Schema({
     studyDesks: { type: Boolean, default: false },
     multiBranch: { type: Boolean, default: false },
     staffAccounts: { type: Boolean, default: false },
-    apiAccess: { type: Boolean, default: false }
+    apiAccess: { type: Boolean, default: false },
+    blogs: { type: Boolean, default: false },
+    dailyQuotes: { type: Boolean, default: false }
   },
   limits: {
     maxBooks: { type: Number, default: 500 },

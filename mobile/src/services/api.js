@@ -2,9 +2,9 @@ import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // For Android emulator/Physical device, use your machine's LAN IP:
-// export const BASE_URL = 'http://192.168.31.145:3245/api';
+export const BASE_URL = 'http://10.192.241.166:3245/api';
 
-export const BASE_URL = 'https://library-7qme.onrender.com/api';
+// export const BASE_URL = 'https://library-7qme.onrender.com/api';
 
 // ─── Keys ─────────────────────────────────────────────────────────────────────
 export const AUTH_TOKEN_KEY = '@lib_auth_token';
@@ -13,7 +13,7 @@ export const TENANT_ID_KEY = '@lib_tenant_id';
 // ─── Axios Instance ───────────────────────────────────────────────────────────
 const api = axios.create({
   baseURL: BASE_URL,
-  timeout: 10000,
+  timeout: 30000,
 });
 
 // ─── Request Interceptor — attach token + tenant ─────────────────────────────
@@ -90,11 +90,29 @@ export const libraryApi = {
   getMyLibraries: () => api.get('/tenants/my'),
 };
 
-// ─── Blog API ─────────────────────────────────────────────────────────────────
 export const blogApi = {
   getBlogs: (params) => api.get('/blogs', { params }),
   getBlog: (id) => api.get(`/blogs/${id}`),
-  submitBlog: (data) => api.post('/blogs', data),
+  submitBlog: async (data) => {
+    const token = await AsyncStorage.getItem(AUTH_TOKEN_KEY);
+    const tenantId = await AsyncStorage.getItem(TENANT_ID_KEY);
+
+    const response = await fetch(`${BASE_URL}/blogs`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token || ''}`,
+        'x-tenant-id': tenantId || '',
+      },
+      body: data,
+    });
+
+    const json = await response.json();
+    if (!response.ok) throw new Error(json.message || 'Upload failed');
+    return { data: json };
+  },
+  addComment: (id, content) => api.post(`/blogs/${id}/comments`, { content }),
+  getComments: (id) => api.get(`/blogs/${id}/comments`),
+  toggleLike: (id) => api.post(`/blogs/${id}/like`),
 };
 
 // ─── Attendance API ───────────────────────────────────────────────────────────

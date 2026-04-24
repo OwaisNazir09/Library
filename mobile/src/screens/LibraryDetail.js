@@ -105,7 +105,7 @@ export default function LibraryDetail({ route, navigation }) {
 
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Banner Section */}
-        <View style={[styles.hero, { backgroundColor: isMember ? '#044343' : colors.primary }]}>
+        <View style={[styles.hero, { backgroundColor: isMember ? colors.primaryDark : colors.primary }]}>
           <View style={styles.iconCircle}>
             {isMember ? (
               <ShieldCheck size={50} color="#fff" />
@@ -354,7 +354,7 @@ const styles = StyleSheet.create({
   sectionTitle: { fontSize: 14, fontWeight: '800', color: colors.lightText, textTransform: 'uppercase', marginBottom: 12, marginLeft: 4 },
   infoCard: { backgroundColor: '#fff', borderRadius: 20, padding: 16, marginBottom: 24, elevation: 1 },
   infoRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 8 },
-  iconBox: { width: 40, height: 40, borderRadius: 10, backgroundColor: '#f0f4ff', alignItems: 'center', justifyContent: 'center', marginRight: 15 },
+  iconBox: { width: 40, height: 40, borderRadius: 10, backgroundColor: '#EEE8FF', alignItems: 'center', justifyContent: 'center', marginRight: 15 },
   infoTextWrapper: { flex: 1 },
   infoLabel: { fontSize: 11, color: colors.lightText, marginBottom: 2 },
   infoValue: { fontSize: 14, fontWeight: '600', color: colors.text },
@@ -374,7 +374,7 @@ const styles = StyleSheet.create({
   errorBox: { backgroundColor: '#fee2e2', padding: 12, borderRadius: 12, marginBottom: 20 },
   errorText: { color: '#ef4444', fontSize: 13, textAlign: 'center' },
   footer: { position: 'absolute', bottom: 0, left: 0, right: 0, padding: 20, backgroundColor: '#fff', borderTopWidth: 1, borderTopColor: '#f0f0f0', borderTopLeftRadius: 20, borderTopRightRadius: 20 },
-  joinBtn: { backgroundColor: colors.secondary, height: 56, borderRadius: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', elevation: 4 },
+  joinBtn: { backgroundColor: colors.primary, height: 56, borderRadius: 20, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', elevation: 4, shadowColor: colors.primary, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 10 },
   disabledBtn: { opacity: 0.6 },
   joinBtnText: { color: '#fff', fontSize: 16, fontWeight: '700' },
   memberBadge: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#4ade8050', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20, marginRight: 10, gap: 4, borderWidth: 1, borderColor: '#4ade80' },

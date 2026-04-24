@@ -1,21 +1,21 @@
 import React, { useEffect, useState } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
-  Image, Alert, ActivityIndicator, FlatList, RefreshControl,
-  Modal, TextInput
+  Image, Alert, ActivityIndicator, RefreshControl,
+  Modal, TextInput, StatusBar
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { useSelector, useDispatch } from 'react-redux';
 import {
-  User, Mail, Phone, Settings, LogOut,
-  ChevronRight, Library, BookOpen, Clock,
-  MapPin, Shield, Camera, Edit2
+  Mail, Phone, LogOut, ChevronRight, Library,
+  BookOpen, Clock, MapPin, Shield, Camera, Edit2
 } from 'lucide-react-native';
 import { logout } from '../store/authSlice';
 import { fetchMyLibraries } from '../store/librarySlice';
 import { fetchMyAttendance } from '../store/attendanceSlice';
 import { updateUserProfile } from '../store/authSlice';
 import { colors } from '../utils/colors';
+import { spacing, radius, shadows } from '../utils/theme';
 
 export default function Profile({ navigation }) {
   const dispatch = useDispatch();
@@ -25,8 +25,7 @@ export default function Profile({ navigation }) {
   const [refreshing, setRefreshing] = useState(false);
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
-  
-  // Field states
+
   const [fullName, setFullName] = useState('');
   const [phone, setPhone] = useState('');
   const [city, setCity] = useState('');
@@ -41,9 +40,7 @@ export default function Profile({ navigation }) {
     }
   };
 
-  useEffect(() => {
-    loadData();
-  }, [isGuest, token, dispatch]);
+  useEffect(() => { loadData(); }, [isGuest, token, dispatch]);
 
   const handleRefresh = async () => {
     setRefreshing(true);
@@ -52,9 +49,9 @@ export default function Profile({ navigation }) {
   };
 
   const handleLogout = () => {
-    Alert.alert('Logout', 'Are you sure you want to exit?', [
+    Alert.alert('Sign Out', 'Are you sure you want to sign out?', [
       { text: 'Cancel', style: 'cancel' },
-      { text: 'Logout', style: 'destructive', onPress: () => dispatch(logout()) },
+      { text: 'Sign Out', style: 'destructive', onPress: () => dispatch(logout()) },
     ]);
   };
 
@@ -72,7 +69,6 @@ export default function Profile({ navigation }) {
       aspect: [1, 1],
       quality: 0.5,
     });
-
     if (!result.canceled) {
       setNewAvatar(result.assets[0]);
     }
@@ -84,7 +80,6 @@ export default function Profile({ navigation }) {
     formData.append('fullName', fullName);
     formData.append('phone', phone);
     formData.append('city', city);
-
     if (newAvatar) {
       const uriParts = newAvatar.uri.split('.');
       const fileType = uriParts[uriParts.length - 1];
@@ -94,10 +89,9 @@ export default function Profile({ navigation }) {
         type: `image/${fileType}`,
       });
     }
-
     try {
       await dispatch(updateUserProfile(formData)).unwrap();
-      Alert.alert('Success', 'Profile updated successfully!');
+      Alert.alert('Success', 'Profile updated!');
       setEditModalVisible(false);
       setNewAvatar(null);
     } catch (err) {
@@ -107,100 +101,147 @@ export default function Profile({ navigation }) {
     }
   };
 
-  const renderGuestView = () => (
-    <ScrollView contentContainerStyle={styles.center} style={styles.container}>
-      <View style={styles.guestImageWrapper}>
-        <User size={80} color={colors.primary} strokeWidth={1} />
+  // ── Guest view ──────────────────────────────────────────────────────────────
+  if (isGuest) {
+    return (
+      <View style={styles.container}>
+        <StatusBar barStyle="dark-content" />
+        <View style={styles.guestHero}>
+          <View style={styles.guestIconWrapper}>
+            <Library size={56} color="#fff" strokeWidth={1.5} />
+          </View>
+        </View>
+        <View style={styles.guestContent}>
+          <Text style={styles.guestTitle}>Join Library System</Text>
+          <Text style={styles.guestSub}>
+            Login to track attendance, manage library memberships, and access exclusive materials.
+          </Text>
+          <TouchableOpacity
+            style={styles.primaryBtn}
+            onPress={() => navigation.navigate('Login')}
+          >
+            <Text style={styles.primaryBtnText}>Sign In</Text>
+            <ChevronRight size={18} color="#fff" />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.outlineBtn}
+            onPress={() => navigation.navigate('Register')}
+          >
+            <Text style={styles.outlineBtnText}>Create Account</Text>
+          </TouchableOpacity>
+        </View>
       </View>
-      <Text style={styles.guestTitle}>Join Library System</Text>
-      <Text style={styles.guestSub}>Login to track your attendance, manage library memberships, and access exclusive materials.</Text>
-      <TouchableOpacity
-        style={[styles.actionBtn, { width: '80%' }]}
-        onPress={() => navigation.navigate('Login')}
-      >
-        <Text style={styles.actionBtnText}>Sign In</Text>
-        <ChevronRight size={18} color="#fff" />
-      </TouchableOpacity>
-      <TouchableOpacity
-        style={[styles.outlineBtn, { width: '80%', marginTop: 12 }]}
-        onPress={() => navigation.navigate('Register')}
-      >
-        <Text style={styles.outlineBtnText}>Create Account</Text>
-      </TouchableOpacity>
-    </ScrollView>
-  );
-
-  if (isGuest) return renderGuestView();
+    );
+  }
 
   return (
     <View style={styles.container}>
-      {/* Header Profile Section */}
-      <View style={styles.header}>
-        <View style={styles.profileInfo}>
-          <View style={styles.avatarWrapper}>
-            {newAvatar ? (
-               <Image source={{ uri: newAvatar.uri }} style={styles.avatar} />
-            ) : user?.profilePicture ? (
-              <Image source={{ uri: user.profilePicture }} style={styles.avatar} />
-            ) : (
-              <View style={[styles.avatarPlaceholder, { backgroundColor: colors.primary }]}>
-                <Text style={styles.avatarInitial}>{user?.fullName?.charAt(0).toUpperCase()}</Text>
-              </View>
-            )}
-            <TouchableOpacity style={styles.editAvatarBtn} onPress={pickImage}>
-              <Camera size={14} color="#fff" />
-            </TouchableOpacity>
-          </View>
-          <View style={styles.nameSection}>
-            <Text style={styles.userName}>{user?.fullName || 'Member'}</Text>
-            <View style={styles.roleBadge}>
-              <Shield size={10} color={colors.primary} />
-              <Text style={styles.roleText}>Verified {user?.role || 'User'}</Text>
+      <StatusBar barStyle="light-content" />
+
+      {/* ── Purple Hero Header ── */}
+      <View style={styles.hero}>
+        <TouchableOpacity style={styles.editBtn} onPress={openEditModal}>
+          <Edit2 size={16} color="#fff" />
+        </TouchableOpacity>
+
+        {/* Avatar */}
+        <View style={styles.avatarWrapper}>
+          {newAvatar ? (
+            <Image source={{ uri: newAvatar.uri }} style={styles.avatar} />
+          ) : user?.profilePicture ? (
+            <Image source={{ uri: user.profilePicture }} style={styles.avatar} />
+          ) : (
+            <View style={styles.avatarFallback}>
+              <Text style={styles.avatarInitial}>
+                {user?.fullName?.charAt(0)?.toUpperCase() || 'U'}
+              </Text>
             </View>
-          </View>
+          )}
+          <TouchableOpacity style={styles.cameraBtn} onPress={pickImage}>
+            <Camera size={12} color="#fff" />
+          </TouchableOpacity>
         </View>
-        <TouchableOpacity style={styles.settingsBtn} onPress={openEditModal}>
-          <Edit2 size={20} color={colors.text} />
+
+        <Text style={styles.heroName}>{user?.fullName || 'Member'}</Text>
+        <View style={styles.rolePill}>
+          <Shield size={10} color="rgba(255,255,255,0.8)" />
+          <Text style={styles.rolePillText}>
+            {user?.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : 'Member'}
+          </Text>
+        </View>
+      </View>
+
+      {/* ── Stats Grid ── */}
+      <View style={styles.statsRow}>
+        <TouchableOpacity style={styles.statCard} onPress={() => navigation.navigate('Libraries')}>
+          <View style={styles.statIcon}>
+            <Library size={18} color={colors.primary} />
+          </View>
+          <Text style={styles.statValue}>{joinedLibraries?.length || 0}</Text>
+          <Text style={styles.statLabel}>Libraries</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.statCard} onPress={() => navigation.navigate('MyBooks')}>
+          <View style={styles.statIcon}>
+            <BookOpen size={18} color={colors.primary} />
+          </View>
+          <Text style={styles.statValue}>{user?.totalBorrowed || 0}</Text>
+          <Text style={styles.statLabel}>Books</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.statCard} onPress={() => navigation.navigate('Attendance')}>
+          <View style={styles.statIcon}>
+            <Clock size={18} color={colors.primary} />
+          </View>
+          <Text style={styles.statValue}>{attendanceRecords?.length || 0}</Text>
+          <Text style={styles.statLabel}>Visits</Text>
         </TouchableOpacity>
       </View>
 
-      <ScrollView 
+      <ScrollView
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={colors.primary} />
         }
       >
-        {/* Stats Grid */}
-        <View style={styles.statsGrid}>
-          <StatBox icon={Library} count={joinedLibraries?.length || 0} label="Libraries" onPress={() => navigation.navigate('Libraries')} />
-          <StatBox icon={BookOpen} count={user?.totalBorrowed || 0} label="My Books" onPress={() => navigation.navigate('MyBooks')} />
-          <StatBox icon={Clock} count={attendanceRecords?.length || 0} label="Visits" onPress={() => navigation.navigate('Attendance')} />
-        </View>
-
+        {/* ── Account Details ── */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Account Details</Text>
-          <View style={styles.infoList}>
+          <Text style={styles.sectionLabel}>Account Details</Text>
+          <View style={styles.infoCard}>
             <InfoRow icon={Mail} label="Email" value={user?.email} />
-            <InfoRow icon={Phone} label="Contact" value={user?.phone || 'Add phone number'} isAction onPress={openEditModal} />
-            <InfoRow icon={MapPin} label="Address" value={user?.city || 'Add address'} isAction onPress={openEditModal} />
+            <View style={styles.divider} />
+            <InfoRow
+              icon={Phone}
+              label="Contact"
+              value={user?.phone || 'Add phone number'}
+              isAction
+              onPress={openEditModal}
+            />
+            <View style={styles.divider} />
+            <InfoRow
+              icon={MapPin}
+              label="Location"
+              value={user?.city || 'Add address'}
+              isAction
+              onPress={openEditModal}
+            />
           </View>
         </View>
 
+        {/* ── My Libraries ── */}
         <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>My Libraries</Text>
+          <View style={styles.sectionHeaderRow}>
+            <Text style={styles.sectionLabel}>My Libraries</Text>
             <TouchableOpacity onPress={() => navigation.navigate('Libraries')}>
-              <Text style={styles.viewAllText}>Join More</Text>
+              <Text style={styles.seeAll}>Join More</Text>
             </TouchableOpacity>
           </View>
 
           {libLoading ? (
             <ActivityIndicator size="small" color={colors.primary} />
           ) : joinedLibraries?.length > 0 ? (
-            joinedLibraries.map((lib, index) => (
+            joinedLibraries.map((lib) => (
               <TouchableOpacity
                 key={lib._id}
-                style={styles.libListItem}
+                style={styles.libItem}
                 onPress={() => navigation.navigate('LibraryDetail', { library: lib })}
               >
                 <View style={styles.libIconBox}>
@@ -208,7 +249,7 @@ export default function Profile({ navigation }) {
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.libName}>{lib.name}</Text>
-                  <Text style={styles.libStatus}>{lib.isActive ? 'Member' : 'Approval Pending'}</Text>
+                  <Text style={styles.libStatus}>{lib.isActive ? 'Active Member' : 'Approval Pending'}</Text>
                 </View>
                 <ChevronRight size={16} color={colors.lightText} />
               </TouchableOpacity>
@@ -220,71 +261,46 @@ export default function Profile({ navigation }) {
           )}
         </View>
 
-        <View style={styles.section}>
+        {/* ── Logout ── */}
+        <View style={[styles.section, { marginBottom: 40 }]}>
           <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
-            <LogOut size={20} color="#ef4444" />
-            <Text style={styles.logoutBtnText}>Sign Out</Text>
+            <LogOut size={18} color="#EF4444" />
+            <Text style={styles.logoutText}>Sign Out</Text>
           </TouchableOpacity>
         </View>
-
-        <View style={{ height: 40 }} />
       </ScrollView>
 
-      {/* Edit Profile Modal */}
+      {/* ── Edit Profile Modal ── */}
       <Modal
         animationType="slide"
-        transparent={true}
+        transparent
         visible={editModalVisible}
         onRequestClose={() => setEditModalVisible(false)}
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
+            <View style={styles.modalHandle} />
             <View style={styles.modalHeader}>
-               <Text style={styles.modalTitle}>Edit Profile</Text>
-               <TouchableOpacity onPress={() => setEditModalVisible(false)}>
-                  <Text style={styles.closeBtn}>Close</Text>
-               </TouchableOpacity>
+              <Text style={styles.modalTitle}>Edit Profile</Text>
+              <TouchableOpacity onPress={() => setEditModalVisible(false)}>
+                <Text style={styles.closeBtn}>Cancel</Text>
+              </TouchableOpacity>
             </View>
-
-            <ScrollView>
-               <View style={styles.inputGroup}>
-                  <Text style={styles.inputLabel}>Full Name</Text>
-                  <TextInput 
-                     style={styles.input}
-                     value={fullName}
-                     onChangeText={setFullName}
-                     placeholder="Your full name"
-                  />
-               </View>
-
-               <View style={styles.inputGroup}>
-                  <Text style={styles.inputLabel}>Phone Number</Text>
-                  <TextInput 
-                     style={styles.input}
-                     value={phone}
-                     onChangeText={setPhone}
-                     placeholder="+91 98765 43210"
-                     keyboardType="phone-pad"
-                  />
-               </View>
-
-               <View style={styles.inputGroup}>
-                  <Text style={styles.inputLabel}>City / Address</Text>
-                  <TextInput 
-                     style={styles.input}
-                     value={city}
-                     onChangeText={setCity}
-                     placeholder="Srinagar, Kashmir"
-                  />
-               </View>
-
-               <TouchableOpacity 
-                  style={[styles.saveBtn, isUpdating && { opacity: 0.7 }]}
-                  onPress={handleUpdate}
-                  disabled={isUpdating}
-               >
-                  {isUpdating ? <ActivityIndicator color="#fff" /> : <Text style={styles.saveBtnText}>Update Profile</Text>}
-               </TouchableOpacity>
+            <ScrollView showsVerticalScrollIndicator={false}>
+              <InputField label="Full Name" value={fullName} onChange={setFullName} placeholder="Your full name" />
+              <InputField label="Phone Number" value={phone} onChange={setPhone} placeholder="+91 98765 43210" keyboard="phone-pad" />
+              <InputField label="City / Address" value={city} onChange={setCity} placeholder="City, State" />
+              <TouchableOpacity
+                style={[styles.saveBtn, isUpdating && { opacity: 0.7 }]}
+                onPress={handleUpdate}
+                disabled={isUpdating}
+              >
+                {isUpdating ? (
+                  <ActivityIndicator color="#fff" />
+                ) : (
+                  <Text style={styles.saveBtnText}>Save Changes</Text>
+                )}
+              </TouchableOpacity>
             </ScrollView>
           </View>
         </View>
@@ -293,91 +309,312 @@ export default function Profile({ navigation }) {
   );
 }
 
-const StatBox = ({ icon: Icon, count, label, onPress }) => (
-  <TouchableOpacity style={styles.statBox} onPress={onPress}>
-    <View style={styles.statIconBox}>
-      <Icon size={20} color={colors.primary} />
-    </View>
-    <Text style={styles.statValue}>{count}</Text>
-    <Text style={styles.statLabel}>{label}</Text>
-  </TouchableOpacity>
-);
-
 const InfoRow = ({ icon: Icon, label, value, isAction, onPress }) => {
   const Container = isAction ? TouchableOpacity : View;
   return (
     <Container style={styles.infoRow} onPress={onPress} activeOpacity={0.7}>
-      <Icon size={18} color={colors.lightText} style={{ marginRight: 15 }} />
+      <View style={styles.infoIconBox}>
+        <Icon size={16} color={colors.primary} />
+      </View>
       <View style={{ flex: 1 }}>
         <Text style={styles.infoLabel}>{label}</Text>
-        <Text style={styles.infoValue}>{value}</Text>
+        <Text style={styles.infoValue} numberOfLines={1}>{value}</Text>
       </View>
       {isAction && <Edit2 size={14} color={colors.primary} />}
     </Container>
   );
 };
 
+const InputField = ({ label, value, onChange, placeholder, keyboard }) => (
+  <View style={styles.inputGroup}>
+    <Text style={styles.inputLabel}>{label}</Text>
+    <TextInput
+      style={styles.input}
+      value={value}
+      onChangeText={onChange}
+      placeholder={placeholder}
+      placeholderTextColor={colors.lightText}
+      keyboardType={keyboard || 'default'}
+    />
+  </View>
+);
+
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fcfcfc' },
-  center: { flexGrow: 1, justifyContent: 'center', alignItems: 'center', padding: 30 },
-  header: {
+  container: { flex: 1, backgroundColor: colors.background },
+
+  // Guest
+  guestHero: {
+    height: 220,
+    backgroundColor: colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderBottomLeftRadius: 36,
+    borderBottomRightRadius: 36,
+  },
+  guestIconWrapper: {
+    width: 110,
+    height: 110,
+    borderRadius: 55,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  guestContent: { flex: 1, padding: spacing.xl, alignItems: 'center', justifyContent: 'center' },
+  guestTitle: { fontSize: 24, fontWeight: '900', color: colors.text, marginBottom: 10, textAlign: 'center' },
+  guestSub: { fontSize: 14, color: colors.lightText, textAlign: 'center', lineHeight: 22, marginBottom: 36 },
+  primaryBtn: {
+    backgroundColor: colors.primary,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingTop: 60,
-    paddingBottom: 25,
-    backgroundColor: '#fff',
+    justifyContent: 'center',
+    width: '85%',
+    paddingVertical: 16,
+    borderRadius: radius.xl,
+    marginBottom: spacing.md,
+    ...shadows.soft,
   },
-  profileInfo: { flexDirection: 'row', alignItems: 'center' },
-  avatarWrapper: { position: 'relative' },
-  avatar: { width: 70, height: 70, borderRadius: 35 },
-  avatarPlaceholder: { width: 70, height: 70, borderRadius: 35, alignItems: 'center', justifyContent: 'center' },
-  avatarInitial: { fontSize: 24, fontWeight: '800', color: '#fff' },
-  editAvatarBtn: { position: 'absolute', bottom: 0, right: 0, backgroundColor: colors.secondary, width: 24, height: 24, borderRadius: 12, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: '#fff' },
-  nameSection: { marginLeft: 16 },
-  userName: { fontSize: 20, fontWeight: '800', color: colors.text },
-  roleBadge: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#eef3ff', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6, marginTop: 4 },
-  roleText: { fontSize: 10, fontWeight: '700', color: colors.primary, marginLeft: 4, textTransform: 'uppercase' },
-  settingsBtn: { width: 44, height: 44, borderRadius: 12, backgroundColor: '#f9fafb', alignItems: 'center', justifyContent: 'center' },
-  statsGrid: { flexDirection: 'row', paddingHorizontal: 20, marginBottom: 30 },
-  statBox: { flex: 1, backgroundColor: '#fff', margin: 5, borderRadius: 16, padding: 15, alignItems: 'center', elevation: 1 },
-  statIconBox: { width: 36, height: 36, borderRadius: 10, backgroundColor: '#f0f4ff', alignItems: 'center', justifyContent: 'center', marginBottom: 8 },
-  statValue: { fontSize: 16, fontWeight: '800', color: colors.text },
-  statLabel: { fontSize: 11, color: colors.lightText, marginTop: 2 },
-  section: { paddingHorizontal: 20, marginBottom: 30 },
-  sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 15 },
-  sectionTitle: { fontSize: 14, fontWeight: '800', color: colors.lightText, textTransform: 'uppercase', marginBottom: 15 },
-  viewAllText: { fontSize: 12, fontWeight: '700', color: colors.primary },
-  infoList: { backgroundColor: '#fff', borderRadius: 20, padding: 10, elevation: 1 },
-  infoRow: { flexDirection: 'row', alignItems: 'center', padding: 12 },
-  infoLabel: { fontSize: 11, color: colors.lightText, marginBottom: 2 },
-  infoValue: { fontSize: 14, fontWeight: '600', color: colors.text },
-  libListItem: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', borderRadius: 16, padding: 12, marginBottom: 10, elevation: 1 },
-  libIconBox: { width: 36, height: 36, borderRadius: 10, backgroundColor: '#f0f4ff', alignItems: 'center', justifyContent: 'center', marginRight: 12 },
-  libName: { fontSize: 14, fontWeight: '700', color: colors.text },
-  libStatus: { fontSize: 11, color: colors.lightText, marginTop: 2 },
-  emptyLib: { alignItems: 'center', padding: 20, backgroundColor: '#f9fafb', borderRadius: 16, borderStyle: 'dashed', borderWidth: 1, borderColor: '#e5e7eb' },
-  emptyLibText: { fontSize: 12, color: colors.lightText },
-  logoutBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: '#fff', borderWeight: 1, borderColor: '#fee2e2', borderRadius: 16, padding: 16, elevation: 1 },
-  logoutBtnText: { marginLeft: 10, fontSize: 15, fontWeight: '700', color: '#ef4444' },
-  guestImageWrapper: { width: 150, height: 150, borderRadius: 75, backgroundColor: '#eef3ff', alignItems: 'center', justifyContent: 'center', marginBottom: 30 },
-  guestTitle: { fontSize: 24, fontWeight: '800', color: colors.text, marginBottom: 10 },
-  guestSub: { fontSize: 14, color: colors.lightText, textAlign: 'center', lineHeight: 22, paddingHorizontal: 20, marginBottom: 35 },
-  actionBtn: { backgroundColor: colors.primary, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 16, borderRadius: 16, elevation: 4 },
-  actionBtnText: { color: '#fff', fontSize: 16, fontWeight: '700', marginRight: 8 },
-  outlineBtn: { backgroundColor: '#fff', borderWidth: 1, borderColor: colors.primary, alignItems: 'center', paddingVertical: 16, borderRadius: 16 },
+  primaryBtnText: { color: '#fff', fontSize: 16, fontWeight: '800', marginRight: 6 },
+  outlineBtn: {
+    width: '85%',
+    borderWidth: 2,
+    borderColor: colors.primary,
+    alignItems: 'center',
+    paddingVertical: 15,
+    borderRadius: radius.xl,
+  },
   outlineBtnText: { color: colors.primary, fontSize: 16, fontWeight: '700' },
-  
-  // Modal Styles
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
-  modalContent: { backgroundColor: '#fff', borderTopLeftRadius: 30, borderTopRightRadius: 30, padding: 25, height: '70%' },
-  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 25 },
-  modalTitle: { fontSize: 20, fontWeight: '800', color: colors.text },
-  closeBtn: { fontSize: 14, fontWeight: '700', color: '#6b7280' },
-  inputGroup: { marginBottom: 20 },
-  inputLabel: { fontSize: 12, fontWeight: '700', color: colors.lightText, marginBottom: 8, textTransform: 'uppercase' },
-  input: { backgroundColor: '#f9fafb', borderWidth: 1, borderColor: '#f1f1f1', borderRadius: 12, padding: 15, fontSize: 14, color: colors.text },
-  saveBtn: { backgroundColor: colors.primary, borderRadius: 16, padding: 18, alignItems: 'center', marginTop: 10, elevation: 4 },
+
+  // Hero
+  hero: {
+    backgroundColor: colors.primary,
+    paddingTop: 56,
+    paddingBottom: spacing.xxl,
+    alignItems: 'center',
+    borderBottomLeftRadius: 32,
+    borderBottomRightRadius: 32,
+  },
+  editBtn: {
+    position: 'absolute',
+    top: 52,
+    right: spacing.base,
+    width: 36,
+    height: 36,
+    borderRadius: radius.lg,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  avatarWrapper: { position: 'relative', marginBottom: spacing.md },
+  avatar: { width: 88, height: 88, borderRadius: 44, borderWidth: 3, borderColor: 'rgba(255,255,255,0.5)' },
+  avatarFallback: {
+    width: 88,
+    height: 88,
+    borderRadius: 44,
+    backgroundColor: 'rgba(255,255,255,0.25)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 3,
+    borderColor: 'rgba(255,255,255,0.4)',
+  },
+  avatarInitial: { fontSize: 32, fontWeight: '900', color: '#fff' },
+  cameraBtn: {
+    position: 'absolute',
+    bottom: 2,
+    right: 2,
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: colors.secondary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: '#fff',
+  },
+  heroName: { fontSize: 22, fontWeight: '900', color: '#fff', marginBottom: 8 },
+  rolePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: radius.full,
+    gap: 5,
+  },
+  rolePillText: { fontSize: 11, fontWeight: '700', color: 'rgba(255,255,255,0.9)' },
+
+  // Stats
+  statsRow: {
+    flexDirection: 'row',
+    paddingHorizontal: spacing.base,
+    marginTop: -28,
+    gap: spacing.sm,
+    marginBottom: spacing.xl,
+  },
+  statCard: {
+    flex: 1,
+    backgroundColor: '#fff',
+    borderRadius: radius.xl,
+    padding: spacing.base,
+    alignItems: 'center',
+    ...shadows.medium,
+  },
+  statIcon: {
+    width: 38,
+    height: 38,
+    borderRadius: radius.md,
+    backgroundColor: '#EEE8FF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 8,
+  },
+  statValue: { fontSize: 18, fontWeight: '900', color: colors.text },
+  statLabel: { fontSize: 11, color: colors.lightText, fontWeight: '600', marginTop: 2 },
+
+  // Sections
+  section: { paddingHorizontal: spacing.base, marginBottom: spacing.xl },
+  sectionLabel: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: colors.lightText,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    marginBottom: spacing.md,
+  },
+  sectionHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: spacing.md,
+  },
+  seeAll: { fontSize: 13, fontWeight: '700', color: colors.primary },
+
+  // Info card
+  infoCard: {
+    backgroundColor: '#fff',
+    borderRadius: radius.xl,
+    padding: spacing.sm,
+    ...shadows.card,
+  },
+  infoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: spacing.md,
+  },
+  infoIconBox: {
+    width: 36,
+    height: 36,
+    borderRadius: radius.md,
+    backgroundColor: '#EEE8FF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: spacing.md,
+  },
+  infoLabel: { fontSize: 11, color: colors.lightText, marginBottom: 2, fontWeight: '600' },
+  infoValue: { fontSize: 14, fontWeight: '700', color: colors.text },
+  divider: { height: 1, backgroundColor: colors.border, marginLeft: 60 },
+
+  // Libraries list
+  libItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    borderRadius: radius.xl,
+    padding: spacing.md,
+    marginBottom: spacing.sm,
+    ...shadows.card,
+  },
+  libIconBox: {
+    width: 40,
+    height: 40,
+    borderRadius: radius.md,
+    backgroundColor: '#EEE8FF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: spacing.md,
+  },
+  libName: { fontSize: 14, fontWeight: '700', color: colors.text },
+  libStatus: { fontSize: 11, color: colors.lightText, marginTop: 2, fontWeight: '500' },
+  emptyLib: {
+    backgroundColor: '#fff',
+    borderRadius: radius.xl,
+    padding: spacing.xl,
+    alignItems: 'center',
+    borderStyle: 'dashed',
+    borderWidth: 1.5,
+    borderColor: colors.border,
+  },
+  emptyLibText: { fontSize: 13, color: colors.lightText, fontWeight: '500' },
+
+  // Logout
+  logoutBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FFF5F5',
+    borderRadius: radius.xl,
+    padding: spacing.base,
+    gap: 10,
+    borderWidth: 1,
+    borderColor: '#FECACA',
+  },
+  logoutText: { fontSize: 15, fontWeight: '800', color: '#EF4444' },
+
+  // Modal
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.45)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 32,
+    borderTopRightRadius: 32,
+    padding: spacing.xl,
+    paddingBottom: 36,
+    height: '72%',
+  },
+  modalHandle: {
+    width: 40,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: colors.border,
+    alignSelf: 'center',
+    marginBottom: spacing.base,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: spacing.xl,
+  },
+  modalTitle: { fontSize: 20, fontWeight: '900', color: colors.text },
+  closeBtn: { fontSize: 14, fontWeight: '700', color: colors.lightText },
+  inputGroup: { marginBottom: spacing.base },
+  inputLabel: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: colors.lightText,
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+    marginBottom: 8,
+  },
+  input: {
+    backgroundColor: colors.background,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.lg,
+    padding: spacing.base,
+    fontSize: 14,
+    color: colors.text,
+    fontWeight: '600',
+  },
+  saveBtn: {
+    backgroundColor: colors.primary,
+    borderRadius: radius.xl,
+    padding: spacing.base,
+    alignItems: 'center',
+    marginTop: spacing.sm,
+    ...shadows.soft,
+  },
   saveBtnText: { color: '#fff', fontSize: 16, fontWeight: '800' },
 });

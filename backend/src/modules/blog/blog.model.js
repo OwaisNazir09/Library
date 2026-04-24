@@ -40,6 +40,14 @@ const blogSchema = new mongoose.Schema({
   createdAt: {
     type: Date,
     default: Date.now
+  },
+  likesCount: {
+    type: Number,
+    default: 0
+  },
+  commentsCount: {
+    type: Number,
+    default: 0
   }
 });
 

@@ -1,6 +1,7 @@
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { colors } from '../utils/colors';
 
 import BottomTabs from './BottomTabs';
 import ResourceDetail from '../screens/ResourceDetail';
@@ -17,31 +18,86 @@ import Ledger from '../screens/Ledger';
 
 const Stack = createNativeStackNavigator();
 
+const sharedHeaderOptions = {
+  headerStyle: {
+    backgroundColor: '#fff',
+  },
+  headerTintColor: colors.primary,
+  headerTitleStyle: {
+    fontWeight: '800',
+    fontSize: 16,
+    color: colors.text,
+  },
+  headerShadowVisible: false,
+  headerBackTitleVisible: false,
+};
+
 export default function AppNavigator({ navigationRef }) {
   return (
     <NavigationContainer ref={navigationRef}>
-      <Stack.Navigator 
-        initialRouteName="BottomTabs" 
-        screenOptions={{ 
+      <Stack.Navigator
+        initialRouteName="BottomTabs"
+        screenOptions={{
           headerShown: false,
-          headerStyle: { backgroundColor: '#fff', elevation: 1, shadowOpacity: 0.1 },
-          headerTintColor: '#044343',
-          headerTitleStyle: { fontWeight: '800' },
-          headerBackTitleVisible: false
+          ...sharedHeaderOptions,
         }}
       >
         <Stack.Screen name="BottomTabs" component={BottomTabs} />
-        <Stack.Screen name="ResourceDetail" component={ResourceDetail} options={{ headerShown: true, title: 'Resource Details' }} />
-        <Stack.Screen name="BlogDetail" component={BlogDetail} options={{ headerShown: true, title: 'Blog Details' }} />
-        <Stack.Screen name="SubmitBlog" component={SubmitBlog} options={{ headerShown: true, title: 'Submit Blog' }} />
-        <Stack.Screen name="LibraryDetail" component={LibraryDetail} options={{ headerShown: true, title: 'Library Details' }} />
-        <Stack.Screen name="Login" component={Login} options={{ headerShown: true, title: 'Login' }} />
-        <Stack.Screen name="Register" component={Register} options={{ headerShown: true, title: 'Register' }} />
-        <Stack.Screen name="Attendance" component={Attendance} options={{ headerShown: true, title: 'Attendance' }} />
-        <Stack.Screen name="Downloads" component={Downloads} options={{ headerShown: true, title: 'Downloads / Books' }} />
-        <Stack.Screen name="MyBooks" component={MyBooks} options={{ headerShown: true, title: 'My Borrowed Books' }} />
-        <Stack.Screen name="BookDetail" component={BookDetail} options={{ headerShown: true, title: 'Book Details' }} />
-        <Stack.Screen name="Ledger" component={Ledger} options={{ headerShown: true, title: 'Payments & Ledger' }} />
+        <Stack.Screen
+          name="ResourceDetail"
+          component={ResourceDetail}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="BlogDetail"
+          component={BlogDetail}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="SubmitBlog"
+          component={SubmitBlog}
+          options={{ headerShown: true, title: 'Write a Blog', ...sharedHeaderOptions }}
+        />
+        <Stack.Screen
+          name="LibraryDetail"
+          component={LibraryDetail}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="Login"
+          component={Login}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="Register"
+          component={Register}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="Attendance"
+          component={Attendance}
+          options={{ headerShown: true, title: 'Attendance History', ...sharedHeaderOptions }}
+        />
+        <Stack.Screen
+          name="Downloads"
+          component={Downloads}
+          options={{ headerShown: true, title: 'My Downloads', ...sharedHeaderOptions }}
+        />
+        <Stack.Screen
+          name="MyBooks"
+          component={MyBooks}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="BookDetail"
+          component={BookDetail}
+          options={{ headerShown: true, title: 'Book Details', ...sharedHeaderOptions }}
+        />
+        <Stack.Screen
+          name="Ledger"
+          component={Ledger}
+          options={{ headerShown: true, title: 'Payments & Ledger', ...sharedHeaderOptions }}
+        />
       </Stack.Navigator>
     </NavigationContainer>
   );

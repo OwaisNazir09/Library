@@ -9,7 +9,10 @@ import resourceSchema from '../modules/resource/resource.model.js';
 import { accountSchema, transactionSchema, receiptSchema } from '../modules/ledger/finance.model.js';
 
 import blogSchema from '../modules/blog/blog.model.js';
+import commentSchema from '../modules/blog/comment.model.js';
+import likeSchema from '../modules/blog/like.model.js';
 import attendanceSchema from '../modules/attendance/attendance.model.js';
+import quoteSchema from '../modules/quote/quote.model.js';
 
 export const getModels = (connection) => {
   return {
@@ -23,7 +26,10 @@ export const getModels = (connection) => {
     Resource: connection.models.Resource || connection.model('Resource', resourceSchema),
 
     Blog: connection.models.Blog || connection.model('Blog', blogSchema),
+    Comment: connection.models.Comment || connection.model('Comment', commentSchema),
+    Like: connection.models.Like || connection.model('Like', likeSchema),
     Attendance: connection.models.Attendance || connection.model('Attendance', attendanceSchema),
+    Quote: connection.models.Quote || connection.model('Quote', quoteSchema),
 
     Account: connection.models.Account || connection.model('Account', accountSchema),
     Transaction: connection.models.Transaction || connection.model('Transaction', transactionSchema),
