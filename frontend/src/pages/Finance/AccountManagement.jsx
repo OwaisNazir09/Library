@@ -58,14 +58,14 @@ const AccountManagement = () => {
 
   return (
     <div className="space-y-6 md:space-y-8 pb-10">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div className="text-center md:text-left">
-          <h1 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight">Chart of Accounts</h1>
-          <p className="text-slate-400 font-bold mt-1 uppercase text-[9px] md:text-[10px] tracking-widest leading-loose">Manage your professional financial structure</p>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
+        <div>
+          <h1 className="text-2xl md:text-3xl font-bold text-slate-900 tracking-tight">Chart of Accounts</h1>
+          <p className="text-sm text-slate-400 font-medium mt-1">Manage your professional financial structure and ledgers.</p>
         </div>
         <button
           onClick={() => setIsModalOpen(true)}
-          className="flex items-center justify-center gap-2 px-6 py-3 bg-[#044343] text-white rounded-2xl font-black text-[10px] md:text-xs uppercase tracking-widest hover:bg-[#033636] transition-all shadow-lg shadow-teal-900/10"
+          className="flex items-center justify-center gap-2 px-6 py-3 bg-[#044343] text-white rounded-2xl font-bold text-xs uppercase tracking-widest hover:bg-[#033636] transition-all shadow-lg shadow-teal-900/10"
         >
           <Plus size={18} /> New Account
         </button>
@@ -112,8 +112,8 @@ const AccountManagement = () => {
             >
               <div className="px-6 md:px-8 py-5 md:py-6 border-b border-slate-50 bg-slate-50/50 flex items-center justify-between shrink-0">
                 <div>
-                  <h2 className="text-lg md:text-xl font-black text-slate-900 tracking-tight">Create New Account</h2>
-                  <p className="text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest mt-0.5">Define a new ledger entry</p>
+                  <h2 className="text-xl font-bold text-slate-900 tracking-tight">Create New Account</h2>
+                  <p className="text-xs text-slate-400 font-medium mt-0.5">Define a new ledger entry</p>
                 </div>
                 <button 
                   onClick={() => setIsModalOpen(false)}
@@ -207,11 +207,11 @@ const AccountManagement = () => {
                 </form>
               </div>
 
-              <div className="p-6 md:p-8 bg-slate-50 border-t border-slate-50 flex flex-col sm:flex-row gap-3 shrink-0">
+              <div className="p-6 md:p-8 bg-slate-50 border-t border-slate-100 flex flex-col sm:flex-row gap-3 shrink-0">
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="order-2 sm:order-1 flex-1 h-12 rounded-xl text-slate-500 font-black text-xs uppercase tracking-widest hover:bg-slate-100 transition-colors"
+                  className="order-2 sm:order-1 flex-1 h-12 rounded-xl text-slate-500 font-bold text-xs uppercase tracking-widest hover:bg-slate-100 transition-colors"
                 >
                   Cancel
                 </button>
@@ -219,7 +219,7 @@ const AccountManagement = () => {
                   form="accountForm"
                   disabled={isAdding}
                   type="submit"
-                  className="order-1 sm:order-2 flex-[2] h-12 bg-[#044343] text-white rounded-xl font-black text-xs uppercase tracking-widest hover:bg-[#033636] transition-all disabled:opacity-50 shadow-lg shadow-teal-900/10"
+                  className="order-1 sm:order-2 flex-[2] h-12 bg-[#044343] text-white rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-[#033636] transition-all disabled:opacity-50 shadow-lg shadow-teal-900/10"
                 >
                    {isAdding ? 'Creating...' : 'Create Account'}
                 </button>
@@ -262,19 +262,19 @@ const AccountRow = ({ account, allAccounts, level = 0 }) => {
           </div>
 
           <div className="min-w-0">
-            <h3 className="text-xs md:text-sm font-black text-slate-900 truncate flex items-center gap-1.5 md:gap-2">
+            <h3 className="text-sm font-bold text-slate-900 truncate flex items-center gap-1.5 md:gap-2">
               {account.name}
               {account.isSystem && (
-                <span className="shrink-0 px-1.5 py-0.5 rounded-md bg-slate-200 text-slate-500 text-[8px] font-black uppercase tracking-tighter">System</span>
+                <span className="shrink-0 px-1.5 py-0.5 rounded-md bg-slate-100 text-slate-400 text-[8px] font-bold uppercase tracking-tight">System</span>
               )}
             </h3>
-            <p className="text-[8px] md:text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5 truncate">{account.subType}</p>
+            <p className="text-[10px] text-slate-400 font-medium uppercase tracking-widest mt-0.5 truncate">{account.subType}</p>
           </div>
         </div>
 
         <div className="text-right mx-4 md:mx-8 shrink-0">
-          <p className="text-xs md:text-sm font-black text-slate-900">₹{account.currentBalance.toLocaleString('en-IN')}</p>
-          <p className="text-[8px] md:text-[9px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">Balance</p>
+          <p className="text-sm font-bold text-slate-900">₹{account.currentBalance.toLocaleString('en-IN')}</p>
+          <p className="text-[10px] text-slate-400 font-medium uppercase tracking-widest mt-0.5">Balance</p>
         </div>
 
         <button className="w-7 h-7 md:w-8 md:h-8 rounded-lg flex items-center justify-center text-slate-300 hover:text-slate-600 hover:bg-slate-100 transition-all sm:opacity-0 group-hover:opacity-100 shrink-0">
