@@ -2,7 +2,7 @@ import axios from 'axios';
 import { toast } from 'react-hot-toast';
 
 const api = axios.create({
-  baseURL: 'http://localhost:3245/api',
+  baseURL: 'https://library-7qme.onrender.com/api',
   headers: {
     'Content-Type': 'application/json',
   },
