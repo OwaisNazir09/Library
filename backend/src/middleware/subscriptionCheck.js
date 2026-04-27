@@ -2,8 +2,6 @@ import Tenant from '../modules/tenant/tenant.model.js';
 
 export const checkSubscription = async (req, res, next) => {
   try {
-    // Skip check for admin routes or public routes if necessary
-    // But usually this applies to tenant-specific actions
 
     if (!req.tenantId) {
       return next();

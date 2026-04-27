@@ -4,6 +4,8 @@ import Tenant from '../modules/tenant/tenant.model.js';
 import { getModels } from '../utils/helpers.js';
 import sendEmail from '../utils/emailService.js';
 import { sendPushNotification } from './firebase.service.js';
+import { checkOverdueBorrowings } from './overdueCron.js';
+import WhatsAppService from './whatsapp.service.js';
 
 const checkSubscriptionExpiry = async () => {
   try {
@@ -94,6 +96,15 @@ const checkUserMembershipExpiry = async () => {
           console.error(`Failed to send push notification to user ${user._id}:`, pushErr);
         }
       }
+
+      if (user.phone) {
+        try {
+          const message = `🎗️ *Membership Expiring Soon* 🎗️\n\nDear ${user.fullName},\n\nYour membership at *${libraryName}* is set to expire on ${expiryDateStr}.\n\nPlease renew your package to continue enjoying uninterrupted access.\n\nThank you!`;
+          await WhatsAppService.sendMessage(user.tenantId._id, user.phone, message);
+        } catch (waErr) {
+          console.error(`Failed to send expiry WhatsApp to user ${user._id}:`, waErr.message);
+        }
+      }
     }
 
     const expiredUsers = await User.updateMany(
@@ -117,8 +128,10 @@ export const initSubscriptionCron = () => {
   cron.schedule('0 0 * * *', () => {
     checkSubscriptionExpiry();
     checkUserMembershipExpiry();
+    checkOverdueBorrowings();
   });
   console.log('Subscription & Membership expiry crons initialized.');
   checkSubscriptionExpiry();
   checkUserMembershipExpiry();
+  checkOverdueBorrowings();
 };

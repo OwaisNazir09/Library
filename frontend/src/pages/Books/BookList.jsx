@@ -114,14 +114,14 @@ const BookList = () => {
               <tr>
                 <th className="px-5">Title & Author</th>
                 <th>Category</th>
-                <th>ISBN</th>
-                <th>Status</th>
+                <th className="px-5 text-center">Total</th>
+                <th className="px-5 text-center">Available</th>
                 <th className="text-right px-5">Actions</th>
               </tr>
             </thead>
             <tbody>
               <tr>
-                <td colSpan="5" className="p-0">
+                <td colSpan="6" className="p-0">
                   <LoadingSkeleton type="table" rows={10} />
                 </td>
               </tr>
@@ -141,7 +141,8 @@ const BookList = () => {
               <th className="px-5">Title & Author</th>
               <th>Category</th>
               <th>ISBN</th>
-              <th>Status</th>
+              <th className="px-5 text-center">Total</th>
+              <th className="px-5 text-center">Available</th>
               <th className="text-right px-5">Actions</th>
             </tr>
           </thead>
@@ -167,9 +168,10 @@ const BookList = () => {
                   <span className="badge badge-neutral lowercase">{book.category || 'General'}</span>
                 </td>
                 <td className="text-slate-500 font-medium text-[12px]">{book.isbn || '-'}</td>
-                <td>
-                  <span className={`badge ${book.availableCopies > 0 ? 'badge-success' : 'badge-danger'} lowercase`}>
-                    {book.availableCopies} / {book.totalCopies} Available
+                <td className="text-center font-bold text-slate-700">{book.totalCopies}</td>
+                <td className="text-center">
+                  <span className={`font-bold ${book.availableCopies > 0 ? 'text-emerald-600' : 'text-rose-500'}`}>
+                    {book.availableCopies}
                   </span>
                 </td>
                 <td className="px-5 text-right">
@@ -219,6 +221,25 @@ const BookList = () => {
             <span className="hidden sm:inline">Add Book</span>
           </button>
         </div>
+      </div>
+ 
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {[
+          { label: 'Total Titles', value: total, icon: BookOpen, color: 'text-blue-600', bg: 'bg-blue-50' },
+          { label: 'Total Copies', value: booksData?.stats?.totalPhysical || 0, icon: Plus, color: 'text-teal-600', bg: 'bg-teal-50' },
+          { label: 'Available Now', value: booksData?.stats?.totalAvailable || 0, icon: BookOpen, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+          { label: 'On Loan', value: (booksData?.stats?.totalPhysical || 0) - (booksData?.stats?.totalAvailable || 0), icon: ArrowRight, color: 'text-amber-600', bg: 'bg-amber-50' },
+        ].map((stat, i) => (
+          <div key={i} className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm flex items-center gap-4">
+            <div className={`w-10 h-10 rounded-lg ${stat.bg} ${stat.color} flex items-center justify-center`}>
+              <stat.icon size={20} />
+            </div>
+            <div>
+              <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">{stat.label}</p>
+              <p className="text-xl font-bold text-slate-900 leading-tight">{stat.value}</p>
+            </div>
+          </div>
+        ))}
       </div>
 
       {renderContent()}

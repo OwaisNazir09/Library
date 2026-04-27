@@ -12,6 +12,10 @@ export const financeApi = baseApi.injectEndpoints({
       query: (params) => ({ url: '/finance/accounts', params }),
       providesTags: ['Finance'],
     }),
+    getStudentAccounts: builder.query({
+      query: (params) => ({ url: '/finance/student-accounts', params }),
+      providesTags: ['Finance'],
+    }),
     addAccount: builder.mutation({
       query: (data) => ({ url: '/finance/accounts', method: 'POST', body: data }),
       invalidatesTags: ['Finance'],
@@ -85,12 +89,20 @@ export const financeApi = baseApi.injectEndpoints({
       query: () => '/finance/reports/balance-sheet',
       providesTags: ['Finance'],
     }),
+    sendLedgerWhatsApp: builder.mutation({
+      query: (studentId) => ({ url: `/finance/accounts/${studentId}/send-whatsapp`, method: 'POST' }),
+      invalidatesTags: ['Finance'],
+    }),
+    sendReceiptWhatsApp: builder.mutation({
+      query: (receiptId) => ({ url: `/finance/receipts/${receiptId}/send-whatsapp`, method: 'POST' }),
+    }),
   }),
 });
 
 export const {
   useGetFinanceStatsQuery,
   useGetAccountsQuery,
+  useGetStudentAccountsQuery,
   useAddAccountMutation,
   useSeedAccountsMutation,
   useGetAccountLedgerQuery,
@@ -107,4 +119,6 @@ export const {
   useGetTrialBalanceQuery,
   useGetProfitAndLossQuery,
   useGetBalanceSheetQuery,
+  useSendLedgerWhatsAppMutation,
+  useSendReceiptWhatsAppMutation,
 } = financeApi;

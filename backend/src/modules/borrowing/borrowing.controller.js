@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 import { getModels } from '../../utils/helpers.js';
 import ApiFeatures from '../../utils/apiFeatures.js';
+import WhatsAppService from '../../services/whatsapp.service.js';
 
 export const borrowBook = async (req, res, next) => {
   try {
@@ -32,6 +33,17 @@ export const borrowBook = async (req, res, next) => {
       status: 'success',
       data: { borrowing }
     });
+
+    // Send WhatsApp Notification
+    try {
+      const targetUser = await User.findById(userId || req.user._id);
+      if (targetUser?.phone) {
+        const message = `📚 *Book Issued* 📚\n\nDear ${targetUser.fullName},\n\nThe book *"${book.title}"* has been issued to you.\n\n📅 *Issue Date:* ${new Date(borrowing.borrowedDate).toLocaleDateString()}\n📅 *Due Date:* ${new Date(dueDate).toLocaleDateString()}\n\nPlease return it on time. Thank you!`;
+        await WhatsAppService.sendMessage(req.tenantId, targetUser.phone, message);
+      }
+    } catch (waErr) {
+      console.error('[WA] Issue notification failed:', waErr.message);
+    }
   } catch (err) {
     next(err);
   }
@@ -97,6 +109,24 @@ export const returnBook = async (req, res, next) => {
     await Book.findOneAndUpdate({ _id: borrowing.book, tenantId: req.tenantId }, { $inc: { availableCopies: 1 } });
 
     res.status(200).json({ status: 'success', data: { borrowing } });
+
+    // Send WhatsApp Notification
+    try {
+      const targetUser = await User.findById(borrowing.user);
+      const targetBook = await Book.findById(borrowing.book);
+      if (targetUser?.phone) {
+        let message = `✅ *Book Returned* ✅\n\nDear ${targetUser.fullName},\n\nWe have received the book *"${targetBook?.title}"* back in the library.\n\n📅 *Return Date:* ${returnedDate.toLocaleDateString()}`;
+        
+        if (borrowing.fineAmount > 0) {
+          message += `\n⚠️ *Late Fine:* ${borrowing.fineAmount} (for ${borrowing.lateDays} days late)`;
+        }
+
+        message += `\n\nThank you for using our library services!`;
+        await WhatsAppService.sendMessage(req.tenantId, targetUser.phone, message);
+      }
+    } catch (waErr) {
+      console.error('[WA] Return notification failed:', waErr.message);
+    }
   } catch (err) {
     next(err);
   }

@@ -1,8 +1,10 @@
 import { getModels } from '../../utils/helpers.js';
 import ApiFeatures from '../../utils/apiFeatures.js';
 import Package from '../package/package.model.js';
-import { addDays } from 'date-fns';
+import { addDays, format } from 'date-fns';
 import { deleteCloudinaryImage } from '../../middleware/upload.middleware.js';
+import WhatsAppService from '../../services/whatsapp.service.js';
+import Tenant from '../tenant/tenant.model.js';
 
 export const getAllUsers = async (req, res, next) => {
   try {
@@ -239,13 +241,13 @@ export const createUser = async (req, res, next) => {
     const newUser = await User.create({
       ...req.body,
       tenantId: req.tenantId,
+      status: 'approved',
+      documents: req.body.documents?.map(doc => ({ ...doc, status: 'verified' })) || [],
       password: req.body.password || 'password123'
     });
 
-    // --- Auto Create Student Account (Ledger) ---
     const { ensureStudentAccount, getSystemAccount, recordTransaction, seedChartOfAccounts } = await import('../ledger/finance.controller.js');
 
-    // Seed default COA if first registration
     await seedChartOfAccounts(req.db, req.tenantId);
 
     const studentAccount = await ensureStudentAccount(req.db, req.tenantId, newUser._id, newUser.fullName);
@@ -285,7 +287,7 @@ export const createUser = async (req, res, next) => {
       const sendEmail = (await import('../../utils/emailService.js')).default;
       const { welcomeEmailTemplate } = await import('../../templates/emails/welcomeEmail.js');
       const { default: Tenant } = await import('../tenant/tenant.model.js');
-      
+
       const tenant = await Tenant.findById(req.tenantId);
       const libraryName = tenant?.name || 'Welib Library';
 
@@ -478,6 +480,17 @@ export const assignPackage = async (req, res, next) => {
       message: 'Package assigned and ledger updated.',
       data: { user }
     });
+
+    try {
+      if (user.phone) {
+        const tenant = await Tenant.findById(req.tenantId);
+        const libraryName = tenant?.name || 'Library';
+        const message = `✨ *Membership Activated* ✨\n\nDear ${user.fullName},\n\nYour membership for *"${pkg.name}"* has been activated at *${libraryName}*.\n\n📅 *Valid From:* ${format(user.packageStartDate, 'dd MMM yyyy')}\n📅 *Valid Until:* ${format(user.packageEndDate, 'dd MMM yyyy')}\n\nThank you for being a part of our library!`;
+        await WhatsAppService.sendMessage(req.tenantId, user.phone, message);
+      }
+    } catch (waErr) {
+      console.error('[WA] Package assignment notification failed:', waErr.message);
+    }
   } catch (err) {
     next(err);
   }

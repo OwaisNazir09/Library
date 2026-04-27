@@ -75,7 +75,7 @@ const Hero = ({ navigate }) => (
     <div className="max-w-7xl mx-auto px-6 text-center lg:text-left grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
         <h1 className="text-[34px] lg:text-[48px] font-bold text-slate-900 leading-[1.15] mb-6 tracking-tight">
-          Modern Library Management<br />
+           Welib Modern Library Management<br />
           <span className="text-[#044343]">Built for Growing Libraries</span>
         </h1>
         <p className="text-[16px] text-slate-500 font-medium leading-relaxed mb-8 max-w-lg mx-auto lg:mx-0">

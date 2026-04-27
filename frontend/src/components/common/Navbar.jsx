@@ -5,8 +5,15 @@ import { logout } from '../../store/slices/authSlice';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Search, Bell, Sun, Moon, Globe, Menu, LogOut,
-  User as UserIcon, Settings as SettingsIcon
+  User as UserIcon, Settings as SettingsIcon, MessageCircle, Loader2, CheckCircle2, AlertCircle
 } from 'lucide-react';
+import {
+  useGetWhatsAppStatusQuery,
+  useInitWhatsAppMutation,
+  useLogoutWhatsAppMutation
+} from '../../store/api/whatsappApi';
+
+
 
 const Navbar = ({ onMenuClick }) => {
   const location = useLocation();
@@ -16,6 +23,16 @@ const Navbar = ({ onMenuClick }) => {
   const [searchValue, setSearchValue] = React.useState('');
   const [isProfileOpen, setIsProfileOpen] = React.useState(false);
   const [isDark, setIsDark] = React.useState(localStorage.getItem('theme') === 'dark');
+  const [isWhatsAppOpen, setIsWhatsAppOpen] = React.useState(false);
+
+  const { data: statusRes, isLoading: isStatusLoading } = useGetWhatsAppStatusQuery(undefined, {
+    pollingInterval: isWhatsAppOpen ? 5000 : 0,
+    skip: !localStorage.getItem('token')
+  });
+  const [initWhatsApp, { isLoading: isInitLoading }] = useInitWhatsAppMutation();
+  const [logoutWhatsApp] = useLogoutWhatsAppMutation();
+
+  const whatsappStatus = statusRes?.data;
 
   React.useEffect(() => {
     if (isDark) {
@@ -27,11 +44,15 @@ const Navbar = ({ onMenuClick }) => {
     }
   }, [isDark]);
 
+
+
   const handleSearch = (e) => {
     if (e.key === 'Enter' && searchValue.trim()) {
       navigate(`/app/books?search=${encodeURIComponent(searchValue)}`);
     }
   };
+
+
 
   const handleLogout = () => {
     dispatch(logout());
@@ -72,9 +93,104 @@ const Navbar = ({ onMenuClick }) => {
           >
             {isDark ? <Moon size={16} className="text-amber-500" /> : <Sun size={16} />}
           </button>
-          <button className="p-1.5 text-slate-400 hover:text-slate-900 transition-all rounded-md hover:bg-slate-50">
-            <Globe size={16} />
-          </button>
+          <div className="relative">
+            <button
+              onClick={() => setIsWhatsAppOpen(!isWhatsAppOpen)}
+              className={`p-1.5 transition-all rounded-md hover:bg-slate-50 flex items-center gap-1.5 ${whatsappStatus?.status === 'READY' ? 'text-emerald-600 bg-emerald-50' : 'text-slate-400 hover:text-slate-900'
+                }`}
+              title="WhatsApp Connection"
+            >
+              <MessageCircle size={16} />
+              {whatsappStatus?.status === 'READY' && (
+                <span className="text-[10px] font-bold uppercase tracking-tight hidden lg:block">Connected</span>
+              )}
+            </button>
+
+            <AnimatePresence>
+              {isWhatsAppOpen && (
+                <>
+                  <div className="fixed inset-0 z-10" onClick={() => setIsWhatsAppOpen(false)} />
+                  <motion.div
+                    initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                    className="absolute right-0 mt-2 w-64 bg-white border border-slate-200 rounded-xl shadow-xl z-20 overflow-hidden dark:bg-slate-900 dark:border-slate-800"
+                  >
+                    <div className="p-4">
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                          <MessageCircle size={16} className="text-emerald-500" />
+                          WhatsApp
+                        </h3>
+                        {whatsappStatus?.status === 'READY' ? (
+                          <span className="flex items-center gap-1 text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full uppercase tracking-wider dark:bg-emerald-950/30">
+                            <CheckCircle2 size={10} /> Online
+                          </span>
+                        ) : (
+                          <span className="flex items-center gap-1 text-[10px] font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full uppercase tracking-wider dark:bg-amber-950/30">
+                            Offline
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="flex flex-col items-center justify-center min-h-[160px] bg-slate-50 rounded-lg border border-dashed border-slate-200 dark:bg-slate-800/50 dark:border-slate-700">
+                        {isInitLoading ? (
+                          <div className="flex flex-col items-center gap-2">
+                            <Loader2 size={24} className="animate-spin text-emerald-500" />
+                            <p className="text-[11px] text-slate-500 font-medium">Initializing...</p>
+                          </div>
+                        ) : whatsappStatus?.status === 'QR_RECEIVED' ? (
+                          <div className="flex flex-col items-center gap-3 p-2">
+                            <img src={whatsappStatus.image} alt="WhatsApp QR" className="w-32 h-32 rounded-lg bg-white p-1" />
+                            <p className="text-[10px] text-center text-slate-500 font-medium px-4">
+                              Scan this QR code with your phone to link your account
+                            </p>
+                          </div>
+                        ) : whatsappStatus?.status === 'READY' ? (
+                          <div className="flex flex-col items-center gap-3 p-4">
+                            <div className="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 dark:bg-emerald-900/30">
+                              <CheckCircle2 size={24} />
+                            </div>
+                            <div className="text-center">
+                              <p className="text-[13px] font-bold text-slate-900 dark:text-slate-100">Successfully Linked</p>
+                              <p className="text-[11px] text-slate-500 mt-1">Next login will be automatic</p>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="flex flex-col items-center gap-4 p-4 text-center">
+                            <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 dark:bg-slate-800">
+                              <MessageCircle size={20} />
+                            </div>
+                            <div>
+                              <p className="text-[12px] font-bold text-slate-700 dark:text-slate-300">Not Connected</p>
+                              <p className="text-[11px] text-slate-500 mt-1">Connect your WhatsApp to send notifications to members</p>
+                            </div>
+                            <button
+                              onClick={() => initWhatsApp()}
+                              className="w-full py-1.5 bg-[#044343] text-white rounded-lg text-[12px] font-bold hover:bg-[#033636] transition-all flex items-center justify-center gap-2"
+                            >
+                              Connect Now
+                            </button>
+                          </div>
+                        )}
+                      </div>
+
+                      {whatsappStatus?.status === 'READY' && (
+                        <button
+                          onClick={() => logoutWhatsApp()}
+                          className="w-full mt-4 py-1.5 text-rose-500 text-[11px] font-bold hover:bg-rose-50 rounded-lg transition-all border border-transparent hover:border-rose-100"
+                        >
+                          Disconnect Account
+                        </button>
+                      )}
+
+                    </div>
+                  </motion.div>
+                </>
+              )}
+            </AnimatePresence>
+          </div>
+
         </div>
 
         <button

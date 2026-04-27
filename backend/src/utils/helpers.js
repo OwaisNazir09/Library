@@ -13,9 +13,11 @@ import commentSchema from '../modules/blog/comment.model.js';
 import likeSchema from '../modules/blog/like.model.js';
 import attendanceSchema from '../modules/attendance/attendance.model.js';
 import quoteSchema from '../modules/quote/quote.model.js';
+import tenantSchema from '../modules/tenant/tenant.model.js';
 
 export const getModels = (connection) => {
   return {
+    Tenant: connection.models.Tenant || connection.model('Tenant', tenantSchema),
     User: connection.models.User || connection.model('User', userSchema),
     Book: connection.models.Book || connection.model('Book', bookSchema),
     Borrowing: connection.models.Borrowing || connection.model('Borrowing', borrowingSchema),

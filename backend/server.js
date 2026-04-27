@@ -1,5 +1,5 @@
 import dotenv from 'dotenv';
-dotenv.config(); // ✅ MUST BE FIRST
+dotenv.config();
 
 import mongoose from 'mongoose';
 import { createServer } from 'http';
@@ -62,7 +62,6 @@ process.on('uncaughtException', (err) => {
   process.exit(1);
 });
 
-// Graceful shutdown (Ctrl + C / SIGTERM)
 process.on('SIGTERM', () => {
   logger.info('SIGTERM RECEIVED. Shutting down gracefully');
 

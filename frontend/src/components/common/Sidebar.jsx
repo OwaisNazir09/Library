@@ -34,11 +34,11 @@ const librarianGroups = [
       { name: 'Attendance Logs', icon: Clock, path: '/app/attendance', feature: 'students' },
       { name: 'Student Registrations', icon: Users, path: '/app/registrations', feature: 'students' },
       { name: 'Membership Packages', icon: LayoutGrid, path: '/app/packages', feature: 'students' },
-       { name: 'Study Desks', icon: Coffee, path: '/app/tables', feature: 'studyDesks' },
-       { name: 'Digital Library', icon: BookOpen, path: '/app/digital-library', feature: 'digitalLibrary' },
-       { name: 'Community Blogs', icon: FileText, path: '/app/blogs', feature: 'blogs' },
-     ]
-   },
+      { name: 'Study Desks', icon: Coffee, path: '/app/tables', feature: 'studyDesks' },
+      { name: 'Digital Library', icon: BookOpen, path: '/app/digital-library', feature: 'digitalLibrary' },
+      { name: 'Community Blogs', icon: FileText, path: '/app/blogs', feature: 'blogs' },
+    ]
+  },
   {
     label: 'REPORTS',
     items: [
@@ -58,7 +58,7 @@ const librarianGroups = [
     items: [
       { name: 'Finance Dashboard', icon: LayoutGrid, path: '/app/finance', end: true },
       { name: 'Chart of Accounts', icon: Library, path: '/app/finance/accounts' },
-      { name: 'Student Ledgers', icon: Users, path: '/app/finance/student-accounts' },
+      { name: 'Finance Management', icon: Users, path: '/app/finance/student-accounts' },
       { name: 'Transactions', icon: IndianRupeeIcon, path: '/app/finance/transactions' },
       { name: 'Receipts', icon: Receipt, path: '/app/finance/receipts' },
       { name: 'Financial Reports', icon: BarChart2, path: '/app/finance/reports' },
@@ -119,12 +119,12 @@ const Sidebar = ({ isOpen, onClose }) => {
   const { user } = useSelector((state) => state.auth);
   const { hasFeature } = useSubscription();
 
-  const groups = user?.role === 'super_admin' 
-    ? superAdminGroups 
+  const groups = user?.role === 'super_admin'
+    ? superAdminGroups
     : librarianGroups.filter(group => !group.feature || hasFeature(group.feature)).map(group => ({
-        ...group,
-        items: group.items.filter(item => !item.feature || hasFeature(item.feature))
-      }));
+      ...group,
+      items: group.items.filter(item => !item.feature || hasFeature(item.feature))
+    }));
 
   const handleLogout = () => {
     dispatch(logout());

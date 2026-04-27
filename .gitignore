@@ -4,6 +4,13 @@ node_modules/
 # Logs
 *.log
 
+
+
+.wwebjs_auth/
+.wwebjs_cache/
+
+.baileys_auth/
+
 # Environment variables
 .env
 
@@ -48,4 +55,7 @@ node_modules/
 
 # Build
 android/build/
-android/app/build/
+android/app/build/.baileys_auth/
+backend/scratch/
+*.pdf
+*.xlsx

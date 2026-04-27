@@ -1,5 +1,8 @@
 import { getModels } from '../../utils/helpers.js';
 import ApiFeatures from '../../utils/apiFeatures.js';
+import WhatsAppService from '../../services/whatsapp.service.js';
+import Tenant from '../tenant/tenant.model.js';
+import { format } from 'date-fns';
 
 export const getAllTables = async (req, res, next) => {
   try {
@@ -99,6 +102,21 @@ export const assignTable = async (req, res, next) => {
     }
 
     res.status(200).json({ status: 'success', data: { table } });
+
+    // Send WhatsApp Notification
+    try {
+      if (user?.phone) {
+        const tenant = await Tenant.findById(req.tenantId);
+        const libraryName = tenant?.name || 'Library';
+        const validUntilStr = table.validUntil ? format(new Date(table.validUntil), 'dd MMM yyyy') : 'N/A';
+        
+        const message = `📚 *Study Desk Assigned* 📚\n\nDear ${user.fullName},\n\nTable No. *${table.tableNumber}* has been assigned to you at *${libraryName}*.\n\n📅 *Valid Until:* ${validUntilStr}\n\nWe wish you a productive study session!`;
+        
+        await WhatsAppService.sendMessage(req.tenantId, user.phone, message);
+      }
+    } catch (waErr) {
+      console.error('[WA] Table assignment notification failed:', waErr.message);
+    }
   } catch (err) { next(err); }
 };
 

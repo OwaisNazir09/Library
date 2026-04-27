@@ -160,3 +160,42 @@ export const getAllAttendance = async (req, res, next) => {
     next(err);
   }
 };
+
+export const getAttendanceStats = async (req, res, next) => {
+  try {
+    const AttendanceModel = await getAttendanceModel(req.db);
+    const { month, year } = req.query;
+
+    const start = new Date(year, month - 1, 1);
+    const end = new Date(year, month, 0, 23, 59, 59, 999);
+
+    const stats = await AttendanceModel.aggregate([
+      {
+        $match: {
+          tenantId: req.tenantId,
+          checkIn: { $gte: start, $lte: end }
+        }
+      },
+      {
+        $group: {
+          _id: { $dateToString: { format: "%Y-%m-%d", date: "$checkIn" } },
+          count: { $addToSet: "$userId" }
+        }
+      },
+      {
+        $project: {
+          date: "$_id",
+          count: { $size: "$count" },
+          _id: 0
+        }
+      }
+    ]);
+
+    res.status(200).json({
+      status: 'success',
+      data: stats
+    });
+  } catch (err) {
+    next(err);
+  }
+};

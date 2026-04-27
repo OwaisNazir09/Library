@@ -15,6 +15,7 @@ router.use(restrictTo('librarian', 'super_admin'));
 router.get('/stats', fc.getFinanceStats);
 
 router.get('/accounts', fc.getAccounts);
+router.get('/student-accounts', fc.getStudentAccounts);
 router.post('/accounts', fc.addAccount);
 router.post('/accounts/seed', fc.seedAccounts);
 router.get('/accounts/:id/ledger', fc.getAccountLedger);
@@ -28,6 +29,7 @@ router.get('/transactions', fc.getTransactions);
 router.post('/accounts/:studentId/payment', fc.addPayment);
 router.post('/accounts/:studentId/charge', fc.addCharge);
 router.post('/accounts/:studentId/refund', fc.issueRefund);
+router.post('/accounts/:studentId/send-whatsapp', fc.sendLedgerWhatsApp);
 
 // Expenses
 router.post('/expenses', fc.addExpense);
@@ -35,6 +37,7 @@ router.post('/expenses', fc.addExpense);
 // Receipts
 router.get('/receipts', fc.getReceipts);
 router.get('/receipts/:id', fc.getReceipt);
+router.post('/receipts/:id/send-whatsapp', fc.sendReceiptWhatsApp);
 
 // Reports
 router.get('/reports/trial-balance', fc.getTrialBalance);

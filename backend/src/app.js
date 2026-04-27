@@ -30,6 +30,8 @@ import blogRoutes from "./modules/blog/blog.routes.js";
 import attendanceRoutes from "./modules/attendance/attendance.routes.js";
 import tenantRoutes from "./modules/tenant/tenant.routes.js";
 import quoteRoutes from "./modules/quote/quote.routes.js";
+import whatsappRoutes from "./modules/whatsapp/whatsapp.routes.js";
+
 
 const app = express();
 
@@ -75,6 +77,7 @@ app.use(xss());
 
 app.use("/api/tenants", tenantRoutes);
 app.use("/api/auth", authRoutes);
+app.use("/api/whatsapp", whatsappRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/books", bookRoutes);
 app.use("/api/borrowings", borrowingRoutes);

@@ -16,10 +16,22 @@ export const getAllBooks = async (req, res, next) => {
     const books = await features.query;
     const total = await Book.countDocuments({ tenantId: req.tenantId });
 
+    const stats = await Book.aggregate([
+      { $match: { tenantId: req.tenantId } },
+      {
+        $group: {
+          _id: null,
+          totalPhysical: { $sum: '$totalCopies' },
+          totalAvailable: { $sum: '$availableCopies' }
+        }
+      }
+    ]);
+
     res.status(200).json({
       status: 'success',
       results: books.length,
       total,
+      stats: stats[0] || { totalPhysical: 0, totalAvailable: 0 },
       data: {
         books
       }
@@ -35,7 +47,7 @@ export const createBook = async (req, res, next) => {
 
     const bookData = { ...req.body, tenantId: req.tenantId };
     if (!bookData.availableCopies) bookData.availableCopies = bookData.totalCopies || 1;
-    
+
     if (req.file) {
       bookData.coverImage = req.file.path;
       bookData.coverImagePublicId = req.file.filename;
@@ -88,6 +100,26 @@ export const updateBook = async (req, res, next) => {
       }
       req.body.coverImage = req.file.path;
       req.body.coverImagePublicId = req.file.filename;
+    }
+
+    const existingBook = await Book.findOne({ _id: req.params.id, tenantId: req.tenantId });
+    if (!existingBook) {
+      const error = new Error('No book found with that ID in your library');
+      error.statusCode = 404;
+      throw error;
+    }
+
+    if (req.body.totalCopies !== undefined) {
+      const borrowedCount = existingBook.totalCopies - existingBook.availableCopies;
+      if (req.body.totalCopies < borrowedCount) {
+        const error = new Error(`Cannot reduce total copies below the number of currently borrowed books (${borrowedCount})`);
+        error.statusCode = 400;
+        throw error;
+      }
+
+      // Also adjust availableCopies based on the change in totalCopies
+      const difference = req.body.totalCopies - existingBook.totalCopies;
+      req.body.availableCopies = existingBook.availableCopies + difference;
     }
 
     const book = await Book.findOneAndUpdate(

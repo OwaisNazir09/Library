@@ -1,12 +1,22 @@
 import mongoose from 'mongoose';
 import { getModels } from '../../utils/helpers.js';
 import ApiFeatures from '../../utils/apiFeatures.js';
+import PDFDocument from 'pdfkit-table';
+import { format } from 'date-fns';
+import WhatsAppService from '../../services/whatsapp.service.js';
 
 // ── Ref Generator ─────────────────────────────────────────────────────────────
 const genRef = async (Transaction, tenantId) => {
-  const year = new Date().getFullYear();
   const count = await Transaction.countDocuments({ tenantId });
-  return `TXN-${year}-${String(count + 1).padStart(6, '0')}`;
+  return `TXN-${new Date().getFullYear()}-${(count + 1).toString().padStart(6, '0')}`;
+};
+
+const smartDate = (dateStr) => {
+  if (!dateStr) return new Date();
+  const d = new Date(dateStr);
+  const now = new Date();
+  if (d.toDateString() === now.toDateString()) return now;
+  return d;
 };
 
 const genReceiptNumber = async (Receipt, tenantId) => {
@@ -92,11 +102,30 @@ export const seedChartOfAccounts = async (db, tenantId) => {
 // ── Ensure Student Receivable Account ─────────────────────────────────────────
 export const ensureStudentAccount = async (db, tenantId, studentId, studentName) => {
   const { Account } = getModels(db);
-  return Account.findOneAndUpdate(
-    { tenantId, studentId, subType: 'Student Receivable' },
-    { $setOnInsert: { tenantId, studentId, name: `Receivable: ${studentName}`, type: 'Assets', subType: 'Student Receivable', isSystem: true } },
-    { upsert: true, new: true }
-  );
+
+  let account = await Account.findOne({ tenantId, studentId, subType: 'Student Receivable' });
+
+  if (account) return account;
+
+  try {
+    return await Account.create({
+      tenantId,
+      studentId,
+      name: `Receivable: ${studentName} (${studentId.toString().slice(-4)})`,
+      type: 'Assets',
+      subType: 'Student Receivable',
+      isSystem: true
+    });
+  } catch (err) {
+    if (err.code === 11000) {
+      return await Account.findOneAndUpdate(
+        { tenantId, studentId, subType: 'Student Receivable' },
+        { $setOnInsert: { tenantId, studentId, name: `Receivable: ${studentName} [${Date.now()}]`, type: 'Assets', subType: 'Student Receivable', isSystem: true } },
+        { upsert: true, new: true }
+      );
+    }
+    throw err;
+  }
 };
 
 // ── Helper: get or create system account by name ──────────────────────────────
@@ -139,6 +168,71 @@ export const getAccounts = async (req, res, next) => {
       .populate('studentId', 'fullName idNumber profilePicture')
       .sort({ type: 1, name: 1 });
     res.json({ status: 'success', data: accounts });
+  } catch (err) { next(err); }
+};
+
+export const getStudentAccounts = async (req, res, next) => {
+  try {
+    const { Account, Transaction, User } = getModels(req.db);
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+    const skip = (page - 1) * limit;
+
+    const students = await User.find({ tenantId: req.tenantId, role: 'member' })
+      .select('fullName email phone profilePicture idNumber status')
+      .sort({ fullName: 1 })
+      .skip(skip)
+      .limit(limit);
+
+    const totalStudents = await User.countDocuments({ tenantId: req.tenantId, role: 'member' });
+
+    const studentIds = students.map(s => s._id);
+
+    const accounts = await Account.find({
+      tenantId: req.tenantId,
+      studentId: { $in: studentIds },
+      subType: 'Student Receivable'
+    });
+
+    const stats = await Transaction.aggregate([
+      {
+        $match: {
+          tenantId: new mongoose.Types.ObjectId(req.tenantId),
+          studentId: { $in: studentIds },
+          type: 'receipt'
+        }
+      },
+      {
+        $group: {
+          _id: '$studentId',
+          totalPaid: { $sum: '$amount' },
+          lastPaymentDate: { $max: '$date' }
+        }
+      }
+    ]);
+
+    const data = students.map(student => {
+      const account = accounts.find(a => a.studentId.toString() === student._id.toString());
+      const studentStat = stats.find(s => s._id.toString() === student._id.toString());
+
+      return {
+        _id: account?._id || `virtual_${student._id}`,
+        studentId: student,
+        accountNumber: account?.accountNumber || `ACC-${student.idNumber || student._id.toString().slice(-6)}`,
+        currentBalance: account?.currentBalance || 0,
+        totalPaid: studentStat?.totalPaid || 0,
+        lastPaymentDate: studentStat?.lastPaymentDate || null,
+        status: account?.currentBalance > 0 ? 'overdue' : 'clear',
+        isVirtual: !account
+      };
+    });
+
+    res.json({
+      status: 'success',
+      total: totalStudents,
+      page,
+      data
+    });
   } catch (err) { next(err); }
 };
 
@@ -213,7 +307,7 @@ export const getMyLedger = async (req, res, next) => {
     const txFilter = { tenantId: req.tenantId, $or: [{ debitAccountId: account._id }, { creditAccountId: account._id }] };
     const allTx = await Transaction.find(txFilter)
       .populate('debitAccountId', 'name type').populate('creditAccountId', 'name type')
-      .sort({ date: 1 });
+      .sort({ date: 1, createdAt: 1 });
 
     let runningBalance = account.openingBalance || 0;
     const enriched = allTx.map(tx => {
@@ -240,18 +334,98 @@ export const addPayment = async (req, res, next) => {
       debitAccountId, creditAccountId: studentAccount._id,
       amount: Number(amount), type: 'receipt',
       description: description || 'Payment Received',
-      reference: notes, date,
+      reference: notes, date: smartDate(date),
       userId: req.user?._id, studentId: studentAccount.studentId,
     });
 
     const rcp = await Receipt.create({
       tenantId: req.tenantId, receiptNumber: await genReceiptNumber(Receipt, req.tenantId),
       type: 'payment', transactionId: tx._id, studentId: studentAccount.studentId,
-      amount: Number(amount), description: description || 'Payment Received', date: date || new Date()
+      amount: Number(amount), description: description || 'Payment Received', date: smartDate(date)
     });
 
     res.status(201).json({ status: 'success', data: { transaction: tx, receipt: rcp } });
   } catch (err) { next(err); }
+};
+
+export const sendLedgerWhatsApp = async (req, res, next) => {
+  try {
+    const { Account, Transaction, Tenant } = getModels(req.db);
+    const id = req.params.studentId;
+
+    let account = await Account.findOne({ $or: [{ studentId: id }, { _id: id }], tenantId: req.tenantId, subType: 'Student Receivable' })
+      .populate('studentId', 'fullName email phone idNumber');
+
+    if (!account) return res.status(404).json({ status: 'fail', message: 'Account not found' });
+    if (!account.studentId?.phone) return res.status(400).json({ status: 'fail', message: 'Student has no phone number' });
+
+    const txFilter = { tenantId: req.tenantId, $or: [{ debitAccountId: account._id }, { creditAccountId: account._id }] };
+    const allTx = await Transaction.find(txFilter).sort({ date: 1, createdAt: 1 });
+
+    const tenant = await Tenant.findById(req.tenantId);
+
+    // Create PDF
+    const doc = new PDFDocument({ margin: 30, size: 'A4' });
+    const chunks = [];
+    doc.on('data', chunk => chunks.push(chunk));
+
+    // Design
+    doc.fillColor('#044343').fontSize(20).text(tenant.name, { align: 'center' });
+    doc.fontSize(10).fillColor('#666').text('Statement of Account', { align: 'center' });
+    doc.moveDown();
+
+    doc.fillColor('#000').fontSize(12).text(`Member: ${account.studentId.fullName}`);
+    doc.fontSize(10).text(`ID: ${account.studentId.idNumber || 'N/A'}`);
+    doc.text(`Balance: ₹${account.currentBalance.toLocaleString('en-IN')}`);
+    doc.moveDown();
+
+    // Table Data
+    let runningBalance = account.openingBalance || 0;
+    const tableRows = allTx.map(tx => {
+      const isDebit = tx.debitAccountId?.toString() === account._id.toString();
+      runningBalance = isDebit ? runningBalance + tx.amount : runningBalance - tx.amount;
+      return [
+        format(new Date(tx.date), 'dd/MM/yy'),
+        tx.description,
+        isDebit ? `+${tx.amount}` : '',
+        !isDebit ? `-${tx.amount}` : '',
+        `${runningBalance}`
+      ];
+    });
+
+    const table = {
+      title: "Transaction History",
+      headers: ["Date", "Description", "Debit", "Credit", "Balance"],
+      rows: tableRows.reverse().slice(0, 50), // Send last 50
+    };
+
+    await doc.table(table, {
+      prepareHeader: () => doc.font("Helvetica-Bold").fontSize(8),
+      prepareRow: (row, indexColumn, indexRow, rectRow, rectCell) => doc.font("Helvetica").fontSize(8),
+    });
+
+    doc.end();
+
+    const pdfBuffer = await new Promise((resolve, reject) => {
+      doc.on('end', () => resolve(Buffer.concat(chunks)));
+      doc.on('error', reject);
+    });
+
+    const success = await WhatsAppService.sendDocument(
+      req.tenantId,
+      account.studentId.phone,
+      pdfBuffer,
+      `Statement_${account.studentId.fullName}.pdf`,
+      `Hello ${account.studentId.fullName}, here is your account statement from ${tenant.name}.`
+    );
+
+    if (success) res.json({ status: 'success', message: 'Ledger sent successfully' });
+    else res.status(500).json({ status: 'fail', message: 'WhatsApp delivery failed' });
+
+  } catch (err) {
+    console.error('[WA-Ledger] Error:', err);
+    next(err);
+  }
 };
 
 // ── Add Charge / Fine ─────────────────────────────────────────────────────────
@@ -268,14 +442,14 @@ export const addCharge = async (req, res, next) => {
       debitAccountId: studentAccount._id, creditAccountId,
       amount: Number(amount), type: 'fee_charge',
       description: description || 'Charge Applied',
-      reference: notes, date,
+      reference: notes, date: smartDate(date),
       userId: req.user?._id, studentId: studentAccount.studentId,
     });
 
     const rcp = await Receipt.create({
       tenantId: req.tenantId, receiptNumber: await genReceiptNumber(Receipt, req.tenantId),
       type: 'fee_charge', transactionId: tx._id, studentId: studentAccount.studentId,
-      amount: Number(amount), description, date: date || new Date()
+      amount: Number(amount), description, date: smartDate(date)
     });
 
     res.status(201).json({ status: 'success', data: { transaction: tx, receipt: rcp } });
@@ -324,20 +498,27 @@ export const issueRefund = async (req, res, next) => {
   try {
     const { Account, Transaction, Receipt } = getModels(req.db);
     const { amount, cashAccountId, incomeAccountId, description, date, originalTransactionId } = req.body;
+
     if (!amount || !cashAccountId || !incomeAccountId) {
       return res.status(400).json({ status: 'fail', message: 'amount, cashAccountId and incomeAccountId required' });
     }
+
     const studentAccount = await Account.findOne({ tenantId: req.tenantId, studentId: req.params.studentId, subType: 'Student Receivable' });
     if (!studentAccount) return res.status(404).json({ status: 'fail', message: 'Student account not found' });
 
-    // Debit income (reduces income), Credit cash (reduces cash to student)
     const tx = await recordTransaction(req.db, req.tenantId, {
-      debitAccountId: incomeAccountId,
+      debitAccountId: studentAccount._id,
       creditAccountId: cashAccountId,
-      amount: Number(amount), type: 'refund',
-      description: description || 'Refund Issued',
-      date, userId: req.user?._id, studentId: studentAccount.studentId,
+      amount: Number(amount),
+      type: 'refund',
+      description: description || 'Cash Refund Issued',
+      date,
+      userId: req.user?._id,
+      studentId: studentAccount.studentId,
     });
+
+    // Optional: If this is an income reversal, we record a second part or handle it via categories
+    // For now, linking to studentAccount._id ensures it SHOWS UP in the ledger.
 
     if (originalTransactionId) {
       await Transaction.findByIdAndUpdate(originalTransactionId, { isReversed: true });
@@ -346,7 +527,7 @@ export const issueRefund = async (req, res, next) => {
     const rcp = await Receipt.create({
       tenantId: req.tenantId, receiptNumber: await genReceiptNumber(Receipt, req.tenantId),
       type: 'refund', transactionId: tx._id, studentId: studentAccount.studentId,
-      amount: Number(amount), description, date: date || new Date()
+      amount: Number(amount), description: description || 'Cash Refund Issued', date: date || new Date()
     });
 
     res.status(201).json({ status: 'success', data: { transaction: tx, receipt: rcp } });
@@ -494,7 +675,13 @@ export const getReceipts = async (req, res, next) => {
     const { Receipt } = getModels(req.db);
     const filter = { tenantId: req.tenantId };
     if (req.query.studentId) filter.studentId = req.query.studentId;
-    const features = new ApiFeatures(Receipt.find(filter).sort({ date: -1 }), req.query).paginate();
+    if (req.query.type) filter.type = req.query.type;
+    const features = new ApiFeatures(
+      Receipt.find(filter)
+        .populate('studentId', 'fullName email phone profilePicture idNumber')
+        .sort({ date: -1 }),
+      req.query
+    ).paginate();
     const [receipts, total] = await Promise.all([features.query, Receipt.countDocuments(filter)]);
     res.json({ status: 'success', results: receipts.length, total, data: receipts });
   } catch (err) { next(err); }
@@ -502,10 +689,93 @@ export const getReceipts = async (req, res, next) => {
 export const getReceipt = async (req, res, next) => {
   try {
     const { Receipt } = getModels(req.db);
-    const r = await Receipt.findOne({ _id: req.params.id, tenantId: req.tenantId });
+    const r = await Receipt.findOne({ _id: req.params.id, tenantId: req.tenantId })
+      .populate('studentId', 'fullName email phone profilePicture idNumber');
     if (!r) return res.status(404).json({ status: 'fail', message: 'Receipt not found' });
     res.json({ status: 'success', data: r });
   } catch (err) { next(err); }
+};
+
+export const sendReceiptWhatsApp = async (req, res, next) => {
+  try {
+    const { Receipt, Tenant } = getModels(req.db);
+
+    const receipt = await Receipt.findOne({ _id: req.params.id, tenantId: req.tenantId })
+      .populate('studentId', 'fullName email phone');
+
+    if (!receipt) return res.status(404).json({ status: 'fail', message: 'Receipt not found' });
+    if (!receipt.studentId?.phone) return res.status(400).json({ status: 'fail', message: 'Student has no phone number' });
+
+    const tenant = await Tenant.findById(req.tenantId);
+
+    const doc = new PDFDocument({ margin: 40, size: 'A5' });
+    const chunks = [];
+    doc.on('data', chunk => chunks.push(chunk));
+
+    // Header
+    doc.fillColor('#044343').rect(0, 0, doc.page.width, 60).fill();
+    doc.fillColor('#ffffff').fontSize(18).font('Helvetica-Bold')
+      .text('OFFICIAL RECEIPT', 0, 18, { align: 'center', width: doc.page.width });
+    doc.fontSize(9).font('Helvetica')
+      .text(tenant?.name || 'Library', 0, 40, { align: 'center', width: doc.page.width });
+
+    doc.fillColor('#000000').fontSize(10).font('Helvetica-Bold').text(`Receipt: ${receipt.receiptNumber}`, 40, 75);
+    doc.fontSize(9).font('Helvetica').fillColor('#555555')
+      .text(`Date: ${new Date(receipt.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' })}`, 40, 91)
+      .text(`Time: ${new Date(receipt.date).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}`, 40, 105);
+
+    doc.moveDown(3);
+    doc.fillColor('#000000').fontSize(10).font('Helvetica-Bold').text('Issued To:', 40, 125);
+    doc.fontSize(11).font('Helvetica').fillColor('#111111')
+      .text(receipt.studentId.fullName, 40, 139)
+      .fontSize(9).fillColor('#555555').text(receipt.studentId.email || '', 40, 153);
+
+    // Line
+    doc.strokeColor('#eeeeee').lineWidth(1).moveTo(40, 170).lineTo(doc.page.width - 40, 170).stroke();
+
+    // Description row
+    doc.fillColor('#044343').rect(40, 178, doc.page.width - 80, 22).fill();
+    doc.fillColor('#ffffff').fontSize(8).font('Helvetica-Bold')
+      .text('DESCRIPTION', 48, 185)
+      .text('TYPE', doc.page.width / 2, 185)
+      .text('AMOUNT', doc.page.width - 80, 185);
+
+    doc.fillColor('#f9f9f9').rect(40, 200, doc.page.width - 80, 30).fill();
+    doc.fillColor('#111111').fontSize(9).font('Helvetica')
+      .text(receipt.description || 'Library Service', 48, 210)
+      .text(receipt.type || 'Payment', doc.page.width / 2, 210)
+      .font('Helvetica-Bold').text(`Rs.${(receipt.amount || 0).toLocaleString('en-IN')}`, doc.page.width - 80, 210);
+
+    doc.strokeColor('#eeeeee').lineWidth(1).moveTo(40, 230).lineTo(doc.page.width - 40, 230).stroke();
+
+    doc.fillColor('#044343').fontSize(13).font('Helvetica-Bold')
+      .text(`Total: Rs.${(receipt.amount || 0).toLocaleString('en-IN')}`, 40, 242, { align: 'right', width: doc.page.width - 80 });
+
+    doc.fontSize(7).font('Helvetica').fillColor('#999999')
+      .text('This is an electronically generated receipt and is valid without a signature.', 40, doc.page.height - 40, { align: 'center', width: doc.page.width - 80 });
+
+    doc.end();
+
+    const pdfBuffer = await new Promise((resolve, reject) => {
+      doc.on('end', () => resolve(Buffer.concat(chunks)));
+      doc.on('error', reject);
+    });
+
+    const success = await WhatsAppService.sendDocument(
+      req.tenantId,
+      receipt.studentId.phone,
+      pdfBuffer,
+      `Receipt_${receipt.receiptNumber}.pdf`,
+      `Hello ${receipt.studentId.fullName}, please find your receipt (${receipt.receiptNumber}) of Rs.${receipt.amount?.toLocaleString('en-IN')} from ${tenant?.name || 'the library'}.`
+    );
+
+    if (success) res.json({ status: 'success', message: 'Receipt sent via WhatsApp' });
+    else res.status(500).json({ status: 'fail', message: 'WhatsApp delivery failed' });
+
+  } catch (err) {
+    console.error('[WA-Receipt] Error:', err);
+    next(err);
+  }
 };
 
 // ── Internal / Backward Compat ────────────────────────────────────────────────

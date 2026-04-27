@@ -1,321 +1,346 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Receipt, Search, Download, Printer, User, Calendar,
-  ArrowLeft, FileText, CheckCircle2, X, Share2, IndianRupee, BookOpen
+  Receipt, Download, FileText, CheckCircle2, MessageCircle
 } from 'lucide-react';
-import { useGetReceiptsQuery, useGetReceiptQuery } from '../../store/api/financeApi';
-import LoadingSkeleton from '../../components/common/LoadingSkeleton';
+import {
+  financeApi,
+  useGetReceiptsQuery,
+  useSendReceiptWhatsAppMutation
+} from '../../store/api/financeApi';
 import EmptyState from '../../components/common/EmptyState';
 import Pagination from '../../components/common/Pagination';
 import { format } from 'date-fns';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import FinanceHeader from './FinanceHeader';
+import UniversalTransactionModal from './UniversalTransactionModal';
+import { toast } from 'react-hot-toast';
 
+const TYPE_LABEL = {
+  receipt: 'Payment',
+  fee_charge: 'Charge',
+  refund: 'Refund',
+  payment: 'Payment',
+  expense: 'Expense',
+};
+
+// ── Premium PDF Generator ──────────────────────────────────────────────────────
+const generateReceiptPDF = (receipt) => {
+  const doc = new jsPDF({ format: 'a5', orientation: 'portrait' });
+  const pw = doc.internal.pageSize.getWidth();
+  const ph = doc.internal.pageSize.getHeight();
+
+  // ── Dark header band ──
+  doc.setFillColor(4, 67, 67);
+  doc.rect(0, 0, pw, 32, 'F');
+
+  doc.setTextColor(255, 255, 255);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(16);
+  doc.text('OFFICIAL RECEIPT', pw / 2, 13, { align: 'center' });
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8);
+  doc.text('Library Financial Document', pw / 2, 22, { align: 'center' });
+
+  // ── Receipt # badge (top-right) ──
+  doc.setFillColor(255, 255, 255);
+  doc.roundedRect(pw - 60, 35, 52, 12, 2, 2, 'F');
+  doc.setTextColor(4, 67, 67);
+  doc.setFontSize(8);
+  doc.setFont('helvetica', 'bold');
+  doc.text(`# ${receipt.receiptNumber}`, pw - 34, 43, { align: 'center' });
+
+  // ── ISSUED TO ──
+  doc.setTextColor(120, 120, 120);
+  doc.setFontSize(7);
+  doc.setFont('helvetica', 'bold');
+  doc.text('ISSUED TO', 10, 42);
+
+  doc.setTextColor(20, 20, 20);
+  doc.setFontSize(12);
+  doc.setFont('helvetica', 'bold');
+  const name = receipt.studentId?.fullName || 'Library Member';
+  doc.text(name, 10, 52);
+
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8);
+  doc.setTextColor(100, 100, 100);
+  let detailY = 59;
+  if (receipt.studentId?.email) { doc.text(receipt.studentId.email, 10, detailY); detailY += 6; }
+  if (receipt.studentId?.phone) { doc.text(`Phone: ${receipt.studentId.phone}`, 10, detailY); }
+
+  // ── Date block (top-right under badge) ──
+  doc.setTextColor(100, 100, 100);
+  doc.setFontSize(8);
+  doc.setFont('helvetica', 'normal');
+  doc.text(format(new Date(receipt.date), 'dd MMM yyyy'), pw - 10, 52, { align: 'right' });
+  doc.text(format(new Date(receipt.date), 'hh:mm a'), pw - 10, 59, { align: 'right' });
+
+  // ── Divider ──
+  doc.setDrawColor(230, 230, 230);
+  doc.setLineWidth(0.5);
+  doc.line(10, 72, pw - 10, 72);
+
+  // ── Line items table ──
+  autoTable(doc, {
+    startY: 78,
+    head: [['Description', 'Category', 'Amount']],
+    body: [[
+      receipt.description || 'Library Service',
+      TYPE_LABEL[receipt.type] || receipt.type || 'Payment',
+      `Rs.${(receipt.amount || 0).toLocaleString('en-IN')}`
+    ]],
+    headStyles: {
+      fillColor: [4, 67, 67],
+      textColor: [255, 255, 255],
+      fontSize: 8,
+      fontStyle: 'bold',
+    },
+    bodyStyles: { fontSize: 9, textColor: [30, 30, 30] },
+    columnStyles: {
+      0: { cellWidth: 'auto' },
+      1: { cellWidth: 30 },
+      2: { halign: 'right', fontStyle: 'bold', cellWidth: 32 }
+    },
+    margin: { left: 10, right: 10 },
+    alternateRowStyles: { fillColor: [249, 249, 249] },
+  });
+
+  const tableBottom = doc.lastAutoTable.finalY;
+
+  // ── Subtotal / Total box ──
+  const boxY = tableBottom + 6;
+  doc.setFillColor(245, 248, 248);
+  doc.roundedRect(pw - 75, boxY, 65, 24, 2, 2, 'F');
+
+  doc.setTextColor(120, 120, 120);
+  doc.setFontSize(7.5);
+  doc.setFont('helvetica', 'normal');
+  doc.text('Subtotal', pw - 13, boxY + 8, { align: 'right' });
+  doc.text('Tax (0%)', pw - 13, boxY + 15, { align: 'right' });
+
+  doc.setTextColor(80, 80, 80);
+  doc.setFont('helvetica', 'bold');
+  const amtStr = `Rs.${(receipt.amount || 0).toLocaleString('en-IN')}`;
+  doc.text(amtStr, pw - 10, boxY + 8, { align: 'right' });
+  doc.text('Rs.0', pw - 10, boxY + 15, { align: 'right' });
+
+  // Total line
+  const totalY = boxY + 30;
+  doc.setDrawColor(4, 67, 67);
+  doc.setLineWidth(0.5);
+  doc.line(10, totalY - 4, pw - 10, totalY - 4);
+
+  doc.setTextColor(4, 67, 67);
+  doc.setFontSize(11);
+  doc.setFont('helvetica', 'bold');
+  doc.text('TOTAL RECEIVED', 10, totalY + 4);
+  doc.setFontSize(14);
+  doc.text(amtStr, pw - 10, totalY + 4, { align: 'right' });
+
+  // ── Signature line ──
+  const sigY = ph - 32;
+  doc.setDrawColor(200, 200, 200);
+  doc.setLineWidth(0.3);
+  doc.line(pw - 60, sigY, pw - 10, sigY);
+  doc.setTextColor(150, 150, 150);
+  doc.setFontSize(7);
+  doc.setFont('helvetica', 'italic');
+  doc.text('Authorized Signatory', pw - 35, sigY + 5, { align: 'center' });
+
+  // ── Footer ──
+  doc.setFontSize(6.5);
+  doc.setTextColor(190, 190, 190);
+  doc.setFont('helvetica', 'normal');
+  doc.text(
+    'This is an electronically generated receipt. No physical signature required.',
+    pw / 2, ph - 8, { align: 'center' }
+  );
+
+  doc.save(`Receipt_${receipt.receiptNumber}.pdf`);
+};
+
+// ── Main Component ─────────────────────────────────────────────────────────────
 const Receipts = () => {
   const [currentPage, setCurrentPage] = useState(1);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedReceiptId, setSelectedReceiptId] = useState(null);
-  const limit = 12;
+  const [typeFilter, setTypeFilter] = useState('');
+  const [modal, setModal] = useState({ type: null, isOpen: false });
+  const limit = 15;
 
-  const { data: receiptsData, isLoading: loading } = useGetReceiptsQuery({ page: currentPage, limit });
+  const { data: receiptsData, isLoading: loading } = useGetReceiptsQuery({
+    page: currentPage,
+    limit,
+    ...(typeFilter ? { type: typeFilter } : {})
+  });
   const receipts = receiptsData?.data || [];
   const totalReceipts = receiptsData?.total || 0;
 
-  const { data: currentReceiptDoc } = useGetReceiptQuery(selectedReceiptId, { skip: !selectedReceiptId });
-  const currentReceipt = currentReceiptDoc?.data;
-
-  const handleViewReceipt = (id) => {
-    setSelectedReceiptId(id);
-  };
+  const [sendReceiptWhatsApp] = useSendReceiptWhatsAppMutation();
+  const [fetchReceipt] = financeApi.endpoints.getReceipt.useLazyQuery();
 
   const fmt = (n) => `₹${(n || 0).toLocaleString('en-IN')}`;
 
-  const ReceiptModal = ({ receipt, onClose }) => {
-    if (!receipt) return null;
-    return (
-      <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-[60] flex items-center justify-center p-4 overflow-y-auto">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9, y: 30 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.9, y: 30 }}
-          className="bg-white rounded-[2rem] w-full max-w-2xl shadow-[0_32px_64px_-12px_rgba(0,0,0,0.2)] relative overflow-hidden my-auto border border-slate-100"
-        >
-          {/* Action Header */}
-          <div className="flex items-center justify-between p-6 border-b border-slate-50 no-print bg-slate-50/50">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-[#044343] flex items-center justify-center text-white">
-                <Receipt size={16} />
-              </div>
-              <span className="text-sm font-black text-slate-900 tracking-tight">Receipt Preview</span>
-            </div>
-            <div className="flex gap-2">
-              <button onClick={() => window.print()} className="flex items-center gap-2 px-4 py-2 bg-[#044343] text-white rounded-xl hover:bg-[#033232] transition-all text-xs font-bold shadow-lg shadow-teal-900/10">
-                <Printer size={14} />
-                <span>Print Document</span>
-              </button>
-              <button onClick={onClose} className="p-2 text-slate-400 hover:text-slate-900 transition-colors">
-                <X size={20} />
-              </button>
-            </div>
-          </div>
-
-          {/* Receipt Content */}
-          <div className="p-12 relative" id="printable-receipt">
-            {/* Watermark Background */}
-            <div className="absolute inset-0 flex items-center justify-center opacity-[0.03] pointer-events-none rotate-[-30deg] select-none">
-              <h1 className="text-[12rem] font-black tracking-tighter">WELIB</h1>
-            </div>
-
-            <div className="relative z-10">
-              {/* Header */}
-              <div className="flex justify-between items-start mb-16">
-                <div className="flex items-center gap-4">
-                  <div className="w-16 h-16 bg-[#044343] rounded-3xl flex items-center justify-center shadow-2xl shadow-teal-900/30 text-white">
-                    <BookOpen size={32} />
-                  </div>
-                  <div>
-                    <h3 className="text-3xl font-black text-slate-900 tracking-tighter">Welib</h3>
-                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.3em] mt-1">SaaS Library Authority</p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <div className="bg-slate-900 text-white px-4 py-1.5 rounded-lg inline-block mb-3">
-                    <h4 className="text-sm font-black tracking-widest uppercase">Official Receipt</h4>
-                  </div>
-                  <p className="text-xs text-slate-400 font-bold uppercase tracking-widest">No: <span className="text-slate-900">{receipt.receiptNumber}</span></p>
-                </div>
-              </div>
-
-              {/* Info Grid */}
-              <div className="grid grid-cols-2 gap-16 mb-16">
-                <div className="space-y-4">
-                  <div>
-                    <p className="text-[10px] font-black text-[#044343] uppercase tracking-widest mb-2 border-b border-teal-50 pb-1">Issued To</p>
-                    <p className="text-xl font-black text-slate-900 tracking-tight">{receipt.studentId?.fullName || 'General Library Member'}</p>
-                    <p className="text-sm font-bold text-slate-500 mt-1">{receipt.studentId?.email || 'N/A'}</p>
-                  </div>
-                  <div>
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Contact</p>
-                    <p className="text-xs font-bold text-slate-700">{receipt.studentId?.phone || 'Not Provided'}</p>
-                  </div>
-                </div>
-                <div className="space-y-4 text-right">
-                  <div>
-                    <p className="text-[10px] font-black text-[#044343] uppercase tracking-widest mb-2 border-b border-teal-50 pb-1 inline-block ml-auto">Timeline</p>
-                    <p className="text-sm font-bold text-slate-900 mt-1">Date: {format(new Date(receipt.date), 'dd MMMM yyyy')}</p>
-                    <p className="text-sm font-bold text-slate-900">Time: {format(new Date(receipt.date), 'hh:mm a')}</p>
-                  </div>
-                  <div>
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Payment Status</p>
-                    <span className="text-[10px] font-black bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full uppercase tracking-widest">Fully Settled</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Line Items Table */}
-              <div className="mb-16">
-                <div className="grid grid-cols-4 px-6 py-3 bg-slate-900 rounded-t-2xl text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                  <div className="col-span-2">Description of Services</div>
-                  <div className="text-center">Category</div>
-                  <div className="text-right">Amount</div>
-                </div>
-                <div className="border border-slate-100 border-t-0 rounded-b-2xl overflow-hidden">
-                  <div className="grid grid-cols-4 px-6 py-8 items-center bg-white">
-                    <div className="col-span-2">
-                      <p className="text-sm font-black text-slate-900">{receipt.description || 'Library Service Charge'}</p>
-                      <p className="text-[10px] text-slate-400 font-bold uppercase mt-1">TXN REF: {receipt.transactionId?.substring(18).toUpperCase() || 'N/A'}</p>
-                    </div>
-                    <div className="text-center">
-                      <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest bg-slate-50 px-2 py-1 rounded-md border border-slate-100">{receipt.type}</span>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-lg font-black text-slate-900">{fmt(receipt.amount)}</p>
-                    </div>
-                  </div>
-                  
-                  {/* Summary Rows */}
-                  <div className="bg-slate-50/50 border-t border-slate-100 px-6 py-6 space-y-3">
-                    <div className="flex justify-between items-center text-xs font-bold text-slate-500">
-                      <span>Subtotal Amount</span>
-                      <span>{fmt(receipt.amount)}</span>
-                    </div>
-                    <div className="flex justify-between items-center text-xs font-bold text-slate-500">
-                      <span>Service Taxes (0%)</span>
-                      <span>₹0.00</span>
-                    </div>
-                    <div className="pt-3 border-t border-slate-200 flex justify-between items-center">
-                      <span className="text-sm font-black text-slate-900 uppercase tracking-wider">Total Received</span>
-                      <span className="text-3xl font-black text-[#044343] tracking-tighter">{fmt(receipt.amount)}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Footer Section */}
-              <div className="flex justify-between items-end">
-                <div className="max-w-[240px]">
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 border-b border-slate-50 pb-1">Declaration</p>
-                  <p className="text-[10px] text-slate-400 font-bold italic leading-relaxed">
-                    This document serves as proof of payment for the mentioned services. It is electronically generated and verified by Welib SaaS Infrastructure.
-                  </p>
-                </div>
-                <div className="text-center space-y-3">
-                  <div className="w-48 h-px bg-slate-200" />
-                  <p className="text-[10px] font-black text-[#044343] uppercase tracking-[0.2em]">Authorized Signatory</p>
-                  <p className="text-[9px] text-slate-300 font-bold uppercase tracking-widest leading-none">Welib Library Authority</p>
-                </div>
-              </div>
-
-              <div className="mt-16 text-center">
-                <p className="text-[11px] font-black text-slate-900 uppercase tracking-widest">Thank you for your support</p>
-                <p className="text-[9px] text-slate-400 font-medium mt-1">Visit us at www.welib.app</p>
-              </div>
-            </div>
-          </div>
-        </motion.div>
-      </div>
-    );
+  const handleDownloadPDF = async (receiptId) => {
+    try {
+      toast.loading('Generating PDF...', { id: 'pdf-gen' });
+      const { data: res } = await fetchReceipt(receiptId);
+      if (res?.status === 'success' && res?.data) {
+        generateReceiptPDF(res.data);
+        toast.success('PDF Downloaded!', { id: 'pdf-gen' });
+      } else {
+        toast.error('Could not load receipt data', { id: 'pdf-gen' });
+      }
+    } catch (error) {
+      console.error('PDF Error:', error);
+      toast.error('Failed to generate PDF', { id: 'pdf-gen' });
+    }
   };
 
+  const handleSendWhatsApp = async (receiptId) => {
+    try {
+      toast.loading('Sending receipt via WhatsApp...', { id: 'wa-receipt' });
+      await sendReceiptWhatsApp(receiptId).unwrap();
+      toast.success('Receipt sent!', { id: 'wa-receipt' });
+    } catch (err) {
+      toast.error(err?.data?.message || 'Failed to send', { id: 'wa-receipt' });
+    }
+  };
+
+  const typeFilters = ['', 'receipt', 'fee_charge', 'refund', 'expense'];
+
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+    <div className="space-y-5 pb-10">
+      <FinanceHeader onAction={(t) => setModal({ type: t, isOpen: true })} />
+      <UniversalTransactionModal
+        initialType={modal.type || 'journal'}
+        isOpen={modal.isOpen}
+        onClose={() => setModal({ type: null, isOpen: false })}
+      />
+
+      {/* Page Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-black text-slate-900 tracking-tight">Receipts</h1>
-          <p className="text-slate-500 font-medium mt-1">Transaction proof and financial documents</p>
+          <h1 className="text-xl font-bold text-slate-900">Receipts</h1>
+          <p className="text-xs text-slate-400 font-medium mt-0.5">Payment proofs and financial documents</p>
         </div>
-        <div className="flex items-center gap-3">
-          <div className="relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-            <input
-              type="text"
-              placeholder="Search receipt number..."
-              className="pl-12 pr-4 py-3 bg-white border border-slate-100 rounded-2xl w-64 shadow-sm focus:ring-2 focus:ring-[#044343]/5 outline-none font-medium text-sm transition-all"
-            />
-          </div>
+        <div className="flex items-center gap-1 bg-white border border-slate-200 rounded-lg p-1">
+          {typeFilters.map(t => (
+            <button
+              key={t}
+              onClick={() => { setTypeFilter(t); setCurrentPage(1); }}
+              className={`px-2.5 py-1 rounded-md text-[11px] font-semibold transition-all capitalize ${
+                typeFilter === t ? 'bg-slate-900 text-white' : 'text-slate-500 hover:bg-slate-50'
+              }`}
+            >
+              {t ? TYPE_LABEL[t] || t : 'All'}
+            </button>
+          ))}
         </div>
       </div>
 
+      {/* Table */}
       <div className="table-container">
         <table className="table-main">
           <thead>
             <tr>
-              <th className="px-6 text-left">Receipt No</th>
-              <th className="text-left">Student</th>
-              <th className="text-left">Category</th>
-              <th className="text-left">Date</th>
-              <th className="text-left">Amount</th>
-              <th className="text-left">Status</th>
-              <th className="text-right px-6">Actions</th>
+              <th className="px-5">Receipt No</th>
+              <th>Issued To</th>
+              <th>Type</th>
+              <th>Date & Time</th>
+              <th className="text-right">Amount</th>
+              <th className="text-center">Status</th>
+              <th className="px-5 text-right">Actions</th>
             </tr>
           </thead>
           <tbody>
             {loading && receipts.length === 0 ? (
-              <tr>
-                <td colSpan="7" className="p-0">
-                  <LoadingSkeleton type="table" rows={10} />
-                </td>
-              </tr>
+              <tr><td colSpan={7} className="p-10 text-center text-slate-400 text-xs animate-pulse">Loading receipts...</td></tr>
             ) : receipts.length === 0 ? (
               <tr>
-                <td colSpan="7" className="p-0">
-                  <EmptyState 
-                    title="No Receipts Found" 
-                    icon={Receipt} 
-                    message="Any fee collection or fine payment will generate a receipt here."
-                  />
+                <td colSpan={7}>
+                  <EmptyState title="No Receipts Found" icon={Receipt}
+                    message="Any fee collection or payment will generate a receipt here." />
                 </td>
               </tr>
-            ) : (
-              receipts.map((receipt) => (
-                <tr key={receipt._id} className="group hover:bg-slate-50/50 transition-colors">
-                  <td className="px-6">
-                    <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-teal-50 group-hover:text-[#044343] transition-colors border border-slate-100/50">
-                        <FileText size={16} />
+            ) : receipts.map((receipt) => (
+              <tr key={receipt._id}>
+                <td className="px-5">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-7 h-7 rounded-lg bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 shrink-0">
+                      <FileText size={13} />
+                    </div>
+                    <span className="font-bold text-slate-900 text-[13px] font-mono">{receipt.receiptNumber}</span>
+                  </div>
+                </td>
+                <td>
+                  {receipt.studentId ? (
+                    <>
+                      <div className="flex items-center gap-2">
+                        {receipt.studentId.profilePicture ? (
+                          <img src={receipt.studentId.profilePicture} alt="" className="w-6 h-6 rounded object-cover border border-slate-100 shrink-0" />
+                        ) : (
+                          <div className="w-6 h-6 rounded bg-slate-100 flex items-center justify-center text-[10px] font-bold text-slate-500 shrink-0">
+                            {receipt.studentId.fullName?.charAt(0)}
+                          </div>
+                        )}
+                        <div>
+                          <p className="text-[13px] font-semibold text-slate-800 leading-none">{receipt.studentId.fullName}</p>
+                          <p className="text-[10px] text-slate-400 font-medium mt-0.5">{receipt.studentId.email || receipt.studentId.phone || '—'}</p>
+                        </div>
                       </div>
-                      <span className="font-black text-slate-900 tracking-tight">{receipt.receiptNumber}</span>
-                    </div>
-                  </td>
-                  <td>
-                    <div className="flex flex-col">
-                      <span className="text-[13px] font-bold text-slate-700">{receipt.studentId?.fullName || 'General'}</span>
-                      <span className="text-[10px] text-slate-400 font-medium">{receipt.studentId?.email || 'N/A'}</span>
-                    </div>
-                  </td>
-                  <td>
-                    <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest bg-slate-100 px-2.5 py-1 rounded-lg">
-                      {receipt.type || 'Payment'}
-                    </span>
-                  </td>
-                  <td className="text-[13px] font-medium text-slate-600">
-                    {format(new Date(receipt.date), 'dd MMM yyyy')}
-                  </td>
-                  <td>
-                    <span className="text-[15px] font-black text-slate-900 tracking-tight">{fmt(receipt.amount)}</span>
-                  </td>
-                  <td>
-                    <div className="flex items-center gap-1.5 text-emerald-600">
-                      <CheckCircle2 size={14} />
-                      <span className="text-[10px] font-black uppercase tracking-widest">Paid</span>
-                    </div>
-                  </td>
-                  <td className="text-right px-6">
-                    <button 
-                      onClick={() => handleViewReceipt(receipt._id)}
-                      className="p-2.5 bg-white border border-slate-100 text-slate-400 hover:text-[#044343] hover:border-teal-100 hover:bg-teal-50/30 rounded-xl transition-all shadow-sm active:scale-95"
+                    </>
+                  ) : (
+                    <span className="text-slate-400 text-[12px] italic">General / Unlinked</span>
+                  )}
+                </td>
+                <td>
+                  <span className="badge badge-neutral lowercase text-[10px]">
+                    {TYPE_LABEL[receipt.type] || receipt.type || 'Payment'}
+                  </span>
+                </td>
+                <td>
+                  <p className="text-[13px] font-medium text-slate-700">{format(new Date(receipt.date), 'dd MMM yyyy')}</p>
+                  <p className="text-[10px] text-slate-400 font-medium">{format(new Date(receipt.date), 'hh:mm a')}</p>
+                </td>
+                <td className="text-right">
+                  <span className="text-[14px] font-bold text-slate-900">{fmt(receipt.amount)}</span>
+                </td>
+                <td className="text-center">
+                  <div className="flex items-center justify-center gap-1 text-emerald-600">
+                    <CheckCircle2 size={13} />
+                    <span className="text-[10px] font-bold uppercase tracking-wider">Paid</span>
+                  </div>
+                </td>
+                <td className="px-5 text-right">
+                  <div className="flex items-center justify-end gap-1.5">
+                    <button
+                      onClick={() => handleDownloadPDF(receipt._id)}
+                      className="btn btn-secondary btn-sm gap-1"
+                      title="Download PDF"
                     >
-                      <Printer size={18} />
+                      <Download size={13} /> PDF
                     </button>
-                  </td>
-                </tr>
-              ))
-            )}
+                    <button
+                      onClick={() => handleSendWhatsApp(receipt._id)}
+                      className="btn btn-secondary btn-sm gap-1 text-emerald-600"
+                      title="Send on WhatsApp"
+                    >
+                      <MessageCircle size={13} /> WA
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
           </tbody>
         </table>
+
         {totalReceipts > limit && (
-          <Pagination
-            total={totalReceipts}
-            limit={limit}
-            currentPage={currentPage}
-            onPageChange={(p) => setCurrentPage(p)}
-          />
+          <div className="px-5 py-3 border-t border-slate-100 flex items-center justify-between">
+            <p className="text-xs text-slate-400">Showing {receipts.length} of {totalReceipts}</p>
+            <Pagination total={totalReceipts} limit={limit} currentPage={currentPage} onPageChange={setCurrentPage} />
+          </div>
         )}
       </div>
-
-      <div className="flex items-center justify-between no-print pt-2">
-        <p className="text-[12px] text-slate-500 font-bold uppercase tracking-widest">
-          Showing {receipts.length} of {totalReceipts} documents
-        </p>
-      </div>
-
-      <AnimatePresence>
-        {selectedReceiptId && (
-          <ReceiptModal
-            receipt={currentReceipt}
-            onClose={() => setSelectedReceiptId(null)}
-          />
-        )}
-      </AnimatePresence>
-
-      <style>{`
-        @media print {
-          @page { margin: 0; }
-          body * { visibility: hidden; }
-          #printable-receipt, #printable-receipt * { visibility: visible; }
-          #printable-receipt {
-            position: fixed;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            padding: 40px !important;
-            margin: 0 !important;
-            background: white !important;
-          }
-          .no-print { display: none !important; }
-        }
-      `}</style>
     </div>
   );
 };
