@@ -30,42 +30,56 @@ io.on('connection', (socket) => {
 
 app.set('io', io);
 
-mongoose
-  .connect(process.env.MONGODB_URI)
-  .then(() => {
-    logger.info('Master Database connected successfully');
-    initSubscriptionCron();
-  })
-  .catch((err) => {
-    logger.error('Database connection error:', err);
+// Serverless connection caching for Vercel
+let cachedDb = null;
+
+async function connectDB() {
+  if (cachedDb) return cachedDb;
+  if (mongoose.connection.readyState >= 1) return;
+
+  const uri = process.env.MONGODB_URI;
+  if (!uri) throw new Error("Missing MONGODB_URI");
+
+  logger.info("Connecting to MongoDB...");
+  cachedDb = await mongoose.connect(uri, { serverSelectionTimeoutMS: 5000 });
+  logger.info("Master Database connected successfully");
+  initSubscriptionCron();
+  return cachedDb;
+}
+
+// Global middleware to guarantee DB connection before any route is hit
+app.use(async (req, res, next) => {
+  try {
+    await connectDB();
+    next();
+  } catch (err) {
+    logger.error("DB Connection Error:", err);
+    res.status(500).json({ status: "error", message: "Database connection failed" });
+  }
+});
+
+// Start server only if NOT running on Vercel
+if (!process.env.VERCEL) {
+  const server = httpServer.listen(port, () => {
+    logger.info(`Server running on port ${port}`);
+  });
+
+  process.on('unhandledRejection', (err) => {
+    logger.error('UNHANDLED REJECTION! Shutting down...');
+    logger.error(err);
+    server.close(() => process.exit(1));
+  });
+
+  process.on('uncaughtException', (err) => {
+    logger.error('UNCAUGHT EXCEPTION! Shutting down...');
+    logger.error(err);
     process.exit(1);
   });
 
-// Start server
-const server = httpServer.listen(port, () => {
-  logger.info(`Server running on port ${port}`);
-});
-
-process.on('unhandledRejection', (err) => {
-  logger.error('UNHANDLED REJECTION! Shutting down...');
-  logger.error(err);
-
-  server.close(() => {
-    process.exit(1);
+  process.on('SIGTERM', () => {
+    logger.info('SIGTERM RECEIVED. Shutting down gracefully');
+    server.close(() => logger.info('Process terminated!'));
   });
-});
+}
 
-process.on('uncaughtException', (err) => {
-  logger.error('UNCAUGHT EXCEPTION! Shutting down...');
-  logger.error(err);
-
-  process.exit(1);
-});
-
-process.on('SIGTERM', () => {
-  logger.info('SIGTERM RECEIVED. Shutting down gracefully');
-
-  server.close(() => {
-    logger.info('Process terminated!');
-  });
-});
+export default app;
