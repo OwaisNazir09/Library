@@ -2,7 +2,7 @@ import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 // For Android emulator/Physical device, use your machine's LAN IP:
-export const BASE_URL = "http://10.118.212.166:3245/api";
+export const BASE_URL = "https://library-bice-beta-70.vercel.app/api";
 
 // export const BASE_URL = 'https://library-7qme.onrender.com/api';
 

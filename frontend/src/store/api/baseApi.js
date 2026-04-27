@@ -4,7 +4,7 @@ import { toast } from "react-hot-toast";
 const baseQuery = fetchBaseQuery({
   //baseUrl: "https://library-7qme.onrender.com/api",
 
-   baseUrl: "http://localhost:3245/api",
+   baseUrl: "https://library-bice-beta-70.vercel.app/api",
   prepareHeaders: (headers) => {
     const token = localStorage.getItem("token");
     const tenantId = localStorage.getItem("tenantId");
