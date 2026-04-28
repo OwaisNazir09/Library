@@ -15,6 +15,8 @@ import Downloads from '../screens/Downloads';
 import MyBooks from '../screens/MyBooks';
 import BookDetail from '../screens/BookDetail';
 import Ledger from '../screens/Ledger';
+import ReaderScreen from '../screens/ReaderScreen';
+import Notifications from '../screens/Notifications';
 
 const Stack = createNativeStackNavigator();
 
@@ -97,6 +99,16 @@ export default function AppNavigator({ navigationRef }) {
           name="Ledger"
           component={Ledger}
           options={{ headerShown: true, title: 'Payments & Ledger', ...sharedHeaderOptions }}
+        />
+        <Stack.Screen
+          name="Reader"
+          component={ReaderScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="Notifications"
+          component={Notifications}
+          options={{ headerShown: false }}
         />
       </Stack.Navigator>
     </NavigationContainer>

@@ -85,7 +85,7 @@
   }
 
   .btn-lg {
-    @apply h-[38px] px-4.5 text-[14px];
+    @apply h-[38px] px-5 text-[14px];
   }
 
   .btn-primary {

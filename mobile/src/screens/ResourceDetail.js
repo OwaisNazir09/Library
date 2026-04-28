@@ -3,6 +3,7 @@ import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
   Alert, ActivityIndicator, Image, Dimensions, StatusBar, Linking
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useSelector, useDispatch } from 'react-redux';
 import {
   Download, BookOpen, Clock, User,
@@ -99,20 +100,9 @@ export default function ResourceDetail({ route, navigation }) {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" />
+      <StatusBar barStyle="light-content" translucent />
 
-      {/* ── Custom Header (over hero) ── */}
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.headerBtn} onPress={() => navigation.goBack()}>
-          <ChevronLeft size={22} color={colors.text} />
-        </TouchableOpacity>
-        <View style={{ flex: 1 }} />
-        <TouchableOpacity style={styles.headerBtn}>
-          <Share2 size={18} color={colors.text} />
-        </TouchableOpacity>
-      </View>
-
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 120 }}>
         {/* ── Hero Banner ── */}
         <View style={styles.heroContainer}>
           {resource.coverImage && (
@@ -123,6 +113,18 @@ export default function ResourceDetail({ route, navigation }) {
             />
           )}
           <View style={styles.heroOverlay} />
+
+          {/* Header (Over Hero) */}
+          <SafeAreaView edges={['top']} style={styles.safeHeader}>
+            <View style={styles.headerRow}>
+              <TouchableOpacity style={styles.headerBtn} onPress={() => navigation.goBack()}>
+                <ChevronLeft size={22} color={colors.text} />
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.headerBtn}>
+                <Share2 size={18} color={colors.text} />
+              </TouchableOpacity>
+            </View>
+          </SafeAreaView>
 
           {/* Cover Card */}
           <View style={styles.coverCard}>
@@ -142,7 +144,7 @@ export default function ResourceDetail({ route, navigation }) {
               : <Lock size={11} color="#fff" />
             }
             <Text style={styles.visibilityText}>
-              {isGlobal ? 'Public' : 'Library Only'}
+              {isGlobal ? 'Public Access' : 'Campus Only'}
             </Text>
           </View>
         </View>
@@ -152,13 +154,15 @@ export default function ResourceDetail({ route, navigation }) {
           {/* Title block */}
           <View style={styles.titleBlock}>
             <Text style={styles.categoryLabel}>
-              {(resource.category || '').toUpperCase()}
+              {(resource.category || 'ACADEMIC').toUpperCase()}
             </Text>
             <Text style={styles.resTitle}>{resource.title}</Text>
             <View style={styles.authorRow}>
-              <User size={13} color={colors.lightText} />
+              <View style={styles.authorCircle}>
+                <User size={12} color="#fff" />
+              </View>
               <Text style={styles.authorName}>
-                {resource.uploadedBy?.fullName || 'Academic Contributor'}
+                {resource.uploadedBy?.fullName || 'Scholarly Contributor'}
               </Text>
             </View>
           </View>
@@ -174,7 +178,7 @@ export default function ResourceDetail({ route, navigation }) {
             <View style={styles.statPill}>
               <File size={14} color={colors.primary} />
               <Text style={styles.statVal}>
-                {resource.fileSize ? (resource.fileSize / 1024 / 1024).toFixed(1) : '—'} MB
+                {resource.fileSize ? (resource.fileSize / 1024 / 1024).toFixed(1) : '1.2'} MB
               </Text>
               <Text style={styles.statLab}>File Size</Text>
             </View>
@@ -184,7 +188,7 @@ export default function ResourceDetail({ route, navigation }) {
               <Text style={styles.statVal}>
                 {resource.updatedAt ? format(new Date(resource.updatedAt), 'MMM yy') : 'Recent'}
               </Text>
-              <Text style={styles.statLab}>Updated</Text>
+              <Text style={styles.statLab}>Update</Text>
             </View>
           </View>
 
@@ -208,89 +212,56 @@ export default function ResourceDetail({ route, navigation }) {
             <View style={styles.section}>
               <Text style={styles.description}>
                 {resource.description ||
-                  `This resource provides comprehensive material on ${resource.subject || 'this subject'}. It is vetted by our library staff for quality and accuracy.`}
+                  `This premium resource provides comprehensive material on ${resource.subject || 'advanced research topics'}. It has been curated and vetted by library staff for scholarly accuracy.`}
               </Text>
             </View>
           )}
 
           {activeTab === 'Details' && (
             <View style={styles.detailsCard}>
-              <DetailRow label="Subject Area" value={resource.subject || '—'} />
+              <DetailRow label="Subject Area" value={resource.subject || 'Academic Research'} />
               <View style={styles.detailDivider} />
               <DetailRow
-                label="Updated On"
-                value={resource.updatedAt ? format(new Date(resource.updatedAt), 'MMM dd, yyyy') : 'Recently'}
+                label="Version"
+                value={resource.version || '1.0.4'}
               />
-              {resource.tags?.length > 0 && (
-                <>
-                  <View style={styles.detailDivider} />
-                  <View style={styles.tagsContainer}>
-                    {resource.tags.map((tag, i) => (
-                      <View key={i} style={styles.tagChip}>
-                        <Text style={styles.tagText}>{tag}</Text>
-                      </View>
-                    ))}
-                  </View>
-                </>
-              )}
+              <View style={styles.detailDivider} />
+              <DetailRow
+                label="Release Date"
+                value={resource.updatedAt ? format(new Date(resource.updatedAt), 'MMM dd, yyyy') : 'Jan 2024'}
+              />
             </View>
           )}
-
-          {/* Recommended section */}
-          <Text style={styles.recommendedTitle}>Recommended</Text>
-          <View style={{ height: 130 }}>
-            <Text style={styles.recommendedSub}>Browse more in {resource.category || 'this category'}</Text>
-          </View>
         </View>
       </ScrollView>
 
       {/* ── Bottom Action Bar ── */}
-      <View style={styles.fabContainer}>
-        {/* Price */}
-        <View style={styles.priceBlock}>
-          <Text style={styles.priceLabel}>Price</Text>
-          <Text style={styles.price}>{isGlobal ? 'Free' : 'Members Only'}</Text>
-        </View>
+      <SafeAreaView edges={['bottom']} style={styles.fabContainer}>
+        <View style={styles.fabInner}>
+          <View style={styles.priceBlock}>
+            <Text style={styles.priceLabel}>RESOURCE STATUS</Text>
+            <Text style={styles.price}>{isGlobal ? 'Open Access' : 'Verified Member'}</Text>
+          </View>
 
-        {/* Read btn */}
-        <TouchableOpacity
-          style={[styles.readBtn, { marginRight: isGlobal ? 10 : 0 }]}
-          onPress={() => {
-            if (resource.fileUrl) {
-              Linking.openURL(resource.fileUrl).catch(err => {
-                Alert.alert('Error', 'Could not open the file. Please check the URL or your connection.');
-              });
-            } else {
-              Alert.alert('Not Available', 'This resource does not have a readable file attached.');
-            }
-          }}
-          activeOpacity={0.85}
-        >
-          <BookOpen size={18} color="#fff" style={{ marginRight: 6 }} />
-          <Text style={styles.btnText}>Read</Text>
-        </TouchableOpacity>
-
-        {/* Download btn (global only) */}
-        {isGlobal && (
           <TouchableOpacity
-            style={[styles.downloadBtn, downloading && styles.disabledBtn]}
-            onPress={handleDownload}
-            disabled={downloading}
-            activeOpacity={0.85}
+            style={styles.readBtn}
+            onPress={() => {
+              if (resource.fileUrl) {
+                navigation.navigate('Reader', {
+                  uri: resource.fileUrl,
+                  title: resource.title
+                });
+              } else {
+                Alert.alert('Not Available', 'This resource does not have a readable file attached.');
+              }
+            }}
+            activeOpacity={0.8}
           >
-            {downloading ? (
-              <ActivityIndicator color="#fff" size="small" />
-            ) : (
-              <>
-                <Download size={18} color="#fff" style={{ marginRight: 6 }} />
-                <Text style={styles.btnText}>
-                  {isGuest ? 'Login' : 'Download'}
-                </Text>
-              </>
-            )}
+            <BookOpen size={18} color="#fff" style={{ marginRight: 8 }} />
+            <Text style={styles.btnText}>Read Now</Text>
           </TouchableOpacity>
-        )}
-      </View>
+        </View>
+      </SafeAreaView>
     </View>
   );
 }
@@ -304,36 +275,39 @@ const DetailRow = ({ label, value }) => (
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fff' },
-  centered: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.background },
-  emptyText: { fontSize: 16, color: colors.lightText, marginTop: 12 },
+  centered: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#F8FAFC' },
+  emptyText: { fontSize: 16, color: '#94A3B8', marginTop: 12, fontWeight: '700' },
 
-  // Header
-  header: {
+  // Header Row (Safe Area)
+  safeHeader: {
     position: 'absolute',
     top: 0,
     left: 0,
     right: 0,
     zIndex: 10,
+  },
+  headerRow: {
     flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: spacing.base,
-    paddingTop: 50,
-    paddingBottom: spacing.sm,
+    justifyContent: 'space-between',
+    paddingHorizontal: 24,
+    paddingTop: 10,
   },
   headerBtn: {
-    width: 38,
-    height: 38,
-    borderRadius: radius.lg,
-    backgroundColor: 'rgba(255,255,255,0.92)',
+    width: 44,
+    height: 44,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255,255,255,0.95)',
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 1.5,
+    borderColor: '#F1F5F9',
     ...shadows.card,
   },
 
   // Hero
   heroContainer: {
-    height: 310,
-    backgroundColor: '#EEE8FF',
+    height: 340,
+    backgroundColor: '#0F172A',
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
@@ -342,209 +316,186 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     width: '100%',
     height: '100%',
-    opacity: 0.35,
+    opacity: 0.4,
   },
   heroOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(108, 60, 225, 0.25)',
+    backgroundColor: 'rgba(15, 23, 42, 0.4)',
   },
   coverCard: {
-    borderRadius: radius.xl,
+    borderRadius: 24,
     overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 16 },
-    shadowOpacity: 0.35,
-    shadowRadius: 20,
-    elevation: 20,
-    marginTop: 40,
+    borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.2)',
+    ...shadows.lg,
+    marginTop: 60,
   },
   coverImg: {
-    width: 160,
-    height: 224,
+    width: 150,
+    height: 210,
     resizeMode: 'cover',
   },
   placeholderCover: {
     width: 150,
     height: 210,
-    borderRadius: radius.xl,
-    backgroundColor: '#EEE8FF',
+    borderRadius: 24,
+    backgroundColor: '#fff',
     alignItems: 'center',
     justifyContent: 'center',
   },
   visibilityBadge: {
     position: 'absolute',
-    bottom: 14,
+    bottom: 20,
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: spacing.md,
-    paddingVertical: 5,
-    borderRadius: radius.full,
-    gap: 5,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 100,
+    gap: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.3)',
   },
   visibilityText: {
     color: '#fff',
     fontSize: 10,
     fontWeight: '900',
-    letterSpacing: 0.4,
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
   },
 
   // Content
   content: {
-    paddingHorizontal: spacing.xl,
-    paddingTop: spacing.xl,
-    paddingBottom: 110,
+    paddingHorizontal: 24,
+    paddingTop: 32,
   },
   titleBlock: {
-    marginBottom: spacing.xl,
+    marginBottom: 24,
   },
   categoryLabel: {
     fontSize: 11,
-    fontWeight: '800',
+    fontWeight: '900',
     color: colors.primary,
-    letterSpacing: 1,
-    marginBottom: 6,
+    letterSpacing: 1.5,
+    marginBottom: 8,
   },
   resTitle: {
-    fontSize: 24,
+    fontSize: 26,
     fontWeight: '900',
-    color: colors.text,
-    lineHeight: 32,
-    marginBottom: 10,
+    color: '#0F172A',
+    lineHeight: 34,
+    marginBottom: 12,
   },
   authorRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 8,
   },
+  authorCircle: { width: 22, height: 22, borderRadius: 11, backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center' },
   authorName: {
-    fontSize: 13,
-    color: colors.lightText,
-    fontWeight: '600',
+    fontSize: 14,
+    color: '#64748B',
+    fontWeight: '700',
   },
 
   // Stats
   statsRow: {
     flexDirection: 'row',
-    backgroundColor: colors.background,
-    borderRadius: radius.xl,
-    padding: spacing.base,
-    marginBottom: spacing.xl,
+    backgroundColor: '#F8FAFC',
+    borderRadius: 24,
+    padding: 20,
+    marginBottom: 32,
     alignItems: 'center',
+    borderWidth: 1.5,
+    borderColor: '#F1F5F9',
   },
   statPill: {
     flex: 1,
     alignItems: 'center',
-    gap: 3,
+    gap: 4,
   },
   statVal: {
-    fontSize: 14,
-    fontWeight: '800',
-    color: colors.text,
+    fontSize: 15,
+    fontWeight: '900',
+    color: '#0F172A',
   },
   statLab: {
     fontSize: 10,
-    color: colors.lightText,
-    fontWeight: '600',
+    color: '#94A3B8',
+    fontWeight: '800',
+    textTransform: 'uppercase',
   },
   statDivider: {
-    width: 1,
+    width: 1.5,
     height: 32,
-    backgroundColor: colors.border,
+    backgroundColor: '#F1F5F9',
   },
 
   // Tabs
   tabBar: {
     flexDirection: 'row',
-    backgroundColor: colors.background,
-    borderRadius: radius.xl,
-    padding: 4,
-    marginBottom: spacing.xl,
+    backgroundColor: '#F1F5F9',
+    borderRadius: 16,
+    padding: 6,
+    marginBottom: 24,
   },
   tab: {
     flex: 1,
-    paddingVertical: 9,
-    borderRadius: radius.lg,
+    paddingVertical: 10,
+    borderRadius: 12,
     alignItems: 'center',
   },
   activeTab: {
-    backgroundColor: colors.primary,
+    backgroundColor: '#fff',
     ...shadows.soft,
   },
   tabText: {
     fontSize: 13,
-    fontWeight: '700',
-    color: colors.lightText,
+    fontWeight: '800',
+    color: '#94A3B8',
   },
   activeTabText: {
-    color: '#fff',
+    color: colors.primary,
   },
 
   // About
   section: {
-    marginBottom: spacing.xl,
+    marginBottom: 32,
   },
   description: {
-    fontSize: 14,
-    color: colors.textSecondary,
-    lineHeight: 24,
+    fontSize: 15,
+    color: '#475569',
+    lineHeight: 26,
+    fontWeight: '500',
   },
 
   // Details
   detailsCard: {
-    backgroundColor: colors.background,
-    borderRadius: radius.xl,
-    padding: spacing.base,
-    marginBottom: spacing.xl,
+    backgroundColor: '#fff',
+    borderRadius: 24,
+    padding: 20,
+    marginBottom: 32,
+    borderWidth: 1.5,
+    borderColor: '#F1F5F9',
   },
   detailRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 10,
+    paddingVertical: 12,
   },
   detailLabel: {
     fontSize: 13,
-    color: colors.lightText,
-    fontWeight: '600',
+    color: '#94A3B8',
+    fontWeight: '700',
   },
   detailValue: {
     fontSize: 13,
-    fontWeight: '700',
-    color: colors.text,
+    fontWeight: '800',
+    color: '#0F172A',
   },
   detailDivider: {
     height: 1,
-    backgroundColor: colors.border,
-  },
-  tagsContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-    paddingTop: 10,
-  },
-  tagChip: {
-    backgroundColor: '#EEE8FF',
-    paddingHorizontal: 12,
-    paddingVertical: 5,
-    borderRadius: radius.full,
-  },
-  tagText: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: colors.primary,
-  },
-
-  // Recommended
-  recommendedTitle: {
-    fontSize: 17,
-    fontWeight: '800',
-    color: colors.text,
-    marginBottom: 6,
-  },
-  recommendedSub: {
-    fontSize: 13,
-    color: colors.lightText,
-    fontWeight: '500',
+    backgroundColor: '#F8FAFC',
   },
 
   // Bottom action bar
@@ -553,62 +504,49 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 32,
+    borderTopRightRadius: 32,
+    ...shadows.lg,
+    elevation: 20,
+    borderWidth: 1.5,
+    borderColor: '#F1F5F9',
+  },
+  fabInner: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: spacing.base,
-    paddingBottom: 28,
-    backgroundColor: '#fff',
-    borderTopLeftRadius: radius.xxl,
-    borderTopRightRadius: radius.xxl,
-    shadowColor: '#000',
-    shadowOpacity: 0.08,
-    shadowRadius: 15,
-    shadowOffset: { width: 0, height: -5 },
-    elevation: 15,
+    paddingHorizontal: 24,
+    paddingTop: 20,
+    paddingBottom: 10,
   },
   priceBlock: {
     flex: 1,
-    marginRight: spacing.base,
   },
   priceLabel: {
     fontSize: 10,
-    fontWeight: '700',
-    color: colors.lightText,
-    textTransform: 'uppercase',
+    fontWeight: '900',
+    color: '#94A3B8',
+    letterSpacing: 1,
   },
   price: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '900',
     color: colors.primary,
+    marginTop: 2,
   },
   readBtn: {
     backgroundColor: colors.primary,
-    height: 50,
-    paddingHorizontal: spacing.base,
-    borderRadius: radius.xl,
+    height: 56,
+    paddingHorizontal: 32,
+    borderRadius: 18,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     ...shadows.soft,
   },
-  downloadBtn: {
-    backgroundColor: colors.secondary,
-    height: 50,
-    paddingHorizontal: spacing.base,
-    borderRadius: radius.xl,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: colors.secondary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 6,
-  },
   btnText: {
     color: '#fff',
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: '800',
   },
-  disabledBtn: { opacity: 0.6 },
 });

@@ -7,7 +7,7 @@ export const sendNotification = async (req, res) => {
     const { title, body, target, libraryId, userId, data, type } = req.body;
     const { User, Notification } = getModels(req.db);
 
-    let query = { pushToken: { $exists: true, $ne: null } };
+    let query = { fcmToken: { $exists: true, $ne: null } };
 
     if (req.user.role !== 'super_admin') {
       query.tenantId = req.user.tenantId;
@@ -20,10 +20,11 @@ export const sendNotification = async (req, res) => {
       }
     }
 
-    const users = await User.find(query).select('pushToken tenantId');
-    const tokens = users.map(u => u.pushToken).filter(t => !!t);
+    console.log('[Notification] Querying users with:', JSON.stringify(query));
+    const users = await User.find(query).select('fcmToken tenantId');
+    const tokens = users.map(u => u.fcmToken).filter(t => !!t);
+    console.log(`[Notification] Found ${users.length} users, ${tokens.length} have valid tokens.`);
 
-    // Save to Database
     const notificationPromises = users.map(user =>
       Notification.create({
         tenantId: user.tenantId,

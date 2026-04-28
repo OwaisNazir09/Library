@@ -7,6 +7,7 @@ import attendanceReducer from './attendanceSlice';
 import userReducer from './userSlice';
 import downloadsReducer from './downloadsSlice';
 import financeReducer from './financeSlice';
+import notificationReducer from './notificationSlice';
 
 export const store = configureStore({
   reducer: {
@@ -18,5 +19,6 @@ export const store = configureStore({
     user: userReducer,
     downloads: downloadsReducer,
     finance: financeReducer,
+    notifications: notificationReducer,
   },
 });

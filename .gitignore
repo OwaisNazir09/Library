@@ -59,3 +59,4 @@ android/app/build/.baileys_auth/
 backend/scratch/
 *.pdf
 *.xlsx
+backend/firebase-service-account.json

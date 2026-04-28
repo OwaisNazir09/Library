@@ -4,11 +4,16 @@ import {
   TouchableOpacity, ActivityIndicator, RefreshControl,
   Image, StatusBar
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useSelector, useDispatch } from 'react-redux';
-import { FileText, Edit3, Calendar, ChevronRight, Heart, MessageSquare, Sparkles } from 'lucide-react-native';
+import {
+  FileText, Edit3, Calendar, ChevronRight,
+  Heart, MessageSquare, Sparkles, User, Clock,
+  Plus
+} from 'lucide-react-native';
 import { fetchBlogs } from '../store/blogSlice';
 import { colors } from '../utils/colors';
-import { spacing, radius, shadows, common } from '../utils/theme';
+import { spacing, radius, shadows } from '../utils/theme';
 import { ErrorState } from '../components/EmptyState';
 import SkeletonCard from '../components/SkeletonCard';
 
@@ -48,16 +53,14 @@ export default function Blogs({ navigation }) {
       onPress={() => navigation.navigate('BlogDetail', { blog: item })}
       activeOpacity={0.85}
     >
-      {/* Cover image or gradient placeholder */}
       <View style={styles.cardImageWrapper}>
         {item.coverImage ? (
           <Image source={{ uri: item.coverImage }} style={styles.cardImage} />
         ) : (
           <View style={styles.placeholderImage}>
-            <FileText size={40} color={colors.primary} strokeWidth={1.2} />
+            <FileText size={40} color={colors.primary} strokeWidth={1} />
           </View>
         )}
-        {/* Tags overlay */}
         <View style={styles.tagsOverlay}>
           {item.tags?.slice(0, 2).map((tag, i) => (
             <View key={i} style={styles.tag}>
@@ -68,62 +71,60 @@ export default function Blogs({ navigation }) {
       </View>
 
       <View style={styles.cardBody}>
-        {/* Meta row */}
         <View style={styles.metaRow}>
           <View style={styles.dateMeta}>
-            <Calendar size={11} color={colors.lightText} />
+            <Calendar size={12} color="#94A3B8" />
             <Text style={styles.dateText}>{formatDate(item.createdAt)}</Text>
           </View>
           <View style={styles.statsMeta}>
-            <Heart size={11} color={colors.secondary} />
-            <Text style={styles.statsText}>{item.likesCount || 0}</Text>
-            <MessageSquare size={11} color={colors.lightText} style={{ marginLeft: 8 }} />
-            <Text style={styles.statsText}>{item.commentsCount || 0}</Text>
+            <View style={styles.statPill}>
+              <Heart size={11} color="#E11D48" />
+              <Text style={styles.statsText}>{item.likesCount || 0}</Text>
+            </View>
+            <View style={styles.statPill}>
+              <MessageSquare size={11} color="#64748B" />
+              <Text style={styles.statsText}>{item.commentsCount || 0}</Text>
+            </View>
           </View>
         </View>
 
         <Text style={styles.cardTitle} numberOfLines={2}>{item.title}</Text>
         <Text style={styles.cardSnippet} numberOfLines={2}>{item.content}</Text>
 
-        {/* Footer */}
         <View style={styles.cardFooter}>
           <View style={styles.authorMeta}>
             <View style={styles.authorAvatar}>
-              <Text style={styles.avatarText}>{item.author?.fullName?.charAt(0) || 'A'}</Text>
+              <User size={14} color="#fff" />
             </View>
             <Text style={styles.authorName} numberOfLines={1}>
-              {item.author?.fullName || 'Anonymous'}
+              {item.author?.fullName || 'Academic Member'}
             </Text>
           </View>
-          <TouchableOpacity
-            style={styles.readMoreBtn}
-            onPress={() => navigation.navigate('BlogDetail', { blog: item })}
-          >
-            <Text style={styles.readMoreText}>Read</Text>
-            <ChevronRight size={14} color={colors.primary} />
-          </TouchableOpacity>
+          <View style={styles.readBtn}>
+            <Text style={styles.readBtnText}>Read</Text>
+            <ChevronRight size={14} color={colors.primary} strokeWidth={3} />
+          </View>
         </View>
       </View>
     </TouchableOpacity>
   );
 
   return (
-    <View style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
+    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
+      <StatusBar barStyle="dark-content" backgroundColor="#F8FAFC" />
 
-      {/* ── Header ── */}
+      {/* Header */}
       <View style={styles.header}>
         <View>
-          <Text style={styles.headerTitle}>Library Blogs</Text>
-          <Text style={styles.headerSubtitle}>Stories from our community</Text>
+          <Text style={styles.headerTitle}>Welib Blogs</Text>
+          <Text style={styles.headerSubtitle}>COMMUNITY INSIGHTS</Text>
         </View>
-        <TouchableOpacity style={styles.writeBtn} onPress={handleSubmit} activeOpacity={0.85}>
-          <Edit3 size={16} color="#fff" />
-          <Text style={styles.writeBtnText}>Write</Text>
+        <TouchableOpacity style={styles.writeHeaderBtn} onPress={handleSubmit} activeOpacity={0.8}>
+          <Edit3 size={18} color={colors.primary} />
         </TouchableOpacity>
       </View>
 
-      {/* ── Filter Tabs ── */}
+      {/* Filter tabs */}
       <View style={styles.filterBar}>
         <TouchableOpacity
           style={[styles.filterTab, !isRanked && styles.activeFilterTab]}
@@ -135,22 +136,19 @@ export default function Blogs({ navigation }) {
           style={[styles.filterTab, isRanked && styles.activeFilterTab]}
           onPress={() => setIsRanked(true)}
         >
-          <Sparkles size={12} color={isRanked ? colors.primary : colors.lightText} style={{ marginRight: 4 }} />
+          <Sparkles size={14} color={isRanked ? colors.primary : '#94A3B8'} style={{ marginRight: 6 }} />
           <Text style={[styles.filterText, isRanked && styles.activeFilterText]}>Popular</Text>
         </TouchableOpacity>
       </View>
 
-      {/* ── Blog List ── */}
+      {/* Blog List */}
       <View style={{ flex: 1 }}>
         {loading && !refreshing ? (
           <FlatList
             data={[1, 2, 3]}
             keyExtractor={i => i.toString()}
-            renderItem={() => (
-              <View style={{ paddingHorizontal: spacing.base, marginBottom: spacing.base }}>
-                <SkeletonCard />
-              </View>
-            )}
+            contentContainerStyle={styles.list}
+            renderItem={() => <SkeletonCard type="list" />}
           />
         ) : error ? (
           <ErrorState message={error} onRetry={() => dispatch(fetchBlogs())} />
@@ -162,18 +160,15 @@ export default function Blogs({ navigation }) {
             contentContainerStyle={styles.list}
             showsVerticalScrollIndicator={false}
             refreshControl={
-              <RefreshControl
-                refreshing={refreshing}
-                onRefresh={handleRefresh}
-                tintColor={colors.primary}
-                colors={[colors.primary]}
-              />
+              <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={colors.primary} />
             }
             ListEmptyComponent={
               <View style={styles.emptyContainer}>
-                <MessageSquare size={56} color="#DDD8FF" style={{ marginBottom: 16 }} />
+                <View style={styles.emptyCircle}>
+                  <MessageSquare size={48} color="#CBD5E1" strokeWidth={1} />
+                </View>
                 <Text style={styles.emptyTitle}>No Stories Yet</Text>
-                <Text style={styles.emptySub}>Be the first to share something!</Text>
+                <Text style={styles.emptySub}>Share your research or library experiences with the community!</Text>
                 <TouchableOpacity style={styles.emptyBtn} onPress={handleSubmit}>
                   <Text style={styles.emptyBtnText}>Create Post</Text>
                 </TouchableOpacity>
@@ -183,278 +178,82 @@ export default function Blogs({ navigation }) {
         )}
       </View>
 
-      {/* ── FAB ── */}
+      {/* FAB */}
       <TouchableOpacity style={styles.fab} onPress={handleSubmit} activeOpacity={0.9}>
-        <Edit3 size={22} color="#fff" />
+        <Plus size={30} color="#fff" strokeWidth={2.5} />
       </TouchableOpacity>
-    </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-
-  // Header
+  container: { flex: 1, backgroundColor: '#F8FAFC' },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: spacing.base,
-    paddingTop: 56,
-    paddingBottom: spacing.base,
-    backgroundColor: colors.background,
+    paddingHorizontal: 24,
+    paddingVertical: 16,
   },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: '900',
-    color: colors.text,
-    letterSpacing: -0.3,
-  },
-  headerSubtitle: {
-    fontSize: 13,
-    color: colors.lightText,
-    marginTop: 2,
-    fontWeight: '500',
-  },
-  writeBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.primary,
-    paddingHorizontal: spacing.base,
-    paddingVertical: spacing.sm,
-    borderRadius: radius.full,
-    gap: 6,
-    ...shadows.soft,
-  },
-  writeBtnText: {
-    color: '#fff',
-    fontSize: 13,
-    fontWeight: '800',
+  headerTitle: { fontSize: 26, fontWeight: '900', color: '#0F172A', letterSpacing: -0.5 },
+  headerSubtitle: { fontSize: 10, fontWeight: '800', color: '#94A3B8', letterSpacing: 1.5, marginTop: 4 },
+  writeHeaderBtn: {
+    width: 48, height: 48, borderRadius: 16, backgroundColor: '#F0FDFA',
+    alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#CCFBF1'
   },
 
-  // Filter tabs
-  filterBar: {
-    flexDirection: 'row',
-    paddingHorizontal: spacing.base,
-    marginBottom: spacing.base,
-    gap: spacing.sm,
-  },
+  filterBar: { flexDirection: 'row', paddingHorizontal: 24, marginBottom: 24, gap: 12 },
   filterTab: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: spacing.base,
-    paddingVertical: 8,
-    borderRadius: radius.full,
-    backgroundColor: '#fff',
-    ...shadows.card,
+    flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 10,
+    borderRadius: 14, backgroundColor: '#fff', borderWidth: 1.5, borderColor: '#F1F5F9', ...shadows.soft
   },
-  activeFilterTab: {
-    backgroundColor: '#EEE8FF',
-  },
-  filterText: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: colors.lightText,
-  },
-  activeFilterText: {
-    color: colors.primary,
-  },
+  activeFilterTab: { backgroundColor: '#F0FDFA', borderColor: '#CCFBF1' },
+  filterText: { fontSize: 13, fontWeight: '800', color: '#94A3B8' },
+  activeFilterText: { color: colors.primary },
 
-  // List
-  list: {
-    paddingHorizontal: spacing.base,
-    paddingBottom: 80,
-  },
-
-  // Card
+  list: { paddingHorizontal: 24, paddingBottom: 100 },
   card: {
-    backgroundColor: colors.card,
-    borderRadius: radius.xxl,
-    marginBottom: spacing.base,
-    overflow: 'hidden',
-    ...shadows.card,
+    backgroundColor: '#fff', borderRadius: 28, marginBottom: 20, overflow: 'hidden',
+    borderWidth: 1.5, borderColor: '#F1F5F9', ...shadows.card, elevation: 4
   },
-  cardImageWrapper: {
-    width: '100%',
-    height: 170,
-    backgroundColor: '#EEE8FF',
-    position: 'relative',
-  },
-  cardImage: {
-    width: '100%',
-    height: '100%',
-    resizeMode: 'cover',
-  },
-  placeholderImage: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#F0EAFF',
-  },
-  tagsOverlay: {
-    position: 'absolute',
-    bottom: spacing.sm,
-    left: spacing.sm,
-    flexDirection: 'row',
-    gap: spacing.xs,
-  },
-  tag: {
-    backgroundColor: 'rgba(108, 60, 225, 0.85)',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: radius.sm,
-  },
-  tagText: {
-    fontSize: 10,
-    fontWeight: '800',
-    color: '#fff',
-    textTransform: 'uppercase',
-    letterSpacing: 0.3,
-  },
+  cardImageWrapper: { width: '100%', height: 180, backgroundColor: '#F1F5F9', position: 'relative' },
+  cardImage: { width: '100%', height: '100%', resizeMode: 'cover' },
+  placeholderImage: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  tagsOverlay: { position: 'absolute', bottom: 12, left: 12, flexDirection: 'row', gap: 6 },
+  tag: { backgroundColor: 'rgba(15, 23, 42, 0.75)', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8 },
+  tagText: { fontSize: 9, fontWeight: '900', color: '#fff', textTransform: 'uppercase', letterSpacing: 0.5 },
 
-  // Card body
-  cardBody: {
-    padding: spacing.base,
-  },
-  metaRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  dateMeta: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  dateText: {
-    fontSize: 11,
-    color: colors.lightText,
-    fontWeight: '600',
-  },
-  statsMeta: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  statsText: {
-    fontSize: 11,
-    color: colors.lightText,
-    fontWeight: '600',
-    marginLeft: 3,
-  },
-  cardTitle: {
-    fontSize: 16,
-    fontWeight: '800',
-    color: colors.text,
-    marginBottom: 6,
-    lineHeight: 22,
-  },
-  cardSnippet: {
-    fontSize: 13,
-    color: colors.lightText,
-    lineHeight: 19,
-    marginBottom: spacing.md,
-  },
+  cardBody: { padding: 18 },
+  metaRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
+  dateMeta: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  dateText: { fontSize: 12, color: '#94A3B8', fontWeight: '700' },
+  statsMeta: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  statPill: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#F8FAFC', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 },
+  statsText: { fontSize: 11, color: '#64748B', fontWeight: '800' },
 
-  // Card footer
+  cardTitle: { fontSize: 18, fontWeight: '900', color: '#0F172A', marginBottom: 8, lineHeight: 24 },
+  cardSnippet: { fontSize: 14, color: '#64748B', lineHeight: 22, marginBottom: 20, fontWeight: '500' },
+
   cardFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
-    paddingTop: spacing.sm,
+    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+    paddingTop: 16, borderTopWidth: 1, borderTopColor: '#F8FAFC'
   },
-  authorMeta: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  authorAvatar: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: spacing.sm,
-  },
-  avatarText: {
-    color: '#fff',
-    fontSize: 12,
-    fontWeight: '800',
-  },
-  authorName: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: colors.textSecondary,
-    flex: 1,
-  },
-  readMoreBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#EEE8FF',
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 5,
-    borderRadius: radius.full,
-  },
-  readMoreText: {
-    fontSize: 12,
-    fontWeight: '800',
-    color: colors.primary,
-    marginRight: 2,
-  },
+  authorMeta: { flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 },
+  authorAvatar: { width: 32, height: 32, borderRadius: 12, backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center' },
+  authorName: { fontSize: 13, fontWeight: '800', color: '#475569', flex: 1 },
+  readBtn: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  readBtnText: { fontSize: 13, fontWeight: '900', color: colors.primary },
 
-  // Empty
-  emptyContainer: {
-    alignItems: 'center',
-    paddingVertical: 60,
-    paddingHorizontal: 40,
-  },
-  emptyTitle: {
-    fontSize: 18,
-    fontWeight: '800',
-    color: colors.text,
-    marginBottom: 6,
-  },
-  emptySub: {
-    fontSize: 13,
-    color: colors.lightText,
-    textAlign: 'center',
-    lineHeight: 20,
-  },
-  emptyBtn: {
-    backgroundColor: colors.primary,
-    paddingHorizontal: spacing.xl,
-    paddingVertical: spacing.md,
-    borderRadius: radius.xl,
-    marginTop: spacing.xl,
-    ...shadows.soft,
-  },
-  emptyBtnText: {
-    color: '#fff',
-    fontWeight: '800',
-    fontSize: 14,
-  },
+  emptyContainer: { alignItems: 'center', paddingVertical: 80 },
+  emptyCircle: { width: 90, height: 90, borderRadius: 32, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', marginBottom: 20, borderWidth: 1.5, borderColor: '#F1F5F9' },
+  emptyTitle: { fontSize: 20, fontWeight: '900', color: '#0F172A', marginBottom: 8 },
+  emptySub: { fontSize: 14, color: '#94A3B8', textAlign: 'center', paddingHorizontal: 30, lineHeight: 22 },
+  emptyBtn: { backgroundColor: colors.primary, paddingHorizontal: 32, paddingVertical: 14, borderRadius: 16, marginTop: 24 },
+  emptyBtnText: { color: '#fff', fontWeight: '800' },
 
-  // FAB
   fab: {
-    position: 'absolute',
-    bottom: 24,
-    right: 24,
-    backgroundColor: colors.secondary,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: colors.secondary,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.4,
-    shadowRadius: 10,
-    elevation: 10,
+    position: 'absolute', bottom: 30, right: 24, backgroundColor: colors.secondary,
+    width: 60, height: 60, borderRadius: 20, alignItems: 'center', justifyContent: 'center',
+    ...shadows.lg, elevation: 10
   },
 });

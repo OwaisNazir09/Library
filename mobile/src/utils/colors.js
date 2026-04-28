@@ -1,40 +1,39 @@
 export const colors = {
-  // Brand
-  primary: '#184D35',       // Rich emerald forest
-  primaryLight: '#2F6B4A',
-  primaryDark: '#0F2F20',
+  // Brand - Official Welib Deep Teal
+  primary: '#044343',       
+  primaryLight: '#065e5e',
+  primaryDark: '#022c2c',
+  primaryVeryLight: '#F0F9F9',
 
-  // Accent
-  secondary: '#3E7C73',     // Sage teal
-  secondaryLight: '#69A89F',
-
-  accentGold: '#C9A86A',
-  accentCream: '#FBF7EF',
-  accentSage: '#9AAF8D',
-
-  // Surfaces
-  background: '#F7FAF5',
+  // Accent - Official Welib Emerald
+  secondary: '#10B981',     
+  secondaryLight: '#34D399',
+  accent: '#F43F5E',        // Rose (for deletions/danger)
+  
+  // Surfaces - Official Welib Neutral Scale
+  background: '#F9FAFB',
   card: '#FFFFFF',
-  cardHover: '#F1F6EF',
-  surfaceAlt: '#EAF2E7',
-
-  // Text
-  text: '#13261D',
-  textSecondary: '#52665C',
-  lightText: '#8A978F',
+  surface: '#FFFFFF',
+  surfaceAlt: '#F3F4F6',
+  
+  // Text - Official Welib Slate/Gray
+  text: '#111827',          
+  textSecondary: '#4B5563', 
+  lightText: '#6B7280',     
   white: '#FFFFFF',
 
   // Utility
-  border: '#D7E2D4',
-  success: '#2F855A',
-  error: '#DC2626',
-  warning: '#D97706',
-  info: '#2563EB',
+  border: '#E5E7EB',
+  borderDark: '#D1D5DB',
+  success: '#10B981',
+  error: '#EF4444',         // Red-500
+  warning: '#F59E0B',       // Amber-500
+  info: '#3B82F6',          // Blue-500
 
-  // Gradients
-  gradientPrimary: ['#184D35', '#2F6B4A'],
-  gradientHero: ['#0F2F20', '#184D35'],
-  gradientCard: ['#2F6B4A', '#7FA37E'],
-  gradientGold: ['#B68A44', '#D7C08A'],
-  gradientTeal: ['#3E7C73', '#6EB0A7'],
+  // SaaS Gradients (Themed)
+  gradientPrimary: ['#044343', '#065e5e'],
+  gradientSecondary: ['#10B981', '#059669'],
+  gradientHero: ['#044343', '#022c2c'],
+  gradientDanger: ['#EF4444', '#B91C1C'],
+  gradientSurface: ['#FFFFFF', '#F9FAFB'],
 };

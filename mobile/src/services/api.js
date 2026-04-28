@@ -2,7 +2,7 @@ import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 // For Android emulator/Physical device, use your machine's LAN IP:
-export const BASE_URL = "https://library-bice-beta-70.vercel.app/api";
+export const BASE_URL = "http://10.157.117.166:3245/api";
 
 // export const BASE_URL = 'https://library-7qme.onrender.com/api';
 
@@ -72,13 +72,11 @@ export const authApi = {
     api.patch("/users/update-me", data, {
       headers: { "Content-Type": "multipart/form-data" },
     }),
+  saveFcmToken: (fcmToken) => api.patch("/users/update-me", { fcmToken }),
 };
 
-// ─── Resource API ─────────────────────────────────────────────────────────────
 export const resourceApi = {
-  // No auth required
   getPublicResources: (params) => api.get("/resources/public", { params }),
-  // Auth required
   getAllResources: (params) => api.get("/resources", { params }),
   getResource: (id) => api.get(`/resources/${id}`),
   trackDownload: (id) => api.patch(`/resources/${id}/download`),
@@ -131,7 +129,8 @@ export const notificationApi = {
 // ─── User API ─────────────────────────────────────────────────────────────────
 export const userApi = {
   getProfile: () => api.get("/users/me"),
-  updateProfile: (data) => api.patch("/users/me", data),
+  updateProfile: (data) => api.patch("/users/update-me", data),
+  saveFcmToken: (fcmToken) => api.patch("/users/update-me", { fcmToken }),
 };
 
 // ─── Events API ───────────────────────────────────────────────────────────────

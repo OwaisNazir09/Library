@@ -1,14 +1,22 @@
 import React, { useEffect } from 'react';
 import {
   View, Text, StyleSheet, FlatList, ActivityIndicator,
-  SafeAreaView, StatusBar, TouchableOpacity
+  StatusBar, TouchableOpacity, Dimensions, Image, ScrollView
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchMyLedger } from '../store/financeSlice';
-import { CreditCard, ArrowUpRight, ArrowDownLeft, Calendar, FileText, Info, TrendingUp } from 'lucide-react-native';
+import { 
+  CreditCard, ArrowUpRight, ArrowDownLeft, 
+  Calendar, FileText, Info, TrendingUp, 
+  ChevronRight, Receipt, Wallet, Sparkles
+} from 'lucide-react-native';
 import { format } from 'date-fns';
 import { colors } from '../utils/colors';
 import { spacing, radius, shadows } from '../utils/theme';
+import LinearGradient from 'react-native-linear-gradient';
+
+const { width } = Dimensions.get('window');
 
 const Ledger = () => {
   const dispatch = useDispatch();
@@ -19,27 +27,31 @@ const Ledger = () => {
   const renderTransaction = ({ item }) => {
     const isPayment = item.type === 'receipt';
     return (
-      <View style={styles.txCard}>
-        <View style={[styles.txIconBox, { backgroundColor: isPayment ? '#E8F5E9' : '#FFF0F0' }]}>
+      <TouchableOpacity style={styles.txCard} activeOpacity={0.7}>
+        <View style={[styles.txIconBox, { backgroundColor: isPayment ? '#F0FDFA' : '#FFF1F2' }]}>
           {isPayment
-            ? <ArrowDownLeft size={18} color="#2E7D32" />
-            : <ArrowUpRight size={18} color="#C62828" />
+            ? <ArrowDownLeft size={20} color="#0D9488" strokeWidth={2.5} />
+            : <ArrowUpRight size={20} color="#E11D48" strokeWidth={2.5} />
           }
         </View>
         <View style={styles.txInfo}>
           <Text style={styles.txTitle} numberOfLines={1}>{item.description}</Text>
           <View style={styles.txDateRow}>
-            <Calendar size={11} color={colors.lightText} />
-            <Text style={styles.txDate}>{format(new Date(item.date), 'dd MMM yyyy')}</Text>
+            <Calendar size={12} color="#94A3B8" />
+            <Text style={styles.txDate}>{format(new Date(item.date), 'dd MMM, yyyy')}</Text>
           </View>
         </View>
         <View style={styles.txAmountCol}>
-          <Text style={[styles.txAmount, { color: isPayment ? '#2E7D32' : '#C62828' }]}>
+          <Text style={[styles.txAmount, { color: isPayment ? '#0D9488' : '#E11D48' }]}>
             {isPayment ? '-' : '+'} ₹{item.amount.toLocaleString()}
           </Text>
-          <Text style={styles.txType}>{item.type.replace('_', ' ')}</Text>
+          <View style={[styles.typeBadge, { backgroundColor: isPayment ? '#CCFBF1' : '#FFE4E6' }]}>
+            <Text style={[styles.txType, { color: isPayment ? '#0F766E' : '#BE123C' }]}>
+              {item.type.replace('_', ' ')}
+            </Text>
+          </View>
         </View>
-      </View>
+      </TouchableOpacity>
     );
   };
 
@@ -52,186 +64,246 @@ const Ledger = () => {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
+    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
+      <StatusBar barStyle="dark-content" backgroundColor="#F8FAFC" />
 
-      {/* ── Balance Hero Card ── */}
-      <View style={styles.heroSection}>
-        <View style={styles.balanceCard}>
-          {/* Top row */}
-          <View style={styles.balanceTop}>
-            <View style={styles.balanceIconBox}>
-              <CreditCard size={22} color="#fff" />
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40 }}>
+        {/* ── Balance Dashboard ── */}
+        <View style={styles.heroSection}>
+          <LinearGradient
+            colors={['#044343', '#0F172A']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.balanceCard}
+          >
+            <View style={styles.cardHeader}>
+              <View style={styles.walletIconBox}>
+                <Wallet size={24} color="#fff" strokeWidth={1.5} />
+              </View>
+              <View style={styles.statusBadge}>
+                <Sparkles size={12} color="#fff" />
+                <Text style={styles.statusText}>Active Member</Text>
+              </View>
             </View>
-            <View style={styles.studentBadge}>
-              <Text style={styles.studentId}>
-                ID: {ledger?.studentId?.idNumber || 'N/A'}
+
+            <Text style={styles.balanceLabel}>Total Outstanding</Text>
+            <View style={styles.amountRow}>
+              <Text style={styles.currency}>₹</Text>
+              <Text style={styles.balanceAmount}>
+                {ledger?.currentBalance?.toLocaleString() || '0'}
               </Text>
             </View>
-          </View>
 
-          <Text style={styles.balanceLabel}>Outstanding Balance</Text>
-          <Text style={styles.balanceAmount}>
-            ₹{ledger?.currentBalance?.toLocaleString() || '0'}
-          </Text>
-
-          {/* Mini stats */}
-          <View style={styles.balanceStats}>
-            <View style={styles.balanceStat}>
-              <TrendingUp size={13} color="rgba(255,255,255,0.7)" />
-              <Text style={styles.balanceStatText}>
-                {transactions?.length || 0} transactions
-              </Text>
+            <View style={styles.cardFooter}>
+              <View style={styles.idBox}>
+                 <Text style={styles.idLabel}>STUDENT ID</Text>
+                 <Text style={styles.idValue}>{ledger?.studentId?.idNumber || 'LIB-2024-88'}</Text>
+              </View>
+              <TouchableOpacity style={styles.payBtn}>
+                 <Text style={styles.payBtnText}>Settle Due</Text>
+                 <ChevronRight size={14} color="#044343" strokeWidth={3} />
+              </TouchableOpacity>
             </View>
-          </View>
 
-          {/* Decorative circles */}
-          <View style={styles.decorCircle1} />
-          <View style={styles.decorCircle2} />
-        </View>
-      </View>
-
-      {/* ── Transaction History ── */}
-      <View style={styles.historySection}>
-        <View style={styles.sectionRow}>
-          <Text style={styles.sectionTitle}>Transaction History</Text>
-          <View style={styles.countBadge}>
-            <Text style={styles.countText}>{transactions?.length || 0}</Text>
-          </View>
+            {/* Abstract Background Elements */}
+            <View style={styles.circle1} />
+            <View style={styles.circle2} />
+          </LinearGradient>
         </View>
 
-        {error ? (
-          <View style={styles.errorContainer}>
-            <View style={styles.errorIconBox}>
-              <Info size={28} color={colors.error} />
+        {/* ── Quick Stats ── */}
+        <View style={styles.quickStats}>
+           <View style={styles.statBox}>
+              <View style={[styles.statIcon, { backgroundColor: '#F0FDFA' }]}>
+                <Receipt size={18} color="#0D9488" />
+              </View>
+              <View>
+                <Text style={styles.statNum}>{transactions?.length || 0}</Text>
+                <Text style={styles.statLabel2}>Receipts</Text>
+              </View>
+           </View>
+           <View style={styles.statDivider2} />
+           <View style={styles.statBox}>
+              <View style={[styles.statIcon, { backgroundColor: '#F8FAFC' }]}>
+                <Calendar size={18} color="#64748B" />
+              </View>
+              <View>
+                <Text style={styles.statNum}>30 Days</Text>
+                <Text style={styles.statLabel2}>Cycle</Text>
+              </View>
+           </View>
+        </View>
+
+        {/* ── Transaction History ── */}
+        <View style={styles.historySection}>
+          <View style={styles.sectionHeader}>
+            <View style={styles.titleRow}>
+               <TrendingUp size={18} color={colors.primary} />
+               <Text style={styles.sectionTitle}>Activity History</Text>
             </View>
-            <Text style={styles.errorTitle}>Something went wrong</Text>
-            <Text style={styles.errorText}>{error}</Text>
-            <TouchableOpacity style={styles.retryBtn} onPress={() => dispatch(fetchMyLedger())}>
-              <Text style={styles.retryText}>Retry</Text>
+            <TouchableOpacity>
+               <Text style={styles.filterText}>Recent</Text>
             </TouchableOpacity>
           </View>
-        ) : (
-          <FlatList
-            data={transactions}
-            keyExtractor={(item) => item._id}
-            renderItem={renderTransaction}
-            contentContainerStyle={styles.listContent}
-            showsVerticalScrollIndicator={false}
-            ListEmptyComponent={
-              <View style={styles.emptyContainer}>
-                <View style={styles.emptyIconBox}>
-                  <FileText size={32} color={colors.primary} />
-                </View>
-                <Text style={styles.emptyTitle}>No Transactions</Text>
-                <Text style={styles.emptyText}>Your payment history will appear here</Text>
-              </View>
-            }
-          />
-        )}
-      </View>
+
+          {error ? (
+            <View style={styles.errorContainer}>
+              <Info size={32} color="#E11D48" />
+              <Text style={styles.errorTitle}>Update Failed</Text>
+              <Text style={styles.errorText}>{error}</Text>
+              <TouchableOpacity style={styles.retryBtn} onPress={() => dispatch(fetchMyLedger())}>
+                <Text style={styles.retryText}>Retry Update</Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <View style={styles.listWrapper}>
+               {transactions && transactions.length > 0 ? (
+                 transactions.map(item => (
+                   <View key={item._id}>
+                     {renderTransaction({ item })}
+                   </View>
+                 ))
+               ) : (
+                 <View style={styles.emptyContainer}>
+                    <FileText size={48} color="#CBD5E1" strokeWidth={1} />
+                    <Text style={styles.emptyTitle}>Clear Records</Text>
+                    <Text style={styles.emptyText}>No financial activity found for this period.</Text>
+                 </View>
+               )}
+            </View>
+          )}
+        </View>
+      </ScrollView>
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background },
+  container: { flex: 1, backgroundColor: '#F8FAFC' },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
 
-  // Hero
-  heroSection: { padding: spacing.base, paddingBottom: 0 },
+  // Hero Section
+  heroSection: { paddingHorizontal: 24, paddingVertical: 20 },
   balanceCard: {
-    backgroundColor: colors.primary,
-    borderRadius: radius.xxl,
-    padding: spacing.xl,
+    borderRadius: 30,
+    padding: 24,
+    minHeight: 220,
     overflow: 'hidden',
-    position: 'relative',
-    ...shadows.medium,
+    ...shadows.lg,
   },
-  balanceTop: {
-    flexDirection: 'row', justifyContent: 'space-between',
-    alignItems: 'center', marginBottom: spacing.base,
+  cardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
   },
-  balanceIconBox: {
-    width: 46, height: 46, borderRadius: radius.lg,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    alignItems: 'center', justifyContent: 'center',
+  walletIconBox: {
+    width: 48,
+    height: 48,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255,255,255,0.12)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
   },
-  studentBadge: {
-    backgroundColor: 'rgba(255,255,255,0.15)',
-    paddingHorizontal: 12, paddingVertical: 5, borderRadius: radius.full,
+  statusBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: 'rgba(16, 185, 129, 0.2)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 100,
   },
-  studentId: { fontSize: 12, fontWeight: '700', color: 'rgba(255,255,255,0.9)' },
-  balanceLabel: { fontSize: 13, color: 'rgba(255,255,255,0.7)', fontWeight: '600', marginBottom: 6 },
-  balanceAmount: { fontSize: 40, fontWeight: '900', color: '#fff', letterSpacing: -1, marginBottom: spacing.base },
-  balanceStats: { flexDirection: 'row', alignItems: 'center' },
-  balanceStat: { flexDirection: 'row', alignItems: 'center', gap: 5 },
-  balanceStatText: { fontSize: 12, color: 'rgba(255,255,255,0.7)', fontWeight: '600' },
-  decorCircle1: {
-    position: 'absolute', width: 150, height: 150, borderRadius: 75,
-    backgroundColor: 'rgba(255,255,255,0.06)', bottom: -50, right: -30,
+  statusText: { color: '#fff', fontSize: 10, fontWeight: '800', textTransform: 'uppercase' },
+  balanceLabel: { color: 'rgba(255,255,255,0.6)', fontSize: 13, fontWeight: '600', marginBottom: 4 },
+  amountRow: { flexDirection: 'row', alignItems: 'baseline', gap: 4, marginBottom: 24 },
+  currency: { color: '#fff', fontSize: 24, fontWeight: '600' },
+  balanceAmount: { color: '#fff', fontSize: 42, fontWeight: '900', letterSpacing: -1 },
+  
+  cardFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.1)',
+    paddingTop: 20,
   },
-  decorCircle2: {
-    position: 'absolute', width: 90, height: 90, borderRadius: 45,
-    backgroundColor: 'rgba(255,255,255,0.06)', top: -20, right: 60,
+  idBox: {},
+  idLabel: { color: 'rgba(255,255,255,0.4)', fontSize: 9, fontWeight: '800', letterSpacing: 1 },
+  idValue: { color: '#fff', fontSize: 14, fontWeight: '700', marginTop: 2 },
+  payBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 12,
+    gap: 4,
   },
+  payBtnText: { color: '#044343', fontSize: 12, fontWeight: '800' },
 
-  // History
-  historySection: { flex: 1, paddingTop: spacing.xl },
-  sectionRow: {
-    flexDirection: 'row', alignItems: 'center',
-    paddingHorizontal: spacing.base, marginBottom: spacing.md, gap: spacing.sm,
-  },
-  sectionTitle: { fontSize: 17, fontWeight: '800', color: colors.text },
-  countBadge: {
-    backgroundColor: '#EEE8FF', paddingHorizontal: 10,
-    paddingVertical: 3, borderRadius: radius.full,
-  },
-  countText: { fontSize: 12, fontWeight: '800', color: colors.primary },
-  listContent: { paddingHorizontal: spacing.base, paddingBottom: 20 },
+  circle1: { position: 'absolute', width: 200, height: 200, borderRadius: 100, backgroundColor: 'rgba(255,255,255,0.03)', top: -80, right: -60 },
+  circle2: { position: 'absolute', width: 120, height: 120, borderRadius: 60, backgroundColor: 'rgba(255,255,255,0.03)', bottom: -40, left: 40 },
 
-  // Transaction card
+  // Quick Stats
+  quickStats: {
+    flexDirection: 'row',
+    backgroundColor: '#fff',
+    marginHorizontal: 24,
+    borderRadius: 24,
+    padding: 20,
+    marginBottom: 24,
+    alignItems: 'center',
+    borderWidth: 1.5,
+    borderColor: '#F1F5F9',
+    ...shadows.soft,
+  },
+  statBox: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 12 },
+  statIcon: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+  statNum: { fontSize: 16, fontWeight: '800', color: '#0F172A' },
+  statLabel2: { fontSize: 11, color: '#64748B', fontWeight: '600' },
+  statDivider2: { width: 1, height: 30, backgroundColor: '#F1F5F9', marginHorizontal: 10 },
+
+  // History Section
+  historySection: { paddingHorizontal: 24, paddingBottom: 40 },
+  sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
+  titleRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  sectionTitle: { fontSize: 18, fontWeight: '800', color: '#0F172A' },
+  filterText: { fontSize: 13, fontWeight: '700', color: colors.primary },
+
+  listWrapper: { gap: 12 },
   txCard: {
-    flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff',
-    padding: spacing.base, borderRadius: radius.xl, marginBottom: spacing.sm, ...shadows.card,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    padding: 16,
+    borderRadius: 24,
+    borderWidth: 1.5,
+    borderColor: '#F1F5F9',
+    ...shadows.card,
   },
-  txIconBox: {
-    width: 44, height: 44, borderRadius: radius.md,
-    justifyContent: 'center', alignItems: 'center', marginRight: spacing.md,
-  },
+  txIconBox: { width: 48, height: 48, borderRadius: 16, alignItems: 'center', justifyContent: 'center', marginRight: 16 },
   txInfo: { flex: 1 },
-  txTitle: { fontSize: 14, fontWeight: '700', color: colors.text, marginBottom: 4 },
-  txDateRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  txDate: { fontSize: 11, color: colors.lightText, fontWeight: '500' },
+  txTitle: { fontSize: 14, fontWeight: '800', color: '#1E293B', marginBottom: 4 },
+  txDateRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  txDate: { fontSize: 12, fontWeight: '600', color: '#94A3B8' },
   txAmountCol: { alignItems: 'flex-end' },
-  txAmount: { fontSize: 15, fontWeight: '800' },
-  txType: {
-    fontSize: 9, color: colors.lightText,
-    textTransform: 'uppercase', fontWeight: '700', marginTop: 2, letterSpacing: 0.5,
-  },
+  txAmount: { fontSize: 16, fontWeight: '900', marginBottom: 6 },
+  typeBadge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8 },
+  txType: { fontSize: 9, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 0.5 },
 
-  // Error
-  errorContainer: { alignItems: 'center', paddingTop: 48, paddingHorizontal: 40 },
-  errorIconBox: {
-    width: 68, height: 68, borderRadius: 34, backgroundColor: '#FFF0F0',
-    alignItems: 'center', justifyContent: 'center', marginBottom: spacing.base,
-  },
-  errorTitle: { fontSize: 16, fontWeight: '800', color: colors.text, marginBottom: 6 },
-  errorText: { color: colors.lightText, textAlign: 'center', fontSize: 13, fontWeight: '500', marginBottom: spacing.xl },
-  retryBtn: {
-    backgroundColor: colors.primary, paddingHorizontal: 28,
-    paddingVertical: 12, borderRadius: radius.xl, ...shadows.soft,
-  },
-  retryText: { color: '#fff', fontWeight: '800', fontSize: 14 },
+  // States
+  errorContainer: { alignItems: 'center', padding: 40 },
+  errorTitle: { fontSize: 18, fontWeight: '800', color: '#0F172A', marginTop: 12, marginBottom: 4 },
+  errorText: { fontSize: 14, color: '#64748B', textAlign: 'center', lineHeight: 20, marginBottom: 24 },
+  retryBtn: { backgroundColor: colors.primary, paddingHorizontal: 24, paddingVertical: 12, borderRadius: 16 },
+  retryText: { color: '#fff', fontWeight: '800' },
 
-  // Empty
-  emptyContainer: { alignItems: 'center', paddingTop: 56 },
-  emptyIconBox: {
-    width: 72, height: 72, borderRadius: 36, backgroundColor: '#EEE8FF',
-    alignItems: 'center', justifyContent: 'center', marginBottom: spacing.base,
-  },
-  emptyTitle: { fontSize: 17, fontWeight: '800', color: colors.text, marginBottom: 6 },
-  emptyText: { fontSize: 13, color: colors.lightText, fontWeight: '500', textAlign: 'center' },
+  emptyContainer: { alignItems: 'center', paddingVertical: 40 },
+  emptyTitle: { fontSize: 18, fontWeight: '800', color: '#0F172A', marginTop: 16, marginBottom: 4 },
+  emptyText: { fontSize: 14, color: '#94A3B8', textAlign: 'center', fontWeight: '500' },
 });
 
 export default Ledger;

@@ -45,39 +45,40 @@ const SendNotification = () => {
   };
 
   return (
-    <div className="max-w-4xl mx-auto">
-      <div className="bg-white rounded-2xl p-8 md:p-10 shadow-sm border border-slate-100">
-        <div className="flex items-center gap-4 mb-10">
-          <div className="w-16 h-16 rounded-2xl bg-teal-50 flex items-center justify-center text-[#044343]">
-             <Bell size={32} />
-          </div>
-          <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-slate-900 tracking-tight">Push Notifications</h1>
-            <p className="text-sm text-slate-400 font-medium mt-1">
-              {isSuperAdmin 
-                ? 'Global broadcast and targeted mobile notifications' 
-                : `Send notifications to ${user?.tenantId?.name || 'your library'} members`}
-            </p>
-          </div>
+    <div className="space-y-6 animate-slide-up max-w-5xl mx-auto">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Notification Center</h1>
+          <p className="text-sm text-slate-400 font-medium mt-1">
+            {isSuperAdmin 
+              ? 'Global broadcast and targeted mobile notifications' 
+              : `Send notifications to ${user?.tenantId?.name || 'your library'} members`}
+          </p>
         </div>
+      </div>
 
-        <form onSubmit={handleSubmit} className="space-y-8">
-          {/* Target Selection */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Configuration Card */}
+        <div className="card p-6 lg:col-span-1 space-y-6">
+          <h3 className="text-[12px] font-bold text-slate-900 uppercase tracking-widest mb-4">Targeting</h3>
+          
+          <div className="space-y-3">
             {isSuperAdmin && (
               <button
                 type="button"
                 onClick={() => setFormData({ ...formData, target: 'all' })}
-                className={`p-6 rounded-2xl border-2 transition-all flex items-center gap-4 ${
+                className={`w-full p-4 rounded-xl border transition-all flex items-center gap-4 ${
                   formData.target === 'all' 
                   ? 'border-[#044343] bg-teal-50/50 text-[#044343]' 
-                  : 'border-slate-100 hover:border-slate-200 text-slate-500'
+                  : 'border-slate-100 hover:border-slate-200 text-slate-500 bg-white'
                 }`}
               >
-                <Users size={24} />
+                <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${formData.target === 'all' ? 'bg-white shadow-sm' : 'bg-slate-50'}`}>
+                  <Users size={18} />
+                </div>
                 <div className="text-left">
-                   <p className="font-bold text-sm">Global</p>
-                   <p className="text-[10px] uppercase font-bold tracking-widest opacity-70">Everyone</p>
+                   <p className="font-bold text-sm leading-tight">Global</p>
+                   <p className="text-[10px] uppercase font-bold tracking-widest opacity-70 mt-0.5">Broadcast to all</p>
                 </div>
               </button>
             )}
@@ -85,109 +86,141 @@ const SendNotification = () => {
             <button
               type="button"
               onClick={() => setFormData({ ...formData, target: 'library' })}
-              className={`p-6 rounded-2xl border-2 transition-all flex items-center gap-4 ${
+              className={`w-full p-4 rounded-xl border transition-all flex items-center gap-4 ${
                 formData.target === 'library' 
                 ? 'border-[#044343] bg-teal-50/50 text-[#044343]' 
-                : 'border-slate-100 hover:border-slate-200 text-slate-500'
+                : 'border-slate-100 hover:border-slate-200 text-slate-500 bg-white'
               }`}
             >
-              <Library size={24} />
+              <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${formData.target === 'library' ? 'bg-white shadow-sm' : 'bg-slate-50'}`}>
+                <Library size={18} />
+              </div>
               <div className="text-left">
-                 <p className="font-bold text-sm">{isSuperAdmin ? 'Library' : 'All Members'}</p>
-                 <p className="text-[10px] uppercase font-bold tracking-widest opacity-70">{isSuperAdmin ? 'Target Tenant' : 'All your users'}</p>
+                 <p className="font-bold text-sm leading-tight">{isSuperAdmin ? 'Library' : 'All Members'}</p>
+                 <p className="text-[10px] uppercase font-bold tracking-widest opacity-70 mt-0.5">{isSuperAdmin ? 'Target Tenant' : 'Every student'}</p>
               </div>
             </button>
 
             <button
               type="button"
               onClick={() => setFormData({ ...formData, target: 'single' })}
-              className={`p-6 rounded-2xl border-2 transition-all flex items-center gap-4 ${
+              className={`w-full p-4 rounded-xl border transition-all flex items-center gap-4 ${
                 formData.target === 'single' 
                 ? 'border-[#044343] bg-teal-50/50 text-[#044343]' 
-                : 'border-slate-100 hover:border-slate-200 text-slate-500'
+                : 'border-slate-100 hover:border-slate-200 text-slate-500 bg-white'
               }`}
             >
-              <UserIcon size={24} />
+              <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${formData.target === 'single' ? 'bg-white shadow-sm' : 'bg-slate-50'}`}>
+                <UserIcon size={18} />
+              </div>
               <div className="text-left">
-                 <p className="font-bold text-sm">Individual</p>
-                 <p className="text-[10px] uppercase font-bold tracking-widest opacity-70">Single Member</p>
+                 <p className="font-bold text-sm leading-tight">Individual</p>
+                 <p className="text-[10px] uppercase font-bold tracking-widest opacity-70 mt-0.5">Single Member</p>
               </div>
             </button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {isSuperAdmin && formData.target === 'library' && (
-              <div className="space-y-2">
-                <label className="text-[11px] font-bold text-slate-400 uppercase tracking-widest ml-1">Select Library</label>
-                <select
-                  value={formData.libraryId}
-                  onChange={(e) => setFormData({ ...formData, libraryId: e.target.value })}
-                  className="w-full p-4 bg-slate-50 border border-slate-100 rounded-xl outline-none font-bold text-sm focus:border-[#044343] transition-colors"
-                >
-                  <option value="">Choose Library...</option>
-                  {tenants.map(t => (
-                    <option key={t._id} value={t._id}>{t.name}</option>
-                  ))}
-                </select>
+          {(formData.target === 'library' || formData.target === 'single') && (
+            <div className="pt-6 border-t border-slate-50 space-y-4">
+              {isSuperAdmin && formData.target === 'library' && (
+                <div className="space-y-2">
+                  <label className="label">Select Library</label>
+                  <select
+                    value={formData.libraryId}
+                    onChange={(e) => setFormData({ ...formData, libraryId: e.target.value })}
+                    className="input"
+                  >
+                    <option value="">Choose Library...</option>
+                    {tenants.map(t => (
+                      <option key={t._id} value={t._id}>{t.name}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {formData.target === 'single' && (
+                <div className="space-y-2">
+                  <label className="label">Select Recipient</label>
+                  <select
+                    value={formData.userId}
+                    onChange={(e) => setFormData({ ...formData, userId: e.target.value })}
+                    className="input"
+                  >
+                    <option value="">Search user...</option>
+                    {users.map(u => (
+                      <option key={u._id} value={u._id}>{u.fullName} ({u.email})</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Message Card */}
+        <div className="lg:col-span-2 card p-8">
+          <form onSubmit={handleSubmit} className="space-y-8">
+            <div className="flex items-center gap-4 mb-2">
+              <div className="w-12 h-12 rounded-2xl bg-teal-50 text-[#044343] flex items-center justify-center shadow-sm">
+                <Bell size={24} />
               </div>
-            )}
-
-            {formData.target === 'single' && (
-              <div className="space-y-2">
-                <label className="text-[11px] font-bold text-slate-400 uppercase tracking-widest ml-1">Select Recipient</label>
-                <select
-                  value={formData.userId}
-                  onChange={(e) => setFormData({ ...formData, userId: e.target.value })}
-                  className="w-full p-4 bg-slate-50 border border-slate-100 rounded-xl outline-none font-bold text-sm focus:border-[#044343] transition-colors"
-                >
-                  <option value="">Search user...</option>
-                  {users.map(u => (
-                    <option key={u._id} value={u._id}>{u.fullName} ({u.email})</option>
-                  ))}
-                </select>
+              <div>
+                <h3 className="text-lg font-bold text-slate-900 tracking-tight">Compose Message</h3>
+                <p className="text-xs text-slate-400 font-medium">Craft your push notification content.</p>
               </div>
-            )}
-          </div>
+            </div>
 
-          <div className="space-y-2">
-            <label className="text-[11px] font-bold text-slate-400 uppercase tracking-widest ml-1">Notification Title</label>
-            <input
-              type="text"
-              placeholder="e.g. Library closed for holiday"
-              value={formData.title}
-              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-              className="w-full p-4 bg-slate-50 border border-slate-100 rounded-xl focus:border-[#044343] transition-all outline-none font-bold text-sm"
-            />
-          </div>
+            <div className="space-y-6">
+              <div className="space-y-2">
+                <label className="label uppercase tracking-widest text-[10px] font-bold text-slate-400">Notification Title</label>
+                <input
+                  type="text"
+                  placeholder="e.g. System Update or Holiday Notice"
+                  value={formData.title}
+                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  className="input h-12 px-4 font-semibold text-slate-900 bg-slate-50/50 border-slate-200 focus:bg-white"
+                />
+              </div>
 
-          <div className="space-y-2">
-            <label className="text-[11px] font-bold text-slate-400 uppercase tracking-widest ml-1">Message Body</label>
-            <textarea
-              rows={4}
-              placeholder="Type your message here..."
-              value={formData.body}
-              onChange={(e) => setFormData({ ...formData, body: e.target.value })}
-              className="w-full p-4 bg-slate-50 border border-slate-100 rounded-xl focus:border-[#044343] transition-all outline-none font-bold text-sm"
-            />
-          </div>
+              <div className="space-y-2">
+                <label className="label uppercase tracking-widest text-[10px] font-bold text-slate-400">Message Body</label>
+                <textarea
+                  rows={6}
+                  placeholder="Type the message content here..."
+                  value={formData.body}
+                  onChange={(e) => setFormData({ ...formData, body: e.target.value })}
+                  className="input h-auto py-4 px-4 font-semibold text-slate-900 bg-slate-50/50 border-slate-200 focus:bg-white resize-none"
+                />
+              </div>
+            </div>
 
-          <div className="bg-amber-50 rounded-2xl p-5 flex items-start gap-4 border border-amber-100/50">
-            <Info className="text-amber-500 flex-shrink-0 mt-0.5" size={18} />
-            <p className="text-xs text-amber-700 font-medium leading-relaxed">
-              This will send a real-time push notification via Firebase Cloud Messaging.
-              Only users who have opened the mobile app and granted permissions will receive this.
-            </p>
-          </div>
+            <div className="bg-amber-50 rounded-2xl p-5 flex items-start gap-4 border border-amber-100/50">
+              <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center shadow-sm shrink-0">
+                <Info className="text-amber-500" size={16} />
+              </div>
+              <p className="text-[11px] text-amber-700 font-bold leading-relaxed uppercase tracking-tight">
+                Notifications are sent in real-time. Only users who have granted permissions on the mobile app will receive this broadcast.
+              </p>
+            </div>
 
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="w-full h-14 bg-[#044343] text-white rounded-xl font-bold flex items-center justify-center gap-3 hover:bg-[#033636] transition-all shadow-lg shadow-teal-900/10 disabled:opacity-70"
-          >
-            {isLoading ? <Loader2 className="animate-spin" /> : <Send size={18} />}
-            <span className="uppercase tracking-widest text-xs">{isLoading ? 'Sending...' : 'Broadcast Notification'}</span>
-          </button>
-        </form>
+            <div className="flex justify-end pt-4">
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="btn btn-primary h-12 px-10 rounded-xl font-bold text-sm shadow-lg shadow-teal-900/10 min-w-[200px]"
+              >
+                {isLoading ? (
+                  <Loader2 className="animate-spin" size={20} />
+                ) : (
+                  <>
+                    <Send size={18} />
+                    <span className="uppercase tracking-widest ml-2">Broadcast Now</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
   );

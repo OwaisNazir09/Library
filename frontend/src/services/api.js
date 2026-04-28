@@ -2,8 +2,8 @@ import axios from 'axios';
 import { toast } from 'react-hot-toast';
 
 const api = axios.create({
-  baseURL: 'https://library-bice-beta-70.vercel.app/api',
-  
+  baseURL: 'http://localhost:3245/api',
+
   headers: {
     'Content-Type': 'application/json',
   },

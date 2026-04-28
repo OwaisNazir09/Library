@@ -9,18 +9,20 @@ import { useSelector, useDispatch } from 'react-redux';
 import {
   Search, BookOpen, GraduationCap, FileText,
   File, ClipboardList, Bell, SlidersHorizontal,
-  Bookmark, Share2, Quote
+  Bookmark, Share2, Quote, ArrowRight, Sparkles,
+  TrendingUp, Clock, ChevronRight
 } from 'lucide-react-native';
 import { fetchPublicResources, fetchAllResources } from '../store/resourceSlice';
 import api from '../services/api';
 import { colors } from '../utils/colors';
-import { spacing, radius, shadows, common, typography } from '../utils/theme';
+import { spacing, radius, shadows } from '../utils/theme';
 import { ErrorState, NoResultsState } from '../components/EmptyState';
 import SkeletonCard from '../components/SkeletonCard';
+import LinearGradient from 'react-native-linear-gradient';
 
 const { width } = Dimensions.get('window');
 const COLUMN_COUNT = 2;
-const ITEM_WIDTH = (width - spacing.base * 2 - spacing.sm) / COLUMN_COUNT;
+const ITEM_WIDTH = (width - spacing.base * 2 - spacing.md) / COLUMN_COUNT;
 
 const CATEGORIES = [
   { id: 'All', label: 'All', icon: BookOpen },
@@ -86,14 +88,14 @@ export default function Home({ navigation }) {
     <TouchableOpacity
       style={styles.bookCard}
       onPress={() => navigation.navigate('ResourceDetail', { resource: item })}
-      activeOpacity={0.85}
+      activeOpacity={0.9}
     >
       <View style={styles.imageContainer}>
         {item.coverImage ? (
           <Image source={{ uri: item.coverImage }} style={styles.bookCover} />
         ) : (
           <View style={styles.placeholderCover}>
-            <BookOpen size={36} color={colors.primary} strokeWidth={1.5} />
+            <BookOpen size={32} color="#94A3B8" strokeWidth={1} />
           </View>
         )}
         {item.visibility === 'global' && (
@@ -105,24 +107,34 @@ export default function Home({ navigation }) {
       <View style={styles.bookInfo}>
         <Text style={styles.bookTitle} numberOfLines={2}>{item.title}</Text>
         <Text style={styles.bookCategory} numberOfLines={1}>{item.category}</Text>
+        
+        <View style={styles.bookFooter}>
+           <Text style={styles.readNow}>View Details</Text>
+           <View style={styles.arrowCircle}>
+             <ChevronRight size={10} color="#fff" strokeWidth={3} />
+           </View>
+        </View>
       </View>
     </TouchableOpacity>
   );
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
+      <StatusBar barStyle="dark-content" backgroundColor="#F8FAFC" />
 
       {/* ── Header ── */}
       <View style={styles.header}>
-        <View>
-          <Text style={styles.greeting}>
-            {!isGuest ? `Hi, ${user?.fullName?.split(' ')[0] || 'Member'}!` : 'Hello, Guest!'}
-          </Text>
-          <Text style={styles.tagline}>Explore new resources</Text>
+        <View style={styles.brandRow}>
+          <Image source={require('../../assets/appicon.png')} style={styles.logo} />
+          <View>
+            <Text style={styles.greeting}>
+              {!isGuest ? `Hi, ${user?.fullName?.split(' ')[0] || 'Member'} 👋` : 'Welcome back!'}
+            </Text>
+            <Text style={styles.tagline}>Your digital library pulse</Text>
+          </View>
         </View>
-        <TouchableOpacity style={styles.notifBtn}>
-          <Bell size={20} color={colors.primary} />
+        <TouchableOpacity style={styles.notifBtn} onPress={() => navigation.navigate('Notifications')}>
+          <Bell size={20} color="#64748B" />
           <View style={styles.notifDot} />
         </TouchableOpacity>
       </View>
@@ -130,11 +142,11 @@ export default function Home({ navigation }) {
       {/* ── Search Bar ── */}
       <View style={styles.searchRow}>
         <View style={styles.searchBox}>
-          <Search size={18} color={colors.lightText} />
+          <Search size={18} color="#94A3B8" />
           <TextInput
             style={styles.searchInput}
-            placeholder="Search resources..."
-            placeholderTextColor={colors.lightText}
+            placeholder="Search titles or authors..."
+            placeholderTextColor="#94A3B8"
             value={search}
             onChangeText={setSearch}
             onSubmitEditing={loadResources}
@@ -146,38 +158,48 @@ export default function Home({ navigation }) {
         </TouchableOpacity>
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false} refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={colors.primary} colors={[colors.primary]} />
-      }>
-
+      <ScrollView 
+        showsVerticalScrollIndicator={false} 
+        contentContainerStyle={{ paddingBottom: 100 }}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={colors.primary} />
+        }
+      >
         {/* ── Quote of the Day ── */}
         {dailyQuote && (
           <View style={styles.quoteWrapper}>
-            <View style={styles.quoteCard}>
+            <LinearGradient
+              colors={['#044343', '#0F172A']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.quoteCard}
+            >
               <View style={styles.quoteHeader}>
-                <View style={styles.quoteTitleBox}>
-                  <Quote size={16} color="#fff" fill="#fff" />
-                  <Text style={styles.quoteTitle}>Quote of the Day</Text>
+                <View style={styles.quoteBadge}>
+                  <Sparkles size={12} color="#fff" />
+                  <Text style={styles.quoteBadgeText}>Daily Inspiration</Text>
                 </View>
+                <Quote size={20} color="rgba(255,255,255,0.2)" fill="rgba(255,255,255,0.1)" />
               </View>
               <Text style={styles.quoteText}>“{dailyQuote.quote}”</Text>
-              <Text style={styles.quoteAuthor}>— {dailyQuote.author}</Text>
-              <View style={styles.quoteActions}>
-                <TouchableOpacity style={styles.quoteBtn}>
-                  <Bookmark size={14} color="#fff" />
-                  <Text style={styles.quoteBtnText}>Save</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.quoteBtn}>
-                  <Share2 size={14} color="#fff" />
-                  <Text style={styles.quoteBtnText}>Share</Text>
-                </TouchableOpacity>
+              <View style={styles.quoteFooter}>
+                <Text style={styles.quoteAuthor}>— {dailyQuote.author}</Text>
+                <View style={styles.quoteActions}>
+                  <TouchableOpacity style={styles.miniBtn}>
+                    <Bookmark size={14} color="#fff" />
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.miniBtn}>
+                    <Share2 size={14} color="#fff" />
+                  </TouchableOpacity>
+                </View>
               </View>
-            </View>
+            </LinearGradient>
           </View>
         )}
 
         {/* ── Category Chips ── */}
         <View style={styles.categorySection}>
+          <Text style={styles.label}>Explore Categories</Text>
           <FlatList
             data={CATEGORIES}
             horizontal
@@ -193,7 +215,7 @@ export default function Home({ navigation }) {
                   onPress={() => setCategory(item.id)}
                   activeOpacity={0.8}
                 >
-                  <Icon size={12} color={active ? '#fff' : colors.primary} strokeWidth={2} style={{ marginRight: 5 }} />
+                  <Icon size={14} color={active ? '#fff' : '#64748B'} strokeWidth={2} />
                   <Text style={[styles.catText, active && styles.catTextActive]}>{item.label}</Text>
                 </TouchableOpacity>
               );
@@ -203,16 +225,17 @@ export default function Home({ navigation }) {
 
         {/* ── Section Header ── */}
         <View style={styles.sectionRow}>
-          <Text style={styles.sectionTitle}>
-            {category === 'All' ? 'All Resources' : category}
-          </Text>
+          <View style={styles.titleWithIcon}>
+             <TrendingUp size={16} color={colors.primary} />
+             <Text style={styles.sectionTitle}>Library Pulse</Text>
+          </View>
           <TouchableOpacity>
-            <Text style={styles.seeAll}>See all</Text>
+            <Text style={styles.seeAll}>See All</Text>
           </TouchableOpacity>
         </View>
 
         {/* ── Grid Content ── */}
-        <View style={{ paddingBottom: 80 }}>
+        <View>
           {loading && !refreshing ? (
             <View style={styles.skeletonGrid}>
               {[1, 2, 3, 4].map(i => (
@@ -235,9 +258,19 @@ export default function Home({ navigation }) {
 
       {/* ── Guest Banner ── */}
       {isGuest && (
-        <TouchableOpacity style={styles.guestBanner} onPress={() => navigation.navigate('Login')}>
-          <Text style={styles.guestText}>Sign in to unlock exclusive library resources →</Text>
-        </TouchableOpacity>
+        <View style={styles.guestContainer}>
+          <TouchableOpacity style={styles.guestBanner} onPress={() => navigation.navigate('Login')}>
+            <LinearGradient
+              colors={[colors.primary, '#033636']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.guestGradient}
+            >
+              <Text style={styles.guestText}>Sign in to unlock exclusive library resources</Text>
+              <ArrowRight size={16} color="#fff" />
+            </LinearGradient>
+          </TouchableOpacity>
+        </View>
       )}
     </View>
   );
@@ -246,158 +279,243 @@ export default function Home({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: '#F8FAFC',
   },
-
-  // Header
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: spacing.base,
-    paddingTop: 56,
+    paddingTop: 60,
     paddingBottom: spacing.md,
-    backgroundColor: colors.background,
+  },
+  brandRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  logo: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    resizeMode: 'contain',
   },
   greeting: {
-    fontSize: 24,
-    fontWeight: '900',
-    color: colors.text,
-    letterSpacing: -0.3,
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#0F172A',
+    letterSpacing: -0.2,
   },
   tagline: {
-    fontSize: 13,
-    color: colors.lightText,
-    marginTop: 2,
-    fontWeight: '500',
+    fontSize: 12,
+    color: '#64748B',
+    fontWeight: '600',
+    marginTop: 1,
   },
   notifBtn: {
     width: 44,
     height: 44,
-    borderRadius: radius.lg,
-    backgroundColor: '#EEE8FF',
+    borderRadius: 14,
+    backgroundColor: '#fff',
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#F1F5F9',
+    ...shadows.soft,
   },
   notifDot: {
     position: 'absolute',
-    top: 8,
-    right: 8,
-    width: 8,
-    height: 8,
+    top: 12,
+    right: 12,
+    width: 7,
+    height: 7,
     borderRadius: 4,
-    backgroundColor: colors.secondary,
+    backgroundColor: '#F43F5E',
     borderWidth: 1.5,
-    borderColor: colors.background,
+    borderColor: '#fff',
   },
-
-  // Search
   searchRow: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: spacing.base,
-    marginBottom: spacing.md,
-    gap: spacing.sm,
+    marginBottom: spacing.lg,
+    gap: 12,
   },
   searchBox: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#fff',
-    borderRadius: radius.xl,
-    paddingHorizontal: spacing.md,
-    height: 48,
+    borderRadius: 16,
+    paddingHorizontal: 16,
+    height: 52,
+    borderWidth: 1,
+    borderColor: '#F1F5F9',
     ...shadows.card,
   },
   searchInput: {
     flex: 1,
-    marginLeft: spacing.sm,
+    marginLeft: 10,
     fontSize: 14,
-    color: colors.text,
-    fontWeight: '500',
+    color: '#1E293B',
+    fontWeight: '600',
   },
   filterBtn: {
-    width: 48,
-    height: 48,
-    borderRadius: radius.lg,
+    width: 52,
+    height: 52,
+    borderRadius: 16,
     backgroundColor: colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
     ...shadows.soft,
   },
-
-  // Categories
+  quoteWrapper: {
+    paddingHorizontal: spacing.base,
+    marginBottom: spacing.xl,
+  },
+  quoteCard: {
+    borderRadius: 24,
+    padding: 24,
+    ...shadows.lg,
+  },
+  quoteHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 16,
+  },
+  quoteBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    borderRadius: 100,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+  },
+  quoteBadgeText: {
+    color: '#fff',
+    fontSize: 10,
+    fontWeight: '800',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  quoteText: {
+    color: '#fff',
+    fontSize: 17,
+    fontWeight: '700',
+    fontStyle: 'italic',
+    lineHeight: 26,
+    marginBottom: 20,
+    letterSpacing: -0.2,
+  },
+  quoteFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.1)',
+    paddingTop: 16,
+  },
+  quoteAuthor: {
+    color: 'rgba(255,255,255,0.7)',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  quoteActions: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  miniBtn: {
+    width: 34,
+    height: 34,
+    borderRadius: 10,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  label: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: '#1E293B',
+    paddingHorizontal: spacing.base,
+    marginBottom: 12,
+  },
   categorySection: {
-    marginBottom: spacing.base,
+    marginBottom: spacing.xl,
   },
   categoryList: {
     paddingHorizontal: spacing.base,
-    gap: spacing.sm,
+    gap: 10,
   },
   catChip: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: spacing.md,
-    paddingVertical: 7,
-    borderRadius: radius.full,
-    backgroundColor: '#EEE8FF',
-    marginRight: spacing.sm,
+    gap: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 14,
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#F1F5F9',
+    ...shadows.soft,
   },
   catChipActive: {
     backgroundColor: colors.primary,
-    ...shadows.soft,
+    borderColor: colors.primary,
   },
   catText: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '700',
-    color: colors.primary,
+    color: '#64748B',
   },
   catTextActive: {
     color: '#fff',
   },
-
-  // Section header
   sectionRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: spacing.base,
-    marginBottom: spacing.md,
+    marginBottom: 16,
+  },
+  titleWithIcon: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
   },
   sectionTitle: {
-    fontSize: 17,
+    fontSize: 16,
     fontWeight: '800',
-    color: colors.text,
+    color: '#0F172A',
   },
   seeAll: {
     fontSize: 13,
     fontWeight: '700',
     color: colors.primary,
   },
-
-  // Grid
-  list: {
-    paddingHorizontal: spacing.base,
-    paddingBottom: spacing.xl,
-  },
-  row: {
-    justifyContent: 'space-between',
-  },
   bookCard: {
     width: ITEM_WIDTH,
-    marginBottom: spacing.base,
-    backgroundColor: colors.card,
-    borderRadius: radius.xl,
-    padding: spacing.sm,
+    marginBottom: 20,
+    backgroundColor: '#fff',
+    borderRadius: 24,
+    padding: 12,
+    borderWidth: 1.5,
+    borderColor: '#F1F5F9',
     ...shadows.card,
+    elevation: 3,
   },
   imageContainer: {
     width: '100%',
-    aspectRatio: 0.72,
-    borderRadius: radius.lg,
-    backgroundColor: '#F0EAFF',
+    aspectRatio: 0.8,
+    borderRadius: 18,
+    backgroundColor: '#F8FAFC',
     overflow: 'hidden',
-    marginBottom: spacing.sm,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#F1F5F9',
   },
   bookCover: {
     width: '100%',
@@ -408,40 +526,65 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#EEE8FF',
   },
   freeBadge: {
     position: 'absolute',
-    top: 8,
-    left: 8,
-    backgroundColor: colors.secondary,
-    paddingHorizontal: 7,
-    paddingVertical: 3,
-    borderRadius: radius.sm,
+    top: 10,
+    left: 10,
+    backgroundColor: '#0F766E',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
   },
   freeBadgeText: {
     color: '#fff',
     fontSize: 8,
     fontWeight: '900',
-    letterSpacing: 0.5,
+    letterSpacing: 1,
+  },
+  bookInfo: {
+    paddingHorizontal: 2,
   },
   bookTitle: {
     fontSize: 13,
-    fontWeight: '700',
-    color: colors.text,
-    paddingHorizontal: 4,
-    marginBottom: 2,
+    fontWeight: '800',
+    color: '#0F172A',
+    marginBottom: 4,
     lineHeight: 18,
   },
   bookCategory: {
     fontSize: 10,
     fontWeight: '600',
-    color: colors.lightText,
-    paddingHorizontal: 4,
-    marginBottom: 4,
+    color: '#64748B',
+    marginBottom: 12,
   },
-
-  // Skeleton
+  bookFooter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: '#F1F5F9',
+  },
+  readNow: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#0F172A',
+  },
+  arrowCircle: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  gridContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    paddingHorizontal: spacing.base,
+    justifyContent: 'space-between',
+  },
   skeletonGrid: {
     padding: spacing.base,
     flexDirection: 'row',
@@ -450,99 +593,31 @@ const styles = StyleSheet.create({
   },
   skeletonWrapper: {
     width: ITEM_WIDTH,
-    marginBottom: spacing.base,
+    marginBottom: 20,
   },
-
-  // Guest
-  guestBanner: {
-    backgroundColor: colors.primary,
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.base,
-    alignItems: 'center',
+  guestContainer: {
     position: 'absolute',
-    bottom: 0, left: 0, right: 0,
+    bottom: 24,
+    left: spacing.base,
+    right: spacing.base,
+  },
+  guestBanner: {
+    borderRadius: 18,
+    overflow: 'hidden',
+    ...shadows.lg,
+  },
+  guestGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 16,
+    paddingHorizontal: 20,
   },
   guestText: {
+    flex: 1,
     fontSize: 13,
     color: '#fff',
-    fontWeight: '700',
-    textAlign: 'center',
-  },
-
-  // Quote
-  quoteWrapper: {
-    paddingHorizontal: spacing.base,
-    marginBottom: spacing.md,
-  },
-  quoteCard: {
-    backgroundColor: '#044343',
-    borderRadius: radius.xxl,
-    padding: spacing.xl,
-    shadowColor: '#044343',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.3,
-    shadowRadius: 12,
-    elevation: 8,
-  },
-  quoteHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: spacing.md,
-  },
-  quoteTitleBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    backgroundColor: 'rgba(255,255,255,0.15)',
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: radius.full,
-  },
-  quoteTitle: {
-    color: '#fff',
-    fontSize: 12,
     fontWeight: '800',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  quoteText: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: '700',
-    fontStyle: 'italic',
-    lineHeight: 26,
-    marginBottom: spacing.md,
-  },
-  quoteAuthor: {
-    color: 'rgba(255,255,255,0.8)',
-    fontSize: 13,
-    fontWeight: '600',
-    textAlign: 'right',
-    marginBottom: spacing.xl,
-  },
-  quoteActions: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-  },
-  quoteBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: radius.lg,
-  },
-  quoteBtnText: {
-    color: '#fff',
-    fontSize: 12,
-    fontWeight: '700',
-  },
-  gridContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    paddingHorizontal: spacing.base,
-    justifyContent: 'space-between',
+    marginRight: 10,
   },
 });

@@ -1,7 +1,7 @@
 import { StyleSheet, Platform } from 'react-native';
 import { colors } from './colors';
 
-// ─── Spacing System (8pt grid) ────────────────────────────────────────────────
+// ─── SaaS Layout System ───────────────────────────────────────────────────────
 export const spacing = {
   xs: 4,
   sm: 8,
@@ -13,52 +13,66 @@ export const spacing = {
   xxxl: 40,
 };
 
+export const layout = {
+  pagePadding: 24,
+  headerHeight: 70,
+  cardPadding: 18,
+};
+
+// ─── Solid Border System ──────────────────────────────────────────────────────
+export const borders = {
+  width: 1.5,
+  color: '#F1F5F9',
+  light: '#F8FAFC',
+  primary: colors.primary + '25',
+};
+
 // ─── Border Radii ─────────────────────────────────────────────────────────────
 export const radius = {
-  sm: 8,
-  md: 12,
-  lg: 16,
+  sm: 10,
+  md: 14,
+  lg: 18,
   xl: 20,
   xxl: 24,
-  pill: 50,
+  xxxl: 28,
+  pill: 100,
   full: 999,
 };
 
 // ─── Typography ───────────────────────────────────────────────────────────────
 export const typography = {
-  h1: { fontSize: 28, fontWeight: '900', color: colors.text, letterSpacing: -0.5 },
-  h2: { fontSize: 22, fontWeight: '800', color: colors.text },
-  h3: { fontSize: 18, fontWeight: '800', color: colors.text },
-  h4: { fontSize: 16, fontWeight: '700', color: colors.text },
-  body: { fontSize: 14, fontWeight: '500', color: colors.textSecondary, lineHeight: 22 },
-  bodySmall: { fontSize: 12, fontWeight: '500', color: colors.lightText, lineHeight: 18 },
-  caption: { fontSize: 11, fontWeight: '700', color: colors.lightText, letterSpacing: 0.5 },
-  label: { fontSize: 11, fontWeight: '800', color: colors.lightText, textTransform: 'uppercase', letterSpacing: 1 },
-  price: { fontSize: 20, fontWeight: '900', color: colors.primary },
+  h1: { fontSize: 26, fontWeight: '900', color: colors.text, letterSpacing: -0.5 },
+  h2: { fontSize: 20, fontWeight: '900', color: colors.text, letterSpacing: -0.3 },
+  h3: { fontSize: 17, fontWeight: '800', color: colors.text },
+  h4: { fontSize: 15, fontWeight: '800', color: colors.textSecondary },
+  body: { fontSize: 14, fontWeight: '600', color: colors.textSecondary, lineHeight: 22 },
+  bodySmall: { fontSize: 12, fontWeight: '600', color: colors.lightText, lineHeight: 18 },
+  caption: { fontSize: 10, fontWeight: '800', color: colors.lightText, textTransform: 'uppercase', letterSpacing: 1 },
+  label: { fontSize: 11, fontWeight: '900', color: colors.primary, textTransform: 'uppercase', letterSpacing: 1.5 },
 };
 
 // ─── Shadow System ────────────────────────────────────────────────────────────
 export const shadows = {
   soft: {
-    shadowColor: '#3dd56dff',
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 12,
-    elevation: 4,
-  },
-  medium: {
-    shadowColor: '#60e13cff',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.15,
-    shadowRadius: 20,
-    elevation: 8,
+    shadowOpacity: 0.04,
+    shadowRadius: 10,
+    elevation: 2,
   },
   card: {
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 3,
+    shadowRadius: 16,
+    elevation: 4,
+  },
+  lg: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.1,
+    shadowRadius: 20,
+    elevation: 8,
   },
 };
 
@@ -66,23 +80,26 @@ export const shadows = {
 export const common = StyleSheet.create({
   // Cards
   card: {
-    backgroundColor: colors.card,
-    borderRadius: radius.xl,
-    padding: spacing.base,
+    backgroundColor: '#fff',
+    borderRadius: radius.xxl,
+    padding: layout.cardPadding,
+    borderWidth: borders.width,
+    borderColor: colors.border,
     ...shadows.card,
   },
-  cardLarge: {
-    backgroundColor: colors.card,
+  cardSolid: {
+    backgroundColor: '#fff',
     borderRadius: radius.xxl,
-    padding: spacing.xl,
-    ...shadows.medium,
+    padding: layout.cardPadding,
+    borderWidth: borders.width,
+    borderColor: colors.border,
   },
 
   // Buttons
   primaryBtn: {
     backgroundColor: colors.primary,
-    borderRadius: radius.xl,
-    height: 54,
+    borderRadius: radius.lg,
+    height: 56,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -92,52 +109,38 @@ export const common = StyleSheet.create({
     color: '#fff',
     fontSize: 15,
     fontWeight: '800',
-    letterSpacing: 0.3,
   },
   secondaryBtn: {
-    backgroundColor: colors.secondary,
-    borderRadius: radius.xl,
-    height: 54,
+    backgroundColor: colors.primaryVeryLight,
+    borderRadius: radius.lg,
+    height: 56,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: colors.secondary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 10,
-    elevation: 5,
+    borderWidth: 1.5,
+    borderColor: colors.border,
   },
-  outlineBtn: {
-    borderWidth: 2,
-    borderColor: colors.primary,
-    borderRadius: radius.xl,
-    height: 54,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+  secondaryBtnText: {
+    color: colors.primary,
+    fontSize: 15,
+    fontWeight: '800',
   },
 
   // Icon containers
   iconBox: {
-    width: 42,
-    height: 42,
-    borderRadius: radius.md,
-    backgroundColor: '#EEE8FF',
+    width: 48,
+    height: 48,
+    borderRadius: 16,
+    backgroundColor: colors.background,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  iconBoxLarge: {
-    width: 56,
-    height: 56,
-    borderRadius: radius.lg,
-    backgroundColor: '#EEE8FF',
-    alignItems: 'center',
-    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   iconBoxPrimary: {
-    width: 44,
-    height: 44,
-    borderRadius: radius.md,
+    width: 48,
+    height: 48,
+    borderRadius: 16,
     backgroundColor: colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
@@ -147,74 +150,45 @@ export const common = StyleSheet.create({
   badge: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: radius.full,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 10,
+    backgroundColor: colors.surfaceAlt,
   },
   badgePrimary: {
-    backgroundColor: '#EEE8FF',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: radius.full,
-  },
-  badgeText: {
-    fontSize: 10,
-    fontWeight: '800',
-    color: colors.primary,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-
-  // Search bar
-  searchBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.background,
-    borderRadius: radius.xl,
-    paddingHorizontal: spacing.base,
-    height: 48,
+    backgroundColor: colors.primaryVeryLight,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 10,
     borderWidth: 1,
     borderColor: colors.border,
   },
-  searchInput: {
-    flex: 1,
-    marginLeft: spacing.sm,
-    fontSize: 14,
-    color: colors.text,
-    fontWeight: '500',
-  },
 
-  // Section headers
-  sectionRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: spacing.md,
-  },
-  sectionTitle: {
-    fontSize: 17,
-    fontWeight: '800',
+  // Input Fields
+  input: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    height: 56,
+    paddingHorizontal: 16,
+    fontSize: 15,
     color: colors.text,
-  },
-  seeAll: {
-    fontSize: 13,
     fontWeight: '700',
-    color: colors.primary,
+    borderWidth: 1.5,
+    borderColor: colors.border,
   },
 
-  divider: {
-    height: 1,
-    backgroundColor: colors.border,
-  },
-
+  // Layout Helpers
   screen: {
     flex: 1,
     backgroundColor: colors.background,
   },
-
+  pageContainer: {
+    paddingHorizontal: layout.pagePadding,
+  },
   centered: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: colors.background,
   },
 });

@@ -59,6 +59,18 @@ export const updateUserProfile = createAsyncThunk(
   }
 );
 
+export const saveFcmToken = createAsyncThunk(
+  'auth/saveFcmToken',
+  async (fcmToken, { rejectWithValue }) => {
+    try {
+      const res = await authApi.saveFcmToken(fcmToken);
+      return res.data.data.user;
+    } catch (err) {
+      return rejectWithValue(err.message);
+    }
+  }
+);
+
 // ─── Slice ────────────────────────────────────────────────────────────────────
 
 const authSlice = createSlice({
@@ -158,6 +170,9 @@ const authSlice = createSlice({
       .addCase(updateUserProfile.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
+      })
+      .addCase(saveFcmToken.fulfilled, (state, action) => {
+        state.user = action.payload;
       });
   }
 });

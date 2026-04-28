@@ -12,7 +12,7 @@ import {
 const Navbar = ({ navigate }) => {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
-  
+
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener('scroll', onScroll);
@@ -35,7 +35,7 @@ const Navbar = ({ navigate }) => {
           </div>
           <span className="text-xl font-bold text-slate-900 tracking-tight">Welib</span>
         </div>
-        
+
         <nav className="hidden md:flex items-center gap-8">
           {links.map(l => (
             <a key={l.name} href={l.href} className="text-[13px] font-semibold text-slate-500 hover:text-[#044343] transition-colors">{l.name}</a>
@@ -75,7 +75,7 @@ const Hero = ({ navigate }) => (
     <div className="max-w-7xl mx-auto px-6 text-center lg:text-left grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
         <h1 className="text-[34px] lg:text-[48px] font-bold text-slate-900 leading-[1.15] mb-6 tracking-tight">
-           Welib Modern Library Management<br />
+          Welib Modern Library Management<br />
           <span className="text-[#044343]">Built for Growing Libraries</span>
         </h1>
         <p className="text-[16px] text-slate-500 font-medium leading-relaxed mb-8 max-w-lg mx-auto lg:mx-0">
@@ -86,52 +86,52 @@ const Hero = ({ navigate }) => (
           <button onClick={() => navigate('/login')} className="btn btn-secondary px-8 py-4 rounded-xl text-[14px] font-bold border-slate-200">View Demo</button>
         </div>
         <div className="flex items-center justify-center lg:justify-start gap-6 text-[12px] font-bold text-slate-400">
-           <div className="flex items-center gap-1.5"><Check size={14} className="text-emerald-500" /> No credit card required</div>
-           <div className="flex items-center gap-1.5"><Check size={14} className="text-emerald-500" /> 30-day free trial</div>
-           <div className="flex items-center gap-1.5"><Check size={14} className="text-emerald-500" /> Cancel anytime</div>
+          <div className="flex items-center gap-1.5"><Check size={14} className="text-emerald-500" /> No credit card required</div>
+          <div className="flex items-center gap-1.5"><Check size={14} className="text-emerald-500" /> 30-day free trial</div>
+          <div className="flex items-center gap-1.5"><Check size={14} className="text-emerald-500" /> Cancel anytime</div>
         </div>
       </motion.div>
 
       <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.6, delay: 0.2 }} className="relative hidden lg:block">
         <div className="card p-0 shadow-2xl border-slate-100 overflow-hidden scale-105 origin-center">
           <div className="bg-slate-50 border-b border-slate-100 px-4 py-2.5 flex items-center gap-3">
-             <div className="flex gap-1.5"><div className="w-2.5 h-2.5 rounded-full bg-slate-200" /><div className="w-2.5 h-2.5 rounded-full bg-slate-200" /><div className="w-2.5 h-2.5 rounded-full bg-slate-200" /></div>
-             <div className="flex-1 bg-white border border-slate-200 rounded px-3 py-1 text-[10px] text-slate-400 font-bold">app.welib.com/dashboard</div>
+            <div className="flex gap-1.5"><div className="w-2.5 h-2.5 rounded-full bg-slate-200" /><div className="w-2.5 h-2.5 rounded-full bg-slate-200" /><div className="w-2.5 h-2.5 rounded-full bg-slate-200" /></div>
+            <div className="flex-1 bg-white border border-slate-200 rounded px-3 py-1 text-[10px] text-slate-400 font-bold">app.welib.com/dashboard</div>
           </div>
           <div className="p-6 bg-white space-y-6">
-             <div className="grid grid-cols-3 gap-4">
-                <div className="p-4 bg-emerald-50/50 rounded-xl border border-emerald-100">
-                   <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest">Total Books</p>
-                   <p className="text-xl font-bold text-slate-900 mt-1">4,208</p>
+            <div className="grid grid-cols-3 gap-4">
+              <div className="p-4 bg-emerald-50/50 rounded-xl border border-emerald-100">
+                <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest">Total Books</p>
+                <p className="text-xl font-bold text-slate-900 mt-1">4,208</p>
+              </div>
+              <div className="p-4 bg-blue-50/50 rounded-xl border border-blue-100">
+                <p className="text-[10px] font-bold text-blue-600 uppercase tracking-widest">Active Students</p>
+                <p className="text-xl font-bold text-slate-900 mt-1">1,204</p>
+              </div>
+              <div className="p-4 bg-rose-50/50 rounded-xl border border-rose-100">
+                <p className="text-[10px] font-bold text-rose-600 uppercase tracking-widest">Revenue</p>
+                <p className="text-xl font-bold text-slate-900 mt-1">₹2,45,000</p>
+              </div>
+            </div>
+            <div className="space-y-3">
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Recent Borrowings</p>
+              {[
+                { t: 'Introduction to Algorithms', s: 'Aman Gupta', status: 'returned' },
+                { t: 'Clean Code', s: 'Rohan Sharma', status: 'active' },
+                { t: 'Atomic Habits', s: 'Fatima Khan', status: 'active' },
+                { t: 'Rich Dad Poor Dad', s: 'Ananya Roy', status: 'returned' }
+              ].map((item, i) => (
+                <div key={i} className="flex items-center justify-between py-2 border-b border-slate-50 last:border-0">
+                  <div className="min-w-0"><p className="text-[12px] font-bold text-slate-800 truncate">{item.t}</p><p className="text-[10px] text-slate-400 font-medium">{item.s}</p></div>
+                  <span className={`badge ${item.status === 'returned' ? 'badge-success' : 'badge-warning'} lowercase`}>{item.status}</span>
                 </div>
-                <div className="p-4 bg-blue-50/50 rounded-xl border border-blue-100">
-                   <p className="text-[10px] font-bold text-blue-600 uppercase tracking-widest">Active Students</p>
-                   <p className="text-xl font-bold text-slate-900 mt-1">1,204</p>
-                </div>
-                <div className="p-4 bg-rose-50/50 rounded-xl border border-rose-100">
-                   <p className="text-[10px] font-bold text-rose-600 uppercase tracking-widest">Revenue</p>
-                   <p className="text-xl font-bold text-slate-900 mt-1">₹2,45,000</p>
-                </div>
-             </div>
-             <div className="space-y-3">
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Recent Borrowings</p>
-                {[
-                  { t: 'Introduction to Algorithms', s: 'Aman Gupta', status: 'returned' },
-                  { t: 'Clean Code', s: 'Rohan Sharma', status: 'active' },
-                  { t: 'Atomic Habits', s: 'Fatima Khan', status: 'active' },
-                  { t: 'Rich Dad Poor Dad', s: 'Ananya Roy', status: 'returned' }
-                ].map((item, i) => (
-                  <div key={i} className="flex items-center justify-between py-2 border-b border-slate-50 last:border-0">
-                    <div className="min-w-0"><p className="text-[12px] font-bold text-slate-800 truncate">{item.t}</p><p className="text-[10px] text-slate-400 font-medium">{item.s}</p></div>
-                    <span className={`badge ${item.status === 'returned' ? 'badge-success' : 'badge-warning'} lowercase`}>{item.status}</span>
-                  </div>
-                ))}
-             </div>
+              ))}
+            </div>
           </div>
         </div>
         <div className="absolute -bottom-8 -right-8 card p-4 flex items-center gap-3 shadow-xl border-slate-100 animate-bounce-slow">
-           <div className="w-10 h-10 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center"><BarChart2 size={20} /></div>
-           <div><p className="text-[10px] font-bold text-slate-400 uppercase">Growth</p><p className="text-lg font-bold text-slate-900">+23% Up</p></div>
+          <div className="w-10 h-10 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center"><BarChart2 size={20} /></div>
+          <div><p className="text-[10px] font-bold text-slate-400 uppercase">Growth</p><p className="text-lg font-bold text-slate-900">+23% Up</p></div>
         </div>
       </motion.div>
     </div>
@@ -159,14 +159,14 @@ const Stats = () => (
 
 // --- Features Section ---
 const features = [
-  { icon: BookOpen, title: 'Book Management', desc: 'Full inventory control with metadata, stock tracking, and ISBN support.', color: 'bg-indigo-50 text-indigo-600' },
-  { icon: Users, title: 'Student Management', desc: 'Detailed member profiles, subscription history, and activity logs.', color: 'bg-teal-50 text-teal-600' },
-  { icon: Package, title: 'Membership Packages', desc: 'Flexible plans (Monthly/Yearly) with automated expiry alerts.', color: 'bg-amber-50 text-amber-600' },
-  { icon: Coffee, title: 'Study Desk Management', desc: 'Visual desk allocation, locker tracking, and occupancy reports.', color: 'bg-blue-50 text-blue-600' },
-  { icon: IndianRupee, title: 'Finance & Ledger', desc: 'Professional accounting for payments, fees, and operational costs.', color: 'bg-emerald-50 text-emerald-600' },
-  { icon: RotateCcw, title: 'Book Circulation', desc: 'Fast check-in/out with automated fine calculation for late returns.', color: 'bg-rose-50 text-rose-600' },
-  { icon: Globe, title: 'Digital Library', desc: 'Upload and share PDFs, notes, and e-books with library members.', color: 'bg-purple-50 text-purple-600' },
-  { icon: BarChart2, title: 'Reports & Analytics', desc: 'Instant P&L statements, growth trends, and student participation.', color: 'bg-slate-50 text-slate-600' },
+  { icon: BookOpen, title: 'Smart Inventory', desc: 'Centralized catalog management with real-time stock levels, ISBN lookups, and category isolation.', color: 'bg-indigo-50 text-indigo-600' },
+  { icon: Users, title: 'Member Lifecycle', desc: 'Manage registrations, subscription approvals, and detailed activity logs for every member.', color: 'bg-teal-50 text-teal-600' },
+  { icon: Zap, title: 'WhatsApp Alerts', desc: 'Automated WhatsApp notifications for membership renewals, overdue books, and announcements.', color: 'bg-emerald-50 text-emerald-600' },
+  { icon: Coffee, title: 'Desk & Table Management', desc: 'Visual seat allocation and locker tracking to maximize library occupancy and efficiency.', color: 'bg-blue-50 text-blue-600' },
+  { icon: IndianRupee, title: 'Double-Entry Ledger', desc: 'Professional accounting system for tracking security deposits, fees, and operational expenses.', color: 'bg-emerald-50 text-emerald-600' },
+  { icon: RotateCcw, title: 'Automated Circulation', desc: 'High-speed check-in/out with automated fine calculation and instant digital receipts.', color: 'bg-rose-50 text-rose-600' },
+  { icon: Shield, title: 'Multi-Tenant Security', desc: 'Enterprise-grade data isolation ensuring every library branch has its own private, secure database.', color: 'bg-purple-50 text-purple-600' },
+  { icon: BarChart2, title: 'Financial Analytics', desc: 'Detailed P&L statements, revenue forecasting, and member growth trends at your fingertips.', color: 'bg-slate-50 text-slate-600' },
 ];
 
 const Features = () => (
@@ -224,35 +224,35 @@ const Pricing = ({ navigate }) => {
         <div className="text-center mb-12">
           <h2 className="text-[22px] font-bold text-slate-900">Simple, Transparent Pricing</h2>
           <div className="mt-6 flex items-center justify-center gap-3">
-             <span className={`text-[12px] font-bold ${billing === 'monthly' ? 'text-slate-900' : 'text-slate-400'}`}>Monthly</span>
-             <button onClick={() => setBilling(billing === 'monthly' ? 'yearly' : 'monthly')} className="w-10 h-5 bg-slate-200 rounded-full relative p-0.5"><div className={`w-4 h-4 bg-white rounded-full transition-all ${billing === 'yearly' ? 'translate-x-5' : 'translate-x-0'}`} /></button>
-             <span className={`text-[12px] font-bold ${billing === 'yearly' ? 'text-[#044343]' : 'text-slate-400'}`}>Yearly <span className="bg-teal-100 text-[#044343] text-[9px] px-1.5 py-0.5 rounded ml-1">Save 20%</span></span>
+            <span className={`text-[12px] font-bold ${billing === 'monthly' ? 'text-slate-900' : 'text-slate-400'}`}>Monthly</span>
+            <button onClick={() => setBilling(billing === 'monthly' ? 'yearly' : 'monthly')} className="w-10 h-5 bg-slate-200 rounded-full relative p-0.5"><div className={`w-4 h-4 bg-white rounded-full transition-all ${billing === 'yearly' ? 'translate-x-5' : 'translate-x-0'}`} /></button>
+            <span className={`text-[12px] font-bold ${billing === 'yearly' ? 'text-[#044343]' : 'text-slate-400'}`}>Yearly <span className="bg-teal-100 text-[#044343] text-[9px] px-1.5 py-0.5 rounded ml-1">Save 20%</span></span>
           </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
-           {[
-             { name: 'Starter', price: 999, features: ['Single Library', 'Up to 500 Students', 'Book Management', 'Manual Invoices'] },
-             { name: 'Professional', price: 1999, features: ['Full Finance Suite', 'Study Desk Management', 'Digital Library', 'Automated Ledgers'], popular: true },
-             { name: 'Enterprise', price: 'Custom', features: ['Multi-branch Sync', 'Custom Domain', 'SSO Integration', '24/7 Priority Support'] }
-           ].map((plan, i) => (
-             <div key={i} className={`card p-8 flex flex-col ${plan.popular ? 'border-[#044343] ring-1 ring-[#044343]/10 relative' : ''}`}>
-               {plan.popular && <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#044343] text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest">Most Popular</span>}
-               <h3 className="text-[14px] font-bold text-slate-500 uppercase tracking-widest">{plan.name}</h3>
-               <div className="mt-4 mb-8">
-                  <span className="text-3xl font-bold text-slate-900">{typeof plan.price === 'number' ? `₹${billing === 'yearly' ? (plan.price * 0.8).toFixed(0) : plan.price}` : plan.price}</span>
-                  {typeof plan.price === 'number' && <span className="text-slate-400 font-bold text-sm">/month</span>}
-               </div>
-               <ul className="space-y-4 mb-10 flex-1">
-                  {plan.features.map(f => (
-                    <li key={f} className="flex items-center gap-3 text-[13px] font-medium text-slate-600"><Check size={14} className="text-emerald-500 shrink-0" /> {f}</li>
-                  ))}
-               </ul>
-               <button onClick={() => navigate('/query')} className={`btn btn-md w-full rounded-lg text-[13px] font-bold ${plan.popular ? 'btn-primary' : 'btn-secondary'}`}>
-                 {plan.name === 'Enterprise' ? 'Contact Sales' : 'Start Free Trial'}
-               </button>
-             </div>
-           ))}
+          {[
+            { name: 'Starter', price: 999, features: ['Single Library', 'Up to 500 Students', 'Book Management', 'Manual Invoices'] },
+            { name: 'Professional', price: 1999, features: ['Full Finance Suite', 'Study Desk Management', 'Digital Library', 'Automated Ledgers'], popular: true },
+            { name: 'Enterprise', price: 'Custom', features: ['Multi-branch Sync', 'Custom Domain', 'SSO Integration', '24/7 Priority Support'] }
+          ].map((plan, i) => (
+            <div key={i} className={`card p-8 flex flex-col ${plan.popular ? 'border-[#044343] ring-1 ring-[#044343]/10 relative' : ''}`}>
+              {plan.popular && <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#044343] text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest">Most Popular</span>}
+              <h3 className="text-[14px] font-bold text-slate-500 uppercase tracking-widest">{plan.name}</h3>
+              <div className="mt-4 mb-8">
+                <span className="text-3xl font-bold text-slate-900">{typeof plan.price === 'number' ? `₹${billing === 'yearly' ? (plan.price * 0.8).toFixed(0) : plan.price}` : plan.price}</span>
+                {typeof plan.price === 'number' && <span className="text-slate-400 font-bold text-sm">/month</span>}
+              </div>
+              <ul className="space-y-4 mb-10 flex-1">
+                {plan.features.map(f => (
+                  <li key={f} className="flex items-center gap-3 text-[13px] font-medium text-slate-600"><Check size={14} className="text-emerald-500 shrink-0" /> {f}</li>
+                ))}
+              </ul>
+              <button onClick={() => navigate('/query')} className={`btn btn-md w-full rounded-lg text-[13px] font-bold ${plan.popular ? 'btn-primary' : 'btn-secondary'}`}>
+                {plan.name === 'Enterprise' ? 'Contact Sales' : 'Start Free Trial'}
+              </button>
+            </div>
+          ))}
         </div>
       </div>
     </section>
@@ -263,37 +263,40 @@ const Pricing = ({ navigate }) => {
 const Testimonials = () => (
   <section id="testimonials" className="py-24 bg-slate-50/50 border-y border-slate-100">
     <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-3 gap-12 items-center">
-       <div className="md:col-span-1">
-          <h2 className="text-[22px] font-bold text-slate-900 leading-tight">Trusted by Leading Institutes Across India</h2>
-          <p className="text-[14px] text-slate-500 font-medium mt-3">From private study centers in Delhi to college libraries in Mumbai, Welib is the #1 choice.</p>
-       </div>
-       <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
-          {[
-            { t: "Welib helped us manage 400+ students easily. Memberships and payments are now fully automated.", name: "Library Owner", org: "Delhi Study Center" },
-            { t: "The study desk management is a lifesaver. Our students can now book seats without any disputes.", name: "Administrator", org: "IIT Coaching Academy" }
-          ].map((t, i) => (
-            <div key={i} className="card p-6">
-               <div className="flex gap-1 mb-4">{Array(5).fill(0).map((_,j)=><Star key={j} size={14} className="text-amber-400 fill-amber-400" />)}</div>
-               <p className="text-[14px] text-slate-700 font-medium leading-relaxed italic mb-6">"{t.t}"</p>
-               <div><p className="text-[13px] font-bold text-slate-900">{t.name}</p><p className="text-[11px] font-bold text-slate-400 uppercase">{t.org}</p></div>
-            </div>
-          ))}
-       </div>
+      <div className="md:col-span-1">
+        <h2 className="text-[22px] font-bold text-slate-900 leading-tight">Trusted by Leading Institutes Across India</h2>
+        <p className="text-[14px] text-slate-500 font-medium mt-3">From private study centers in Delhi to college libraries in Mumbai, Welib is the #1 choice.</p>
+      </div>
+      <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
+        {[
+          { t: "Welib helped us manage 400+ students easily. Memberships and payments are now fully automated.", name: "Library Owner", org: "Delhi Study Center" },
+          { t: "The study desk management is a lifesaver. Our students can now book seats without any disputes.", name: "Administrator", org: "IIT Coaching Academy" }
+        ].map((t, i) => (
+          <div key={i} className="card p-6">
+            <div className="flex gap-1 mb-4">{Array(5).fill(0).map((_, j) => <Star key={j} size={14} className="text-amber-400 fill-amber-400" />)}</div>
+            <p className="text-[14px] text-slate-700 font-medium leading-relaxed italic mb-6">"{t.t}"</p>
+            <div><p className="text-[13px] font-bold text-slate-900">{t.name}</p><p className="text-[11px] font-bold text-slate-400 uppercase">{t.org}</p></div>
+          </div>
+        ))}
+      </div>
     </div>
   </section>
 );
 
-// --- CTA Section ---
 const FinalCTA = ({ navigate }) => (
-  <section className="py-32 bg-white text-center">
-    <div className="max-w-2xl mx-auto px-6">
-      <h2 className="text-[34px] font-bold text-slate-900 tracking-tight leading-tight">Start Managing Your<br />Library Today</h2>
-      <p className="text-[16px] text-slate-500 font-medium mt-6 mb-10">No setup fees. No hidden costs. Join 500+ libraries building a modern experience for their students.</p>
+  <section className="py-32 bg-slate-50 text-center border-t border-slate-100">
+    <div className="max-w-3xl mx-auto px-6">
+      <h2 className="text-[38px] font-bold text-slate-900 tracking-tighter leading-tight italic uppercase">Scale Your Library<br />Operations Today</h2>
+      <p className="text-[16px] text-slate-600 font-medium mt-6 mb-10">Join the growing network of 500+ modern libraries using Welib to automate their management, finance, and member engagement.</p>
       <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-        <button onClick={() => navigate('/query')} className="btn btn-primary px-10 py-4 rounded-xl text-[14px] font-bold shadow-lg shadow-teal-900/10">Get Started Free</button>
-        <button onClick={() => navigate('/login')} className="btn btn-secondary px-10 py-4 rounded-xl text-[14px] font-bold">Book a Demo</button>
+        <button onClick={() => navigate('/query')} className="btn btn-primary px-10 py-4 rounded-xl text-[14px] font-bold shadow-xl shadow-teal-900/20">Start 14-Day Free Trial</button>
+        <button onClick={() => navigate('/login')} className="btn btn-secondary px-10 py-4 rounded-xl text-[14px] font-bold bg-white">Book a Technical Demo</button>
       </div>
-      <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mt-8">Cloud-Based SaaS · 99.9% Uptime · SSL Secured</p>
+      <div className="grid grid-cols-3 gap-8 max-w-lg mx-auto mt-16">
+        <div><p className="text-xl font-black text-slate-900">99.9%</p><p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Uptime SLA</p></div>
+        <div><p className="text-xl font-black text-slate-900">256-bit</p><p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Encryption</p></div>
+        <div><p className="text-xl font-black text-slate-900">24/7</p><p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Support</p></div>
+      </div>
     </div>
   </section>
 );
@@ -313,9 +316,9 @@ const Footer = () => (
           <p className="text-slate-400 text-[13px] font-medium leading-relaxed max-w-xs">Library management, simplified. Modern tools for schools, colleges and study centers.</p>
         </div>
         {[
-          { t: 'Product', l: [{n:'Features', h:'#features'}, {n:'Pricing', h:'#pricing'}, {n:'How it Works', h:'#how-it-works'}, {n:'Get Started', h:'/query'}] },
-          { t: 'Company', l: [{n:'About', h:'#features'}, {n:'Contact', h:'/query'}, {n:'Careers', h:'#'}, {n:'Legal', h:'#'}] },
-          { t: 'Support', l: [{n:'Help Center', h:'#'}, {n:'Documentation', h:'#'}, {n:'Status', h:'#'}, {n:'Security', h:'#'}] }
+          { t: 'Product', l: [{ n: 'Features', h: '#features' }, { n: 'Pricing', h: '#pricing' }, { n: 'How it Works', h: '#how-it-works' }, { n: 'Get Started', h: '/query' }] },
+          { t: 'Company', l: [{ n: 'About', h: '#features' }, { n: 'Contact', h: '/query' }, { n: 'Careers', h: '#' }, { n: 'Legal', h: '#' }] },
+          { t: 'Support', l: [{ n: 'Help Center', h: '#' }, { n: 'Documentation', h: '#' }, { n: 'Status', h: '#' }, { n: 'Security', h: '#' }] }
         ].map(col => (
           <div key={col.t}>
             <h4 className="text-[11px] font-bold uppercase tracking-widest text-slate-500 mb-6">{col.t}</h4>
@@ -334,9 +337,9 @@ const Footer = () => (
       <div className="pt-12 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-6">
         <p className="text-slate-500 text-[12px] font-bold">© 2026 Welib. Built in India for the world.</p>
         <div className="flex items-center gap-6">
-           <Twitter size={18} className="text-slate-500 hover:text-white cursor-pointer transition-colors" />
-           <Linkedin size={18} className="text-slate-500 hover:text-white cursor-pointer transition-colors" />
-           <Github size={18} className="text-slate-500 hover:text-white cursor-pointer transition-colors" />
+          <Twitter size={18} className="text-slate-500 hover:text-white cursor-pointer transition-colors" />
+          <Linkedin size={18} className="text-slate-500 hover:text-white cursor-pointer transition-colors" />
+          <Github size={18} className="text-slate-500 hover:text-white cursor-pointer transition-colors" />
         </div>
       </div>
     </div>
