@@ -1,7 +1,7 @@
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-export const BASE_URL = process.env.EXPO_PUBLIC_API_URL || "http://10.157.117.166:3245/api";
+export const BASE_URL = process.env.EXPO_PUBLIC_API_URL || "https://library-bice-beta-70.vercel.app/api";
 
 // ─── Keys ─────────────────────────────────────────────────────────────────────
 export const AUTH_TOKEN_KEY = "@lib_auth_token";
