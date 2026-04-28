@@ -40,6 +40,15 @@ import quoteRoutes from "./src/modules/quote/quote.routes.js";
 import whatsappRoutes from "./src/modules/whatsapp/whatsapp.routes.js";
 
 const app = express();
+
+app.get('/', (req, res) => {
+  res.status(200).json({
+    status: 'success',
+    message: 'Welib API is running successfully on Vercel!',
+    version: '1.0.0'
+  });
+});
+
 const port = process.env.PORT || 5000;
 const httpServer = createServer(app);
 
@@ -141,9 +150,12 @@ app.all("*", (req, res, next) => {
 
 app.use(globalErrorHandler);
 
+if (process.env.NODE_ENV !== 'production') {
+  httpServer.listen(port, () => {
+    logger.info(`Server running on port ${port}`);
+  });
+}
 
-const server = httpServer.listen(port, () => {
-  logger.info(`Server running on port ${port}`);
-});
+export default app;
 
 
