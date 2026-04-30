@@ -83,7 +83,7 @@ export const tenantHandler = async (req, res, next) => {
     }
 
     req.tenantId = tenant._id;
-    req.tenant = tenant; // Useful for downstream access to plan/status
+    req.tenant = tenant;
     next();
   } catch (err) {
     logger.error('Tenant identification error:', err);

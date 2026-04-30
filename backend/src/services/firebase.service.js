@@ -1,24 +1,61 @@
-import admin from 'firebase-admin';
-import path from 'path';
-import { fileURLToPath } from 'url';
+import admin from "firebase-admin";
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const saPath = process.env.FIREBASE_SERVICE_ACCOUNT_PATH || '../../firebase-service-account.json';
-const serviceAccountPath = path.isAbsolute(saPath) ? saPath : path.resolve(__dirname, saPath);
+const rawSaValue =
+  process.env.FIREBASE_SERVICE_ACCOUNT_PATH ||
+  "../../firebase-service-account.json";
+const serviceAccountPath = path.isAbsolute(rawSaValue)
+  ? rawSaValue
+  : path.resolve(__dirname, rawSaValue);
 
 let firebaseApp;
+
+const resolveServiceAccount = () => {
+  const value = rawSaValue?.trim();
+
+  if (value?.startsWith("{") || value?.startsWith("[")) {
+    try {
+      return JSON.parse(value);
+    } catch (err) {
+      console.warn(
+        "[FCM] FIREBASE_SERVICE_ACCOUNT_PATH env value looks like JSON but could not be parsed:",
+        err.message,
+      );
+    }
+  }
+
+  if (fs.existsSync(serviceAccountPath)) {
+    return serviceAccountPath;
+  }
+
+  throw new Error(
+    `Firebase service account not found. Tried path: ${serviceAccountPath}`,
+  );
+};
 
 export const initializeFirebase = () => {
   try {
     if (!admin.apps.length) {
-      console.log(`[FCM] Resolving service account from: ${serviceAccountPath}`);
+      const serviceAccount = resolveServiceAccount();
+      const source =
+        typeof serviceAccount === "string"
+          ? serviceAccount
+          : "FIREBASE_SERVICE_ACCOUNT_PATH env JSON";
+
+      console.log(`[FCM] Resolving service account from: ${source}`);
       firebaseApp = admin.initializeApp({
-        credential: admin.credential.cert(serviceAccountPath),
+        credential: admin.credential.cert(serviceAccount),
       });
-      console.log('✅ Firebase Admin SDK initialized');
+      console.log("✅ Firebase Admin SDK initialized");
     }
   } catch (error) {
-    console.error('❌ Firebase Admin SDK could not be initialized:', error.message);
+    console.error(
+      "❌ Firebase Admin SDK could not be initialized:",
+      error.message,
+    );
   }
 };
 
@@ -38,7 +75,7 @@ export const sendPushNotification = async (token, payload) => {
     const response = await admin.messaging().send(message);
     return response;
   } catch (error) {
-    console.error('Error sending single notification:', error);
+    console.error("Error sending single notification:", error);
     throw error;
   }
 };
@@ -47,7 +84,9 @@ export const sendMulticastNotification = async (tokens, payload) => {
   try {
     if (!admin.apps.length) initializeFirebase();
 
-    console.log(`[FCM] Attempting to send multicast to ${tokens.length} tokens`);
+    console.log(
+      `[FCM] Attempting to send multicast to ${tokens.length} tokens`,
+    );
     console.log(`[FCM] Payload:`, JSON.stringify(payload));
 
     const message = {
@@ -60,21 +99,24 @@ export const sendMulticastNotification = async (tokens, payload) => {
     };
 
     const response = await admin.messaging().sendEachForMulticast(message);
-    
+
     console.log(`[FCM] Success count: ${response.successCount}`);
     console.log(`[FCM] Failure count: ${response.failureCount}`);
-    
+
     if (response.failureCount > 0) {
       response.responses.forEach((resp, idx) => {
         if (!resp.success) {
-          console.error(`[FCM] Error for token ${tokens[idx].substring(0, 10)}... :`, resp.error);
+          console.error(
+            `[FCM] Error for token ${tokens[idx].substring(0, 10)}... :`,
+            resp.error,
+          );
         }
       });
     }
 
     return response;
   } catch (error) {
-    console.error('❌ [FCM] Critical error in multicast:', error);
+    console.error("❌ [FCM] Critical error in multicast:", error);
     throw error;
   }
 };

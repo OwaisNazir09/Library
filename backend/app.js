@@ -82,9 +82,29 @@ io.on('connection', (socket) => {
 
 app.set('io', io);
 
+const allowedOrigins = [
+  "https://library-bice-beta-70.vercel.app",
+  "https://libsystems.blinkbitlabs.com",
+  "http://localhost:3000",
+  "http://localhost:5173",
+];
+
 app.use(
   cors({
-    origin: true,
+    origin: (origin, callback) => {
+      // Allow requests with no origin (like mobile apps or curl requests)
+      if (!origin) return callback(null, true);
+      
+      const isAllowed = allowedOrigins.includes(origin) || 
+                        origin.endsWith(".vercel.app") ||
+                        origin.includes("owaisnazir09s-projects.vercel.app");
+      
+      if (isAllowed) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     allowedHeaders: [
