@@ -9,6 +9,7 @@ import { Boom } from '@hapi/boom';
 import qrcode from 'qrcode';
 import path from 'path';
 import fs from 'fs';
+import os from 'os';
 import pino from 'pino';
 import WhatsAppLog from '../modules/whatsapp/whatsapp.model.js';
 import logger from '../utils/logger.js';
@@ -43,7 +44,10 @@ class WhatsAppService {
         logger.info(`[WA] Starting Baileys initialization for tenant: ${tId}`);
         
         try {
-            const authPath = path.resolve(`./.baileys_auth/${tId}`);
+            // Use /tmp for Vercel compatibility, fallback to local for development
+            const baseAuthPath = (process.env.NODE_ENV === 'production' || process.env.VERCEL) ? os.tmpdir() : './';
+            const authPath = path.join(baseAuthPath, '.baileys_auth', tId);
+            
             if (!fs.existsSync(authPath)) {
                 fs.mkdirSync(authPath, { recursive: true });
             }
@@ -152,7 +156,8 @@ class WhatsAppService {
             this.qrCodes.delete(tId);
             
             // Clear auth folder
-            const authPath = path.resolve(`./.baileys_auth/${tId}`);
+            const baseAuthPath = (process.env.NODE_ENV === 'production' || process.env.VERCEL) ? os.tmpdir() : './';
+            const authPath = path.join(baseAuthPath, '.baileys_auth', tId);
             if (fs.existsSync(authPath)) {
                 fs.rmSync(authPath, { recursive: true, force: true });
             }
