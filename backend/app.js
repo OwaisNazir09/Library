@@ -81,6 +81,7 @@ app.set("io", io);
 const allowedOrigins = [
   "https://library-bice-beta-70.vercel.app",
   "https://welib.blinkbitlabs.com",
+  "https://libsystems.blinkbitlabs.com",
   "http://localhost:3000",
   "http://localhost:5173",
 ];
@@ -99,6 +100,7 @@ app.use(
       if (isAllowed) {
         callback(null, true);
       } else {
+        console.log("CORS blocked for origin:", origin);
         callback(new Error("Not allowed by CORS"));
       }
     },
@@ -114,8 +116,6 @@ app.use(
     ],
   }),
 );
-
-app.options("*", cors());
 
 app.use("/api", tenantHandler);
 app.use("/api", checkSubscription);
