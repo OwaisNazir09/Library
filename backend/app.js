@@ -40,7 +40,7 @@ import quoteRoutes from "./src/modules/quote/quote.routes.js";
 import whatsappRoutes from "./src/modules/whatsapp/whatsapp.routes.js";
 
 const app = express();
-app.set("trust proxy", 1);
+app.set("trust proxy", true);
 
 app.get("/", (req, res) => {
   res.status(200).json({
