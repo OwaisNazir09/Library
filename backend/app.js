@@ -82,7 +82,6 @@ app.set("io", io);
 const allowedOrigins = [
   "https://library-bice-beta-70.vercel.app",
   "https://welib.blinkbitlabs.com",
-  "https://libsystems.blinkbitlabs.com",
   "http://localhost:3000",
   "http://localhost:5173",
 ];
