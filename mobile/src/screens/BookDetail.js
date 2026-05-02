@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
-  ActivityIndicator, Image, Dimensions, StatusBar
+  ActivityIndicator, Image, Dimensions, StatusBar, Alert, Share
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useSelector } from 'react-redux';
@@ -40,6 +40,18 @@ export default function BookDetail({ route, navigation }) {
       fetchBookDetails();
     }
   }, [passedBook?._id]);
+  
+  const handleShare = async () => {
+    try {
+      await Share.share({
+        message: `Check out this book: ${book.title} by ${book.author}\nView it in the library: https://library-bice-beta-70.vercel.app/books/${book._id}`,
+        url: `https://library-bice-beta-70.vercel.app/books/${book._id}`,
+        title: book.title
+      });
+    } catch (error) {
+      Alert.alert('Error', 'Failed to share book');
+    }
+  };
 
   if (loading && !book) {
     return (
@@ -83,7 +95,7 @@ export default function BookDetail({ route, navigation }) {
               <TouchableOpacity style={styles.iconBtn} onPress={() => navigation.goBack()}>
                 <ChevronLeft size={22} color={colors.text} />
               </TouchableOpacity>
-              <TouchableOpacity style={styles.iconBtn}>
+              <TouchableOpacity style={styles.iconBtn} onPress={handleShare}>
                 <Share2 size={18} color={colors.text} />
               </TouchableOpacity>
             </View>

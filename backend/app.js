@@ -1,4 +1,4 @@
-import dotenv from 'dotenv';
+import dotenv from "dotenv";
 dotenv.config();
 
 import express from "express";
@@ -8,12 +8,12 @@ import morgan from "morgan";
 import mongoSanitize from "express-mongo-sanitize";
 import xss from "xss-clean";
 import rateLimit from "express-rate-limit";
-import mongoose from 'mongoose';
-import { createServer } from 'http';
-import { Server } from 'socket.io';
+import mongoose from "mongoose";
+import { createServer } from "http";
+import { Server } from "socket.io";
 
-import logger from './src/utils/logger.js';
-import { initSubscriptionCron } from './src/services/subscriptionCron.js';
+import logger from "./src/utils/logger.js";
+import { initSubscriptionCron } from "./src/services/subscriptionCron.js";
 import globalErrorHandler from "./src/middleware/errorHandler.js";
 import { tenantHandler } from "./src/middleware/tenant.js";
 import { checkSubscription } from "./src/middleware/subscriptionCheck.js";
@@ -41,52 +41,49 @@ import whatsappRoutes from "./src/modules/whatsapp/whatsapp.routes.js";
 
 const app = express();
 
-app.get('/', (req, res) => {
+app.get("/", (req, res) => {
   res.status(200).json({
-    status: 'success',
-    message: 'Welib API is running successfully on Vercel!',
-    version: '1.0.0'
+    status: "success",
+    message: "Welib API is running successfully on Vercel!",
+    version: "1.0.0",
   });
 });
 
 const port = process.env.PORT || 5000;
 const httpServer = createServer(app);
 
-
-
-
-
 mongoose
   .connect(process.env.MONGODB_URI)
   .then(() => {
-    logger.info('Master Database connected successfully');
+    logger.info("Master Database connected successfully");
     initSubscriptionCron();
   })
   .catch((err) => {
-    logger.error('Database connection error:', err);
+    logger.error("Database connection error:", err);
     process.exit(1);
   });
 const io = new Server(httpServer, {
   cors: {
-    origin: '*',
-    methods: ['GET', 'POST'],
+    origin: "*",
+    methods: ["GET", "POST"],
   },
 });
 
-io.on('connection', (socket) => {
-  logger.info('User connected via socket');
-  socket.on('disconnect', () => {
-    logger.info('User disconnected');
+io.on("connection", (socket) => {
+  logger.info("User connected via socket");
+  socket.on("disconnect", () => {
+    logger.info("User disconnected");
   });
 });
 
-app.set('io', io);
+app.set("io", io);
 
 const allowedOrigins = [
   "https://library-bice-beta-70.vercel.app",
   "https://libsystems.blinkbitlabs.com",
   "http://localhost:3000",
   "http://localhost:5173",
+  "https://welib.blinkbitlabs.com",
 ];
 
 app.use(
@@ -94,11 +91,12 @@ app.use(
     origin: (origin, callback) => {
       // Allow requests with no origin (like mobile apps or curl requests)
       if (!origin) return callback(null, true);
-      
-      const isAllowed = allowedOrigins.includes(origin) || 
-                        origin.endsWith(".vercel.app") ||
-                        origin.includes("owaisnazir09s-projects.vercel.app");
-      
+
+      const isAllowed =
+        allowedOrigins.includes(origin) ||
+        origin.endsWith(".vercel.app") ||
+        origin.includes("owaisnazir09s-projects.vercel.app");
+
       if (isAllowed) {
         callback(null, true);
       } else {
@@ -170,12 +168,10 @@ app.all("*", (req, res, next) => {
 
 app.use(globalErrorHandler);
 
-if (process.env.NODE_ENV !== 'production') {
+if (process.env.NODE_ENV !== "production") {
   httpServer.listen(port, () => {
     logger.info(`Server running on port ${port}`);
   });
 }
 
 export default app;
-
-

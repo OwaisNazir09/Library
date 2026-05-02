@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
-  Alert, ActivityIndicator, Image, Dimensions, StatusBar, Linking
+  Alert, ActivityIndicator, Image, Dimensions, StatusBar, Linking, Share
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useSelector, useDispatch } from 'react-redux';
@@ -78,6 +78,18 @@ export default function ResourceDetail({ route, navigation }) {
     }
   };
 
+  const handleShare = async () => {
+    try {
+      await Share.share({
+        message: `Check out this resource: ${resource.title}\nRead it here: https://library-bice-beta-70.vercel.app/resources/${resource._id}`,
+        url: `https://library-bice-beta-70.vercel.app/resources/${resource._id}`,
+        title: resource.title
+      });
+    } catch (error) {
+      Alert.alert('Error', 'Failed to share resource');
+    }
+  };
+
   if (loading && !resource) {
     return (
       <View style={styles.centered}>
@@ -120,7 +132,7 @@ export default function ResourceDetail({ route, navigation }) {
               <TouchableOpacity style={styles.headerBtn} onPress={() => navigation.goBack()}>
                 <ChevronLeft size={22} color={colors.text} />
               </TouchableOpacity>
-              <TouchableOpacity style={styles.headerBtn}>
+              <TouchableOpacity style={styles.headerBtn} onPress={handleShare}>
                 <Share2 size={18} color={colors.text} />
               </TouchableOpacity>
             </View>
@@ -242,6 +254,18 @@ export default function ResourceDetail({ route, navigation }) {
             <Text style={styles.priceLabel}>RESOURCE STATUS</Text>
             <Text style={styles.price}>{isGlobal ? 'Open Access' : 'Verified Member'}</Text>
           </View>
+
+          <TouchableOpacity
+            style={[styles.readBtn, { backgroundColor: '#F1F5F9', marginRight: 12, paddingHorizontal: 20 }]}
+            onPress={handleDownload}
+            disabled={downloading}
+          >
+            {downloading ? (
+              <ActivityIndicator size="small" color={colors.primary} />
+            ) : (
+              <Download size={18} color={colors.primary} />
+            )}
+          </TouchableOpacity>
 
           <TouchableOpacity
             style={styles.readBtn}

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, ActivityIndicator,
-  Image, TouchableOpacity, TextInput, StatusBar, Dimensions
+  Image, TouchableOpacity, TextInput, StatusBar, Dimensions, Share, Alert
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useSelector, useDispatch } from 'react-redux';
@@ -61,6 +61,18 @@ export default function BlogDetail({ route, navigation }) {
     }
   };
 
+  const handleShare = async () => {
+    try {
+      await Share.share({
+        message: `Check out this blog: ${blog.title}\nRead it here: https://library-bice-beta-70.vercel.app/blogs/${blog._id}`,
+        url: `https://library-bice-beta-70.vercel.app/blogs/${blog._id}`,
+        title: blog.title
+      });
+    } catch (error) {
+      Alert.alert('Error', 'Failed to share blog');
+    }
+  };
+
   const formatDate = (dateStr) => {
     if (!dateStr) return '';
     return new Date(dateStr).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' });
@@ -104,7 +116,7 @@ export default function BlogDetail({ route, navigation }) {
               <TouchableOpacity style={styles.iconBtn} onPress={() => navigation.goBack()}>
                 <ChevronLeft size={22} color={colors.text} />
               </TouchableOpacity>
-              <TouchableOpacity style={styles.iconBtn}>
+              <TouchableOpacity style={styles.iconBtn} onPress={handleShare}>
                 <Share2 size={18} color={colors.text} />
               </TouchableOpacity>
             </View>

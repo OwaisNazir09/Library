@@ -3,7 +3,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import {
   View, Text, StyleSheet, FlatList, TextInput,
   TouchableOpacity, ActivityIndicator, RefreshControl,
-  Image, Dimensions, StatusBar, ScrollView
+  Image, Dimensions, StatusBar, ScrollView, Share, Alert
 } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
 import {
@@ -78,6 +78,17 @@ export default function Home({ navigation }) {
     setRefreshing(true);
     await loadResources();
     setRefreshing(false);
+  };
+
+  const handleQuoteShare = async () => {
+    if (!dailyQuote) return;
+    try {
+      await Share.share({
+        message: `“${dailyQuote.quote}” — ${dailyQuote.author}\nShared from Welib Library`,
+      });
+    } catch (error) {
+      Alert.alert('Error', 'Failed to share quote');
+    }
   };
 
   const allResources = isGuest
@@ -188,7 +199,7 @@ export default function Home({ navigation }) {
                   <TouchableOpacity style={styles.miniBtn}>
                     <Bookmark size={14} color="#fff" />
                   </TouchableOpacity>
-                  <TouchableOpacity style={styles.miniBtn}>
+                  <TouchableOpacity style={styles.miniBtn} onPress={handleQuoteShare}>
                     <Share2 size={14} color="#fff" />
                   </TouchableOpacity>
                 </View>
