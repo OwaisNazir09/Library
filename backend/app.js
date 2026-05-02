@@ -40,6 +40,7 @@ import quoteRoutes from "./src/modules/quote/quote.routes.js";
 import whatsappRoutes from "./src/modules/whatsapp/whatsapp.routes.js";
 
 const app = express();
+app.set("trust proxy", 1);
 
 app.get("/", (req, res) => {
   res.status(200).json({
@@ -98,7 +99,7 @@ app.use(
         origin.includes("owaisnazir09s-projects.vercel.app");
 
       if (isAllowed) {
-        callback(null, true);
+        callback(null, origin);
       } else {
         console.log("CORS blocked for origin:", origin);
         callback(new Error("Not allowed by CORS"));
