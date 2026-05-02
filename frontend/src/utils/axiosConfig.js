@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const instance = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || "https://library-git-master-owaisnazir09s-projects.vercel.app/api",
+  baseURL: import.meta.env.VITE_API_URL || "https://welibapi.blinkbitlabs.com/api",
 });
 
 instance.interceptors.request.use((config) => {

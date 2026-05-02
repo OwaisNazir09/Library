@@ -21,6 +21,7 @@ node_modules/
 .env
 .env.*
 backend/.env
+backend/cc.env
 mobile/.env
 frontend/.env
 

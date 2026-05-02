@@ -81,8 +81,8 @@ export default function ResourceDetail({ route, navigation }) {
   const handleShare = async () => {
     try {
       await Share.share({
-        message: `Check out this resource: ${resource.title}\nRead it here: https://library-bice-beta-70.vercel.app/resources/${resource._id}`,
-        url: `https://library-bice-beta-70.vercel.app/resources/${resource._id}`,
+        message: `Check out this resource: ${resource.title}\nRead it here: https://welib.blinkbitlabs.com/resources/${resource._id}`,
+        url: `https://welib.blinkbitlabs.com/resources/${resource._id}`,
         title: resource.title
       });
     } catch (error) {

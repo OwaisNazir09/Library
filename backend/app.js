@@ -85,6 +85,7 @@ app.set("io", io);
 const allowedOrigins = [
   "https://library-bice-beta-70.vercel.app",
   "https://welib.blinkbitlabs.com",
+  "https://welibapi.blinkbitlabs.com",
   "http://localhost:3000",
   "http://localhost:5173",
 ];
@@ -92,12 +93,12 @@ const allowedOrigins = [
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Allow requests with no origin (like mobile apps or curl requests)
       if (!origin) return callback(null, true);
 
       const isAllowed =
         allowedOrigins.includes(origin) ||
         origin.endsWith(".vercel.app") ||
+        origin.endsWith(".blinkbitlabs.com") ||
         origin.includes("owaisnazir09s-projects.vercel.app");
 
       if (isAllowed) {

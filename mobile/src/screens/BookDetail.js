@@ -44,8 +44,8 @@ export default function BookDetail({ route, navigation }) {
   const handleShare = async () => {
     try {
       await Share.share({
-        message: `Check out this book: ${book.title} by ${book.author}\nView it in the library: https://library-bice-beta-70.vercel.app/books/${book._id}`,
-        url: `https://library-bice-beta-70.vercel.app/books/${book._id}`,
+        message: `Check out this book: ${book.title} by ${book.author}\nView it in the library: https://welib.blinkbitlabs.com/books/${book._id}`,
+        url: `https://welib.blinkbitlabs.com/books/${book._id}`,
         title: book.title
       });
     } catch (error) {

@@ -64,8 +64,8 @@ export default function BlogDetail({ route, navigation }) {
   const handleShare = async () => {
     try {
       await Share.share({
-        message: `Check out this blog: ${blog.title}\nRead it here: https://library-bice-beta-70.vercel.app/blogs/${blog._id}`,
-        url: `https://library-bice-beta-70.vercel.app/blogs/${blog._id}`,
+        message: `Check out this blog: ${blog.title}\nRead it here: https://welib.blinkbitlabs.com/blogs/${blog._id}`,
+        url: `https://welib.blinkbitlabs.com/blogs/${blog._id}`,
         title: blog.title
       });
     } catch (error) {
