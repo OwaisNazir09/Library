@@ -2,7 +2,7 @@ import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import { toast } from "react-hot-toast";
 
 const baseQuery = fetchBaseQuery({
-  baseUrl: import.meta.env.VITE_API_URL || "https://library-bice-beta-70.vercel.app/api",
+  baseUrl: import.meta.env.VITE_API_URL || "https://library-git-master-owaisnazir09s-projects.vercel.app/api",
   prepareHeaders: (headers) => {
     const token = localStorage.getItem("token");
     const tenantId = localStorage.getItem("tenantId");

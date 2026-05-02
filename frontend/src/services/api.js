@@ -2,7 +2,7 @@ import axios from 'axios';
 import { toast } from 'react-hot-toast';
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || "https://library-bice-beta-70.vercel.app/api",
+  baseURL: import.meta.env.VITE_API_URL || "https://library-git-master-owaisnazir09s-projects.vercel.app/api",
 
   headers: {
     'Content-Type': 'application/json',
