@@ -112,6 +112,7 @@ app.use(
       "x-tenant-id",
       "x-platform",
       "X-Requested-With",
+      "x-forwarded-for",
       "Accept",
     ],
   }),
