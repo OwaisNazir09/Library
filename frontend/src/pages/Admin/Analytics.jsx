@@ -18,8 +18,8 @@ const Analytics = () => {
 
   if (isLoading) return (
     <div className="flex items-center justify-center h-[60vh] gap-3">
-      <Loader2 className="animate-spin text-teal-600" size={32} />
-      <span className="text-xs font-black text-slate-400 uppercase tracking-widest">Compiling Intelligence...</span>
+      <Loader2 className="animate-spin text-[#044343]" size={28} />
+      <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Loading analytics...</span>
     </div>
   );
 
@@ -27,8 +27,8 @@ const Analytics = () => {
     <div className="space-y-8 pb-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-black text-slate-900 tracking-tight">Platform Analytics</h1>
-        <p className="text-sm font-medium text-slate-500 mt-0.5">Global performance monitoring and financial intelligence.</p>
+        <h1 className="text-2xl font-black text-slate-900 tracking-tight">Analytics</h1>
+        <p className="text-sm font-medium text-slate-400 mt-0.5">Platform performance and financial reporting.</p>
       </div>
 
       {/* Charts Grid */}
@@ -60,7 +60,7 @@ const Analytics = () => {
           <div className="flex items-center justify-between mb-8">
             <div>
               <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest">Growth Forecast</h3>
-              <p className="text-[11px] font-bold text-slate-400 mt-1">New node provisioning trend</p>
+              <p className="text-[11px] font-bold text-slate-400 mt-1">New library registrations trend</p>
             </div>
             <div className="p-2 bg-slate-50 rounded-xl text-slate-400">
               <TrendingUp size={18} />
@@ -120,7 +120,7 @@ const Analytics = () => {
           <div className="flex items-center justify-between mb-8">
             <div>
               <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest">Expiry Forecast</h3>
-              <p className="text-[11px] font-bold text-slate-400 mt-1">Upcoming node subscription renewals</p>
+              <p className="text-[11px] font-bold text-slate-400 mt-1">Upcoming subscription renewals</p>
             </div>
             <div className="p-2 bg-slate-50 rounded-xl text-slate-400">
               <Calendar size={18} />
@@ -142,8 +142,8 @@ const Analytics = () => {
       <div className="card p-0 overflow-hidden bg-white border-transparent shadow-sm">
         <div className="px-8 py-6 border-b border-slate-50 flex items-center justify-between">
           <div>
-            <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest">Top Yielding Nodes</h3>
-            <p className="text-[11px] font-bold text-slate-400 mt-1">Highest platform revenue contributors</p>
+            <h3 className="text-sm font-black text-slate-900">Top Libraries</h3>
+            <p className="text-[11px] font-bold text-slate-400 mt-1">Highest revenue contributors</p>
           </div>
           <button className="p-2 bg-slate-50 rounded-xl text-slate-400 hover:text-slate-900 transition-colors">
             <ExternalLink size={18} />
@@ -153,15 +153,15 @@ const Analytics = () => {
           <table className="table-main">
             <thead>
               <tr className="bg-slate-50/50">
-                <th className="px-8 py-4">Library Entity</th>
-                <th>Plan Tier</th>
-                <th>Monthly Yield</th>
+                <th className="px-8 py-4">Library</th>
+                <th>Plan</th>
+                <th>Monthly Revenue</th>
                 <th className="px-8 text-right">Status</th>
               </tr>
             </thead>
             <tbody>
               {(stats?.topPayingLibraries || []).length === 0 ? (
-                <tr><td colSpan="4" className="text-center py-20 text-xs font-black text-slate-300 uppercase">Insufficient node data</td></tr>
+                <tr><td colSpan="4" className="text-center py-16 text-xs font-bold text-slate-300 uppercase">No data available</td></tr>
               ) : (
                 stats.topPayingLibraries.map((lib, i) => (
                   <tr key={i} className="hover:bg-slate-50/50 transition-colors">

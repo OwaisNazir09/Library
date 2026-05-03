@@ -113,11 +113,10 @@ const BillingSubscriptions = () => {
             <button
               key={s}
               onClick={() => setStatusFilter(s)}
-              className={`px-4 py-2 rounded-xl text-[11px] font-bold uppercase tracking-widest border transition-all whitespace-nowrap ${
-                statusFilter === s
-                  ? 'bg-slate-900 text-white border-slate-900 shadow-md'
-                  : 'bg-white text-slate-500 border-slate-200 hover:border-slate-300'
-              }`}
+              className={`px-4 py-2 rounded-xl text-[11px] font-bold uppercase tracking-widest border transition-all whitespace-nowrap ${statusFilter === s
+                ? 'bg-slate-900 text-white border-slate-900 shadow-md'
+                : 'bg-white text-slate-500 border-slate-200 hover:border-slate-300'
+                }`}
             >
               {s}
             </button>
@@ -198,10 +197,9 @@ const BillingSubscriptions = () => {
                       </div>
                     </td>
                     <td>
-                      <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full font-black text-[10px] uppercase tracking-wider ${
-                        record.paymentStatus === 'Paid' ? 'bg-emerald-50 text-emerald-600' : 
+                      <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full font-black text-[10px] uppercase tracking-wider ${record.paymentStatus === 'Paid' ? 'bg-emerald-50 text-emerald-600' :
                         record.paymentStatus === 'Trial' ? 'bg-sky-50 text-sky-600' : 'bg-rose-50 text-rose-600'
-                      }`}>
+                        }`}>
                         {record.paymentStatus === 'Paid' ? <CheckCircle size={12} /> : <Clock size={12} />}
                         {record.paymentStatus}
                       </div>

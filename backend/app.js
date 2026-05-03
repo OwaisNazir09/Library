@@ -87,6 +87,7 @@ const allowedOrigins = [
   "https://welib.blinkbitlabs.com",
   "https://welibapi.blinkbitlabs.com",
   "http://localhost:3000",
+  "http://localhost:3001",
   "http://localhost:5173",
 ];
 

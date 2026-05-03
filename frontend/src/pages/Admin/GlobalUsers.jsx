@@ -84,8 +84,8 @@ const GlobalUsers = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-black text-slate-900 tracking-tight">Global User Authority</h1>
-          <p className="text-sm font-medium text-slate-500 mt-0.5">Cross-tenant identity management and access orchestration.</p>
+          <h1 className="text-2xl font-black text-slate-900 tracking-tight">Global Users</h1>
+          <p className="text-sm font-medium text-slate-400 mt-0.5">Manage platform-wide user accounts and role assignments.</p>
         </div>
         <div className="flex items-center gap-3">
           <div className="px-4 py-2 bg-white border border-slate-100 rounded-2xl text-[11px] font-black text-slate-500 shadow-sm flex items-center gap-2">
@@ -119,11 +119,11 @@ const GlobalUsers = () => {
           <table className="table-main">
             <thead>
               <tr className="bg-slate-50/50">
-                <th className="px-8 py-5">User Profile</th>
-                <th>System Role</th>
-                <th>Affiliated Node</th>
-                <th>Security Status</th>
-                <th className="px-8 text-right">Access Control</th>
+                <th className="px-8 py-5">User</th>
+                <th>Role</th>
+                <th>Library</th>
+                <th>Status</th>
+                <th className="px-8 text-right">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -204,8 +204,8 @@ const GlobalUsers = () => {
             >
               <div className="px-8 pt-8 pb-6 flex items-center justify-between">
                 <div>
-                  <h2 className="text-xl font-black text-slate-900 tracking-tight">Identity Governance</h2>
-                  <p className="text-xs text-slate-400 font-bold mt-1 uppercase tracking-widest">Global Authority Management</p>
+                  <h2 className="text-xl font-black text-slate-900 tracking-tight">Manage User</h2>
+                  <p className="text-xs text-slate-400 font-bold mt-1 uppercase tracking-widest">Role & Access Control</p>
                 </div>
                 <button
                   onClick={() => setIsModalOpen(false)}
@@ -228,7 +228,7 @@ const GlobalUsers = () => {
 
                 <div className="space-y-5">
                   <div className="space-y-3">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">System Role Assignment</label>
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Assign Role</label>
                     <div className="grid grid-cols-2 gap-2">
                       {[
                         { id: 'super_admin', label: 'Super Admin', icon: Lock },
@@ -253,7 +253,7 @@ const GlobalUsers = () => {
                   </div>
 
                   <div className="space-y-3 pt-2">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Account Life-Cycle</label>
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Account Status</label>
                     <div className="grid grid-cols-3 gap-2">
                       {[
                         { id: 'approved', label: 'Active', color: 'emerald' },
@@ -289,9 +289,9 @@ const GlobalUsers = () => {
               <div className="px-8 pb-8">
                 <button
                   onClick={() => setIsModalOpen(false)}
-                  className="w-full bg-slate-900 text-white py-4 rounded-2xl text-[12px] font-black uppercase tracking-widest hover:bg-slate-800 transition-all shadow-xl"
+                  className="w-full bg-[#044343] text-white py-4 rounded-2xl text-[12px] font-black uppercase tracking-widest hover:bg-[#033535] transition-all shadow-xl shadow-teal-900/20"
                 >
-                  Commit & Exit Manager
+                  Save & Close
                 </button>
               </div>
             </motion.div>
