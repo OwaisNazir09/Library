@@ -42,7 +42,8 @@ const librarianGroups = [
   {
     label: 'REPORTS',
     items: [
-      { name: 'Reports & Analytics', icon: BarChart2, path: '/app/reports', feature: 'reports' },
+      { name: 'Reports & Analytics', icon: BarChart2, path: '/app/reports', feature: 'reports', end: true },
+      { name: 'Expiring Memberships', icon: Clock, path: '/app/reports/expiring-memberships', feature: 'reports' },
       { name: 'Overdue Reminder', icon: Clock, path: '/app/reminders' },
     ]
   },
@@ -168,11 +169,15 @@ const Sidebar = ({ isOpen, onClose }) => {
                       : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-800/50'}
                   `}
                 >
-                  <item.icon size={18} className={`
-                    transition-colors duration-200
-                    ${location.pathname === item.path ? 'text-white' : 'text-slate-400 group-hover:text-slate-600'}
-                  `} />
-                  <span className="text-[13px] font-medium tracking-tight">{item.name}</span>
+                  {({ isActive }) => (
+                    <>
+                      <item.icon size={18} className={`
+                        transition-colors duration-200
+                        ${isActive ? 'text-white' : 'text-slate-400 group-hover:text-slate-600'}
+                      `} />
+                      <span className="text-[13px] font-medium tracking-tight">{item.name}</span>
+                    </>
+                  )}
                 </NavLink>
               ))}
             </div>

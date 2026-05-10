@@ -15,24 +15,16 @@ export const getAllBlogs = async (req, res, next) => {
     const { Blog: BlogModel } = getModels(req.db);
     console.log('[Blogs] Fetching blogs with query:', req.query);
 
-    // Default query: show approved blogs
     let query = {
-      status: 'approved',
-      $or: [
-        { tenantId: req.tenantId },
-        { visibility: 'global' }
-      ]
+      status: 'approved'
     };
 
     const staffRoles = ['librarian', 'admin', 'super_admin'];
-    
-    if (staffRoles.includes(req.user?.role) && req.query.status) {
+
+    if (staffRoles.includes(req.user?.role) && (req.query.status !== 'approved' || req.query.manage === 'true')) {
       query = {
-        tenantId: req.tenantId,
-        status: req.query.status
+        tenantId: req.tenantId
       };
-    } else if (staffRoles.includes(req.user?.role)) {
-      query = { tenantId: req.tenantId };
       if (req.query.status) query.status = req.query.status;
     }
 

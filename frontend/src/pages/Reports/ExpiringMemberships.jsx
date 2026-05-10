@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Users, Calendar, AlertTriangle, ArrowLeft, Mail, Bell, Search, History, Clock } from 'lucide-react';
+import { Users, Calendar, AlertTriangle, ArrowLeft, Mail, Bell, Search, History, Clock, MessageSquare } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { getExpiringMemberships } from '../../services/reportService';
 
@@ -164,16 +164,41 @@ const ExpiringMemberships = () => {
                             </span>
                           </td>
                           <td className="px-6 py-4 text-right">
-                            <div className="flex items-center justify-end gap-2">
-                               {activeTab === 'upcoming' && daysDiff <= 3 && (
-                                 <div className="flex items-center gap-1.5 text-[9px] font-bold text-rose-500 uppercase tracking-tight bg-rose-50 px-2 py-1 rounded-lg">
-                                   <Bell size={10} />
-                                   Due
-                                 </div>
-                               )}
-                               <span className={`badge ${member.subscriptionStatus === 'active' ? 'badge-success' : 'badge-danger'}`}>
+                            <div className="flex items-center justify-end gap-3">
+                              {/* Notification Actions */}
+                              <div className="flex items-center gap-1.5 mr-2 pr-2 border-r border-slate-100">
+                                <button
+                                  onClick={() => {
+                                    const message = encodeURIComponent(`Hello ${member.fullName}, this is a reminder that your ${member.package?.name || 'membership'} at the library is expiring on ${new Date(member.packageEndDate).toLocaleDateString()}. Please renew it to continue enjoying our services.`);
+                                    window.open(`https://wa.me/${member.phone?.replace(/\D/g, '')}?text=${message}`, '_blank');
+                                  }}
+                                  className="p-2 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
+                                  title="Send WhatsApp Reminder"
+                                >
+                                  <MessageSquare size={16} />
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    const subject = encodeURIComponent('Membership Renewal Reminder');
+                                    const body = encodeURIComponent(`Hello ${member.fullName},\n\nYour ${member.package?.name || 'membership'} is expiring on ${new Date(member.packageEndDate).toLocaleDateString()}.\n\nKindly visit the library to renew your package.\n\nRegards,\nLibrary Authority`);
+                                    window.location.href = `mailto:${member.email}?subject=${subject}&body=${body}`;
+                                  }}
+                                  className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                                  title="Send Email Reminder"
+                                >
+                                  <Mail size={16} />
+                                </button>
+                              </div>
+
+                              {activeTab === 'upcoming' && daysDiff <= 3 && (
+                                <div className="flex items-center gap-1.5 text-[9px] font-bold text-rose-500 uppercase tracking-tight bg-rose-50 px-2 py-1 rounded-lg">
+                                  <Bell size={10} />
+                                  Due
+                                </div>
+                              )}
+                              <span className={`badge ${member.subscriptionStatus === 'active' ? 'badge-success' : 'badge-danger'}`}>
                                 {member.subscriptionStatus}
-                               </span>
+                              </span>
                             </div>
                           </td>
                         </motion.tr>

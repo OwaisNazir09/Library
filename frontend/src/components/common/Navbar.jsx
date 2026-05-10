@@ -70,9 +70,9 @@ const Navbar = ({ onMenuClick }) => {
         </button>
       </div>
 
-      <div className="hidden md:flex flex-1 max-w-md mx-4">
+      <div className="flex flex-1 max-w-md mx-2 md:mx-4">
         <div className="relative group w-full">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#044343] transition-colors" size={15} />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#044343] transition-colors" size={14} />
           <input
             type="text"
             placeholder="Search books or members..."
@@ -85,10 +85,10 @@ const Navbar = ({ onMenuClick }) => {
       </div>
 
       <div className="flex items-center gap-2">
-        <div className="hidden sm:flex items-center gap-1 border-r border-slate-100 pr-3 mr-1">
+        <div className="flex items-center gap-0.5 md:gap-1 border-r border-slate-100 pr-2 md:pr-3 mr-1 dark:border-slate-800">
           <button
             onClick={() => setIsDark(!isDark)}
-            className="p-1.5 text-slate-400 hover:text-slate-900 transition-all rounded-md hover:bg-slate-50"
+            className="p-1.5 text-slate-400 hover:text-slate-900 transition-all rounded-md hover:bg-slate-50 dark:hover:bg-slate-800"
             title="Toggle Theme"
           >
             {isDark ? <Moon size={16} className="text-amber-500" /> : <Sun size={16} />}
@@ -96,7 +96,7 @@ const Navbar = ({ onMenuClick }) => {
           <div className="relative">
             <button
               onClick={() => setIsWhatsAppOpen(!isWhatsAppOpen)}
-              className={`p-1.5 transition-all rounded-md hover:bg-slate-50 flex items-center gap-1.5 ${whatsappStatus?.status === 'READY' ? 'text-emerald-600 bg-emerald-50' : 'text-slate-400 hover:text-slate-900'
+              className={`p-1.5 transition-all rounded-md hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-1.5 ${whatsappStatus?.status === 'READY' ? 'text-emerald-600 bg-emerald-50 dark:bg-emerald-950/30' : 'text-slate-400 hover:text-slate-900 dark:hover:text-slate-100'
                 }`}
               title="WhatsApp Connection"
             >

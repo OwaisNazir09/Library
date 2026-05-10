@@ -40,6 +40,11 @@ import AccountManagement from './pages/Finance/AccountManagement';
 import ExpiringMemberships from './pages/Reports/ExpiringMemberships';
 import BlogApproval from './pages/Blogs/BlogApproval';
 import QuotesAdmin from './pages/Quotes/QuotesAdmin';
+import Support from './pages/Support/Support';
+import About from './pages/Static/About';
+import Privacy from './pages/Static/Privacy';
+import Security from './pages/Static/Security';
+import Status from './pages/Static/Status';
 
 import ProtectedRoute from './components/common/ProtectedRoute';
 
@@ -50,6 +55,14 @@ const App = () => {
       <Route path="/login" element={<Login />} />
       <Route path="/query" element={<QueryPage />} />
       <Route path="/register" element={<Navigate to="/query" replace />} />
+      
+      {/* Static Company & Support Pages */}
+      <Route path="/about" element={<About />} />
+      <Route path="/privacy" element={<Privacy />} />
+      <Route path="/security" element={<Security />} />
+      <Route path="/status" element={<Status />} />
+      <Route path="/help" element={<Navigate to="/app/support" replace />} />
+      <Route path="/documentation" element={<Navigate to="/app/support" replace />} />
 
 
       <Route element={<ProtectedRoute allowedRoles={['super_admin']} />}>
@@ -100,6 +113,7 @@ const App = () => {
           <Route path="blogs" element={<BlogApproval />} />
           <Route path="quotes" element={<QuotesAdmin />} />
           <Route path="settings" element={<Settings />} />
+          <Route path="support" element={<Support />} />
         </Route>
       </Route>
 

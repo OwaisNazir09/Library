@@ -38,6 +38,7 @@ import attendanceRoutes from "./src/modules/attendance/attendance.routes.js";
 import tenantRoutes from "./src/modules/tenant/tenant.routes.js";
 import quoteRoutes from "./src/modules/quote/quote.routes.js";
 import whatsappRoutes from "./src/modules/whatsapp/whatsapp.routes.js";
+import publicRoutes from "./src/modules/public/public.routes.js";
 
 const app = express();
 app.set("trust proxy", true);
@@ -123,6 +124,7 @@ app.use(
   }),
 );
 
+app.use("/api/public", publicRoutes);
 app.use("/api", tenantHandler);
 app.use("/api", checkSubscription);
 app.use(helmet());

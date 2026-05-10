@@ -138,43 +138,57 @@ const DigitalLibrary = () => {
 
   return (
     <div className="space-y-5">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-xl font-bold text-slate-900">Digital Repository</h1>
           <p className="text-xs text-slate-400 font-medium mt-0.5">Manage digital assets, notes and e-books</p>
         </div>
-        <div className="flex items-center gap-2">
-          <div className="relative">
+        <div className="flex flex-col sm:flex-row items-center gap-2">
+          <div className="relative w-full sm:w-auto">
             <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
-            <input type="text" placeholder="Search assets..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-56 bg-white border border-slate-200 rounded-lg h-[34px] pl-8 pr-3 text-[13px] outline-none focus:ring-2 focus:ring-teal-500/10 transition-all" />
+            <input 
+              type="text" 
+              placeholder="Search assets..." 
+              value={searchTerm} 
+              onChange={(e) => setSearchTerm(e.target.value)} 
+              className="w-full sm:w-56 bg-white border border-slate-200 rounded-lg h-[34px] pl-8 pr-3 text-[13px] outline-none focus:ring-2 focus:ring-teal-500/10 transition-all" 
+            />
           </div>
           <button 
             onClick={() => !isExpired && openModal()} 
-            className={`btn btn-primary btn-md ${isExpired ? 'opacity-50 cursor-not-allowed grayscale' : ''}`}
+            className={`btn btn-primary btn-md w-full sm:w-auto ${isExpired ? 'opacity-50 cursor-not-allowed grayscale' : ''}`}
             title={isExpired ? 'Subscription Expired' : ''}
           >
-            <Plus size={16} /> <span className="hidden sm:inline">Upload Resource</span>
+            <Plus size={16} /> <span>Upload Resource</span>
           </button>
         </div>
       </div>
 
-      <div className="card py-2 px-3 flex items-center justify-between">
-        <div className="flex items-center gap-4">
-           <select value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)} className="bg-transparent text-[11px] font-bold text-slate-500 uppercase tracking-wider outline-none border-r border-slate-100 pr-3 cursor-pointer">
+      <div className="card py-2 px-3 flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div className="flex items-center gap-2 sm:gap-4 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0">
+           <select 
+             value={categoryFilter} 
+             onChange={(e) => setCategoryFilter(e.target.value)} 
+             className="bg-slate-50 sm:bg-transparent text-[10px] sm:text-[11px] font-bold text-slate-500 uppercase tracking-wider outline-none border border-slate-100 sm:border-0 sm:border-r sm:border-slate-100 px-2 sm:px-0 sm:pr-3 py-1.5 sm:py-0 rounded-md sm:rounded-none cursor-pointer whitespace-nowrap"
+           >
              <option value="all">All Categories</option>
              <option value="School Books">School Books</option>
              <option value="College Books">College Books</option>
              <option value="Competitive Exams">Competitive Exams</option>
            </select>
-           <select value={visibilityFilter} onChange={(e) => setVisibilityFilter(e.target.value)} className="bg-transparent text-[11px] font-bold text-slate-500 uppercase tracking-wider outline-none cursor-pointer">
+           <select 
+             value={visibilityFilter} 
+             onChange={(e) => setVisibilityFilter(e.target.value)} 
+             className="bg-slate-50 sm:bg-transparent text-[10px] sm:text-[11px] font-bold text-slate-500 uppercase tracking-wider outline-none border border-slate-100 sm:border-0 px-2 sm:px-0 py-1.5 sm:py-0 rounded-md sm:rounded-none cursor-pointer whitespace-nowrap"
+           >
              <option value="all">All Visibility</option>
              <option value="global">Global</option>
              <option value="library">Library Only</option>
            </select>
         </div>
-        <div className="flex bg-slate-50 p-0.5 rounded-md border border-slate-100">
-          <button onClick={() => setViewMode('grid')} className={`p-1.5 rounded transition-all ${viewMode === 'grid' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400'}`}><LayoutGrid size={14} /></button>
-          <button onClick={() => setViewMode('table')} className={`p-1.5 rounded transition-all ${viewMode === 'table' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400'}`}><List size={14} /></button>
+        <div className="flex bg-slate-50 p-0.5 rounded-md border border-slate-100 w-full sm:w-auto justify-center">
+          <button onClick={() => setViewMode('grid')} className={`flex-1 sm:flex-none p-1.5 rounded transition-all flex justify-center ${viewMode === 'grid' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400'}`}><LayoutGrid size={14} /></button>
+          <button onClick={() => setViewMode('table')} className={`flex-1 sm:flex-none p-1.5 rounded transition-all flex justify-center ${viewMode === 'table' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400'}`}><List size={14} /></button>
         </div>
       </div>
 
@@ -195,17 +209,22 @@ const DigitalLibrary = () => {
                 <div className="absolute top-2 right-2 flex flex-col gap-1">
                    <span className={`badge ${resource.visibility === 'global' ? 'badge-info' : 'badge-neutral'} lowercase`}>{resource.visibility}</span>
                 </div>
-                <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                <div className="absolute inset-0 bg-slate-900/40 opacity-0 md:group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
                    <button onClick={() => handleDownload(resource)} className="w-9 h-9 bg-white text-slate-900 rounded-lg flex items-center justify-center hover:scale-110 transition-transform"><Download size={16} /></button>
                    <button onClick={() => navigate(`/app/digital-library/${resource._id}`)} className="w-9 h-9 bg-white text-slate-900 rounded-lg flex items-center justify-center hover:scale-110 transition-transform"><Eye size={16} /></button>
+                </div>
+                {/* Mobile visible actions */}
+                <div className="absolute bottom-2 left-2 right-2 flex gap-2 md:hidden">
+                   <button onClick={() => handleDownload(resource)} className="flex-1 h-8 bg-white/90 backdrop-blur-sm text-slate-900 rounded-lg flex items-center justify-center text-[10px] font-bold uppercase tracking-wider"><Download size={12} className="mr-1.5" /> Get</button>
+                   <button onClick={() => navigate(`/app/digital-library/${resource._id}`)} className="flex-1 h-8 bg-white/90 backdrop-blur-sm text-slate-900 rounded-lg flex items-center justify-center text-[10px] font-bold uppercase tracking-wider"><Eye size={12} className="mr-1.5" /> View</button>
                 </div>
               </div>
               <div className="px-1">
                 <h3 className="text-[13px] font-bold text-slate-900 truncate leading-tight">{resource.title}</h3>
                 <p className="text-[10px] text-slate-400 font-medium mt-1 truncate uppercase tracking-tighter">{resource.subject || resource.category}</p>
                 <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-50">
-                   <div className="flex items-center gap-1.5"><Download size={10} className="text-slate-300" /><span className="text-[10px] font-bold text-slate-400">{resource.downloadCount || 0}</span></div>
-                   <button onClick={() => openModal(resource)} className="text-slate-300 hover:text-slate-900"><MoreVertical size={14} /></button>
+                   <div className="flex items-center gap-1.5"><Download size={10} className="text-slate-300" /><span className="text-[10px] font-bold text-slate-400">{resource.downloadCount || 0} Downloads</span></div>
+                   <button onClick={() => openModal(resource)} className="text-slate-300 hover:text-slate-900 p-1"><MoreVertical size={14} /></button>
                 </div>
               </div>
             </div>

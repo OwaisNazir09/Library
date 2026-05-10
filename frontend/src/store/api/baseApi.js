@@ -90,7 +90,23 @@ export const baseApi = createApi({
     "Attendance",
     "Blogs",
     "WhatsApp",
+    "Public",
   ],
 
   endpoints: () => ({}),
 });
+
+export const publicApi = baseApi.injectEndpoints({
+  endpoints: (builder) => ({
+    getPublicStats: builder.query({
+      query: () => "/public/stats",
+      providesTags: ["Public"],
+    }),
+    getPublicPlans: builder.query({
+      query: () => "/public/plans",
+      providesTags: ["Public"],
+    }),
+  }),
+});
+
+export const { useGetPublicStatsQuery, useGetPublicPlansQuery } = publicApi;

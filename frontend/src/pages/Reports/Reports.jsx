@@ -48,13 +48,6 @@ const Reports = () => {
           <h1 className="text-xl font-bold text-slate-900">Reports & Analytics</h1>
           <p className="text-xs text-slate-400 font-medium mt-0.5">Overview of your library's performance and usage metrics</p>
         </div>
-        <button 
-          onClick={() => navigate('expiring-memberships')}
-          className="btn btn-primary flex items-center gap-2 text-xs h-9"
-        >
-          <AlertTriangle size={14} />
-          Expiring Memberships
-        </button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">

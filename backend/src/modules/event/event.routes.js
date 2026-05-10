@@ -1,5 +1,5 @@
 import express from 'express';
-import { getAllEvents, createEvent, deleteEvent } from './event.controller.js';
+import { getAllEvents, createEvent, deleteEvent, getEvent, updateEvent } from './event.controller.js';
 import { protect, restrictTo } from '../../middleware/auth.js';
 import { restrictToFeature } from '../../middleware/subscriptionCheck.js';
 import { createUploader } from '../../middleware/upload.middleware.js';
@@ -15,6 +15,8 @@ router.route('/')
   .post(protect, restrictTo('librarian'), upload.single('bannerImage'), createEvent);
 
 router.route('/:id')
+  .get(getEvent)
+  .patch(protect, restrictTo('librarian'), upload.single('bannerImage'), updateEvent)
   .delete(protect, restrictTo('librarian'), deleteEvent);
 
 export default router;

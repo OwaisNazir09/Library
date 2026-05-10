@@ -5,7 +5,6 @@ import PDFDocument from 'pdfkit-table';
 import { format } from 'date-fns';
 import WhatsAppService from '../../services/whatsapp.service.js';
 
-// ── Ref Generator ─────────────────────────────────────────────────────────────
 const genRef = async (Transaction, tenantId) => {
   const count = await Transaction.countDocuments({ tenantId });
   return `TXN-${new Date().getFullYear()}-${(count + 1).toString().padStart(6, '0')}`;
@@ -178,13 +177,22 @@ export const getStudentAccounts = async (req, res, next) => {
     const limit = parseInt(req.query.limit) || 20;
     const skip = (page - 1) * limit;
 
-    const students = await User.find({ tenantId: req.tenantId, role: 'member' })
+    const userQuery = { tenantId: req.tenantId, role: 'member' };
+    if (req.query.search) {
+      userQuery.$or = [
+        { fullName: { $regex: req.query.search, $options: 'i' } },
+        { email: { $regex: req.query.search, $options: 'i' } },
+        { idNumber: { $regex: req.query.search, $options: 'i' } }
+      ];
+    }
+
+    const students = await User.find(userQuery)
       .select('fullName email phone profilePicture idNumber status')
       .sort({ fullName: 1 })
       .skip(skip)
       .limit(limit);
 
-    const totalStudents = await User.countDocuments({ tenantId: req.tenantId, role: 'member' });
+    const totalStudents = await User.countDocuments(userQuery);
 
     const studentIds = students.map(s => s._id);
 

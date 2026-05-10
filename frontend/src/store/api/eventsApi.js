@@ -7,7 +7,7 @@ export const eventsApi = baseApi.injectEndpoints({
         url: '/events',
         params,
       }),
-      providesTags: ['Event'],
+      providesTags: ['Events'],
     }),
     addEvent: builder.mutation({
       query: (data) => ({
@@ -15,7 +15,22 @@ export const eventsApi = baseApi.injectEndpoints({
         method: 'POST',
         body: data,
       }),
-      invalidatesTags: ['Event'],
+      invalidatesTags: ['Events'],
+    }),
+    updateEvent: builder.mutation({
+      query: ({ id, data }) => ({
+        url: `/events/${id}`,
+        method: 'PATCH',
+        body: data,
+      }),
+      invalidatesTags: ['Events'],
+    }),
+    deleteEvent: builder.mutation({
+      query: (id) => ({
+        url: `/events/${id}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['Events'],
     }),
   }),
 });
@@ -23,4 +38,6 @@ export const eventsApi = baseApi.injectEndpoints({
 export const {
   useGetEventsQuery,
   useAddEventMutation,
+  useUpdateEventMutation,
+  useDeleteEventMutation,
 } = eventsApi;

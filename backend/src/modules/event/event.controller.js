@@ -9,6 +9,21 @@ export const getAllEvents = async (req, res, next) => {
   } catch (err) { next(err); }
 };
 
+export const getEvent = async (req, res, next) => {
+  try {
+    const { Event } = getModels(req.db);
+    const event = await Event.findOne({ _id: req.params.id, tenantId: req.tenantId }).populate('createdBy', 'fullName');
+
+    if (!event) {
+      const error = new Error('No event found with that ID for this library');
+      error.statusCode = 404;
+      throw error;
+    }
+
+    res.status(200).json({ status: 'success', data: { event } });
+  } catch (err) { next(err); }
+};
+
 export const createEvent = async (req, res, next) => {
   try {
     const { Event } = getModels(req.db);
@@ -35,6 +50,47 @@ export const createEvent = async (req, res, next) => {
 
     const event = await Event.create(eventData);
     res.status(201).json({ status: 'success', data: { event } });
+  } catch (err) { next(err); }
+};
+
+export const updateEvent = async (req, res, next) => {
+  try {
+    const { Event } = getModels(req.db);
+    const { date, time, ...rest } = req.body;
+
+    let eventData = { ...rest };
+
+    if (date || time) {
+      const existingEvent = await Event.findOne({ _id: req.params.id, tenantId: req.tenantId });
+      if (!existingEvent) {
+        const error = new Error('No event found with that ID');
+        error.statusCode = 404;
+        throw error;
+      }
+      
+      const d = date || existingEvent.eventDate.toISOString().split('T')[0];
+      const t = time || existingEvent.eventDate.toISOString().split('T')[1].substring(0, 5);
+      eventData.eventDate = new Date(`${d}T${t}`);
+    }
+
+    if (req.file) {
+      eventData.bannerImage = req.file.path;
+      eventData.bannerImagePublicId = req.file.filename;
+    }
+
+    const event = await Event.findOneAndUpdate(
+      { _id: req.params.id, tenantId: req.tenantId },
+      eventData,
+      { new: true, runValidators: true }
+    );
+
+    if (!event) {
+      const error = new Error('No event found with that ID');
+      error.statusCode = 404;
+      throw error;
+    }
+
+    res.status(200).json({ status: 'success', data: { event } });
   } catch (err) { next(err); }
 };
 
